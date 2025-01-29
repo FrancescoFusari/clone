@@ -22,7 +22,7 @@ export const Auth = () => {
       setLoading(true);
       console.log("Signing up with:", { email, password, username }); // Debug log
       
-      // Sign up the user
+      // Sign up the user with email confirmation disabled
       const { error: signUpError } = await supabase.auth.signUp({
         email,
         password,
@@ -30,6 +30,7 @@ export const Auth = () => {
           data: {
             username,
           },
+          emailRedirectTo: window.location.origin,
         },
       });
       
