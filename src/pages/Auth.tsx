@@ -21,19 +21,31 @@ export const Auth = () => {
     try {
       setLoading(true);
       console.log("Signing up with:", { email, password, username }); // Debug log
-      const { error } = await supabase.auth.signUp({
+      
+      // Sign up the user
+      const { error: signUpError } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
-            username: username, // Make sure username is passed correctly
+            username,
           },
         },
       });
-      if (error) throw error;
+      
+      if (signUpError) throw signUpError;
+
+      // Immediately sign in after successful signup
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (signInError) throw signInError;
+
       toast({
         title: "Success!",
-        description: "Account created successfully.",
+        description: "Account created and logged in successfully.",
       });
       navigate("/");
     } catch (error: any) {
