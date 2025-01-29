@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Auth = () => {
@@ -20,21 +20,24 @@ export const Auth = () => {
     e.preventDefault();
     try {
       setLoading(true);
+      console.log("Signing up with:", { email, password, username }); // Debug log
       const { error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
-            username,
+            username: username, // Make sure username is passed correctly
           },
         },
       });
       if (error) throw error;
       toast({
         title: "Success!",
-        description: "Check your email to confirm your account.",
+        description: "Account created successfully.",
       });
+      navigate("/");
     } catch (error: any) {
+      console.error("Signup error:", error); // Debug log
       toast({
         variant: "destructive",
         title: "Error",
