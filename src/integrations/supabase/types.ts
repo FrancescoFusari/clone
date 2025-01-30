@@ -66,30 +66,6 @@ export type Database = {
         }
         Relationships: []
       }
-      tag_analytics: {
-        Row: {
-          created_at: string | null
-          id: string
-          last_used: string | null
-          tag: string
-          usage_count: number | null
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          last_used?: string | null
-          tag: string
-          usage_count?: number | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          last_used?: string | null
-          tag?: string
-          usage_count?: number | null
-        }
-        Relationships: []
-      }
       user_consent: {
         Row: {
           ai_processing_consent: boolean

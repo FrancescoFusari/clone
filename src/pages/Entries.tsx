@@ -12,7 +12,6 @@ import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
-import { TagManagement } from "@/components/TagManagement";
 
 const Entries = () => {
   const { toast } = useToast();
@@ -53,12 +52,6 @@ const Entries = () => {
   return (
     <div className="container mx-auto px-4 py-8 mb-24">
       <h1 className="text-3xl font-bold mb-8">Your Entries</h1>
-      
-      {/* Add TagManagement component */}
-      <div className="mb-8">
-        <TagManagement />
-      </div>
-
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {entries?.map((entry) => (
           <Card 
