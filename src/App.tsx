@@ -5,13 +5,19 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Navigation } from "./components/Navigation";
 import { NewEntry } from "./components/NewEntry";
-import { Insights } from "./components/Insights";
 import { Auth } from "./pages/Auth";
 import { AuthProvider, useAuth } from "./components/AuthProvider";
 import NotFound from "./pages/NotFound";
 import Entries from "./pages/Entries";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      cacheTime: 1000 * 60 * 30, // 30 minutes
+    },
+  },
+});
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { session, loading } = useAuth();
@@ -49,14 +55,6 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <NewEntry />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/insights"
-        element={
-          <ProtectedRoute>
-            <Insights />
           </ProtectedRoute>
         }
       />

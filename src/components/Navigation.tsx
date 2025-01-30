@@ -1,4 +1,4 @@
-import { List, LogOut, PieChart, Plus } from "lucide-react";
+import { List, LogOut, Plus } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "./ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -54,18 +54,6 @@ export const Navigation = () => {
             }`}
           >
             <Plus className="w-6 h-6" />
-          </Link>
-        </li>
-        <li>
-          <Link
-            to="/insights"
-            className={`flex items-center justify-center w-12 h-12 rounded-full transition-colors ${
-              isActive("/insights")
-                ? "bg-primary text-white"
-                : "text-gray-600 hover:bg-secondary"
-            }`}
-          >
-            <PieChart className="w-6 h-6" />
           </Link>
         </li>
         <li>
