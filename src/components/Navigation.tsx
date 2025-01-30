@@ -1,4 +1,4 @@
-import { Home, LogOut, PieChart, Plus } from "lucide-react";
+import { List, LogOut, PieChart, Plus } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "./ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -41,7 +41,7 @@ export const Navigation = () => {
                 : "text-gray-600 hover:bg-secondary"
             }`}
           >
-            <Home className="w-6 h-6" />
+            <List className="w-6 h-6" />
           </Link>
         </li>
         <li>

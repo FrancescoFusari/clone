@@ -9,6 +9,7 @@ import { Insights } from "./components/Insights";
 import { Auth } from "./pages/Auth";
 import { AuthProvider, useAuth } from "./components/AuthProvider";
 import NotFound from "./pages/NotFound";
+import Entries from "./pages/Entries";
 
 const queryClient = new QueryClient();
 
@@ -39,7 +40,7 @@ const AppRoutes = () => {
         path="/"
         element={
           <ProtectedRoute>
-            <NewEntry />
+            <Entries />
           </ProtectedRoute>
         }
       />
