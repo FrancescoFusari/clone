@@ -1,6 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import "https://deno.land/x/xhr@0.1.0/mod.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -15,6 +14,7 @@ serve(async (req) => {
 
   try {
     const { content } = await req.json()
+    console.log('Processing entry:', content)
 
     // Initialize OpenAI
     const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -46,6 +46,8 @@ serve(async (req) => {
     })
 
     const aiResult = await openAIResponse.json()
+    console.log('AI processing result:', aiResult)
+    
     const processedData = JSON.parse(aiResult.choices[0].message.content)
 
     return new Response(
