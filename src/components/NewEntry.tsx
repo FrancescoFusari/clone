@@ -68,40 +68,38 @@ export const NewEntry = () => {
   };
 
   return (
-    <div className="fixed inset-0 overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center relative">
       <BackgroundCircles 
         variant="quaternary"
         className="absolute inset-0"
       />
       
-      <div className="relative z-10 flex items-center justify-center h-full p-6">
-        <div className="w-full max-w-2xl">
-          <div className="rounded-xl border bg-white/80 dark:bg-black/50 backdrop-blur-lg p-6 shadow-lg">
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <Textarea
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                placeholder="Write your entry here... I'll help categorize and analyze it"
-                className="min-h-[200px] text-base resize-none bg-white/50 dark:bg-black/20"
-              />
-              <div className="flex items-center justify-between">
-                <p className="text-sm text-slate-600 dark:text-slate-400">
-                  Your entry will be processed with AI to help organize your thoughts
-                </p>
-                <Button 
-                  type="submit" 
-                  disabled={loading || !content.trim()}
-                  className="relative overflow-hidden"
-                >
-                  {loading ? "Processing..." : "Save Entry"}
-                </Button>
-              </div>
-            </form>
-          </div>
+      <div className="w-full max-w-2xl mx-auto p-6 relative z-10">
+        <div className="rounded-xl border bg-white/80 dark:bg-black/50 backdrop-blur-lg p-6 shadow-lg">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <Textarea
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              placeholder="Write your entry here... I'll help categorize and analyze it"
+              className="min-h-[200px] text-base resize-none bg-white/50 dark:bg-black/20"
+            />
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-slate-600 dark:text-slate-400">
+                Your entry will be processed with AI to help organize your thoughts
+              </p>
+              <Button 
+                type="submit" 
+                disabled={loading || !content.trim()}
+                className="relative overflow-hidden"
+              >
+                {loading ? "Processing..." : "Save Entry"}
+              </Button>
+            </div>
+          </form>
+        </div>
 
-          <div className="mt-4">
-            <PrivacyNotice />
-          </div>
+        <div className="mt-4">
+          <PrivacyNotice />
         </div>
       </div>
     </div>
