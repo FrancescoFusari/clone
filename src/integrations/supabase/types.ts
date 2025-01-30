@@ -66,6 +66,27 @@ export type Database = {
         }
         Relationships: []
       }
+      user_consent: {
+        Row: {
+          ai_processing_consent: boolean
+          consent_date: string | null
+          last_updated: string | null
+          user_id: string
+        }
+        Insert: {
+          ai_processing_consent?: boolean
+          consent_date?: string | null
+          last_updated?: string | null
+          user_id: string
+        }
+        Update: {
+          ai_processing_consent?: boolean
+          consent_date?: string | null
+          last_updated?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
