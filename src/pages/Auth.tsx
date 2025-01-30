@@ -65,13 +65,19 @@ export const Auth = () => {
     e.preventDefault();
     try {
       setLoading(true);
+      console.log("Signing in with:", { email }); // Debug log
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
       if (error) throw error;
+      toast({
+        title: "Success!",
+        description: "Logged in successfully.",
+      });
       navigate("/");
     } catch (error: any) {
+      console.error("Signin error:", error); // Debug log
       toast({
         variant: "destructive",
         title: "Error",
