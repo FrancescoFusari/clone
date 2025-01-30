@@ -6,6 +6,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./AuthProvider";
 import { PrivacyNotice } from "./PrivacyNotice";
+import { BackgroundCircles } from "./ui/background-circles";
 
 export const NewEntry = () => {
   const [content, setContent] = useState("");
@@ -67,42 +68,42 @@ export const NewEntry = () => {
   };
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] flex flex-col items-center justify-center p-6">
-      <div className="w-full max-w-2xl space-y-6">
-        <div className="text-center space-y-2">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            AI Journal Assistant
-          </h1>
-          <p className="text-muted-foreground">
-            Share your thoughts, and I'll help organize and analyze them
-          </p>
-        </div>
+    <div className="relative min-h-[calc(100vh-4rem)]">
+      <BackgroundCircles 
+        title="AI Journal Assistant"
+        description="Share your thoughts, and I'll help organize and analyze them"
+        variant="quaternary"
+        className="absolute inset-0 -z-10"
+      />
+      
+      <div className="relative z-10 flex flex-col items-center justify-center p-6 min-h-[calc(100vh-4rem)]">
+        <div className="w-full max-w-2xl space-y-6">
+          <div className="rounded-xl border bg-white/80 dark:bg-black/50 backdrop-blur-lg p-6 shadow-lg">
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <Textarea
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                placeholder="Write your entry here... I'll help categorize and analyze it"
+                className="min-h-[200px] text-base resize-none bg-white/50 dark:bg-black/20"
+              />
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-slate-600 dark:text-slate-400">
+                  Your entry will be processed with AI to help organize your thoughts
+                </p>
+                <Button 
+                  type="submit" 
+                  disabled={loading || !content.trim()}
+                  className="relative overflow-hidden"
+                >
+                  {loading ? "Processing..." : "Save Entry"}
+                </Button>
+              </div>
+            </form>
+          </div>
 
-        <div className="rounded-xl border bg-card p-6 shadow-lg backdrop-blur-lg">
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <Textarea
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              placeholder="Write your entry here... I'll help categorize and analyze it"
-              className="min-h-[200px] text-base resize-none bg-background/50"
-            />
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-muted-foreground">
-                Your entry will be processed with AI to help organize your thoughts
-              </p>
-              <Button 
-                type="submit" 
-                disabled={loading || !content.trim()}
-                className="relative overflow-hidden"
-              >
-                {loading ? "Processing..." : "Save Entry"}
-              </Button>
-            </div>
-          </form>
-        </div>
-
-        <div className="mt-8">
-          <PrivacyNotice />
+          <div className="mt-8">
+            <PrivacyNotice />
+          </div>
         </div>
       </div>
     </div>
