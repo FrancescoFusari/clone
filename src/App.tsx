@@ -9,6 +9,7 @@ import { Auth } from "./pages/Auth";
 import { AuthProvider, useAuth } from "./components/AuthProvider";
 import NotFound from "./pages/NotFound";
 import Entries from "./pages/Entries";
+import EntryDetails from "./pages/EntryDetails";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -47,6 +48,14 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <Entries />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/entries/:id"
+        element={
+          <ProtectedRoute>
+            <EntryDetails />
           </ProtectedRoute>
         }
       />
