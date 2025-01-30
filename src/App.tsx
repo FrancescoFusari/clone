@@ -76,7 +76,7 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <TooltipProvider>
-        <div className="min-h-screen bg-gradient-to-br from-secondary/30 to-primary/10">
+        <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50">
           <Toaster />
           <Sonner />
           <BrowserRouter>
