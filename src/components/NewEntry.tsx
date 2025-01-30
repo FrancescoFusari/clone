@@ -39,9 +39,9 @@ export const NewEntry = () => {
       const processedData = await processEntry(content);
       console.log("Processed data:", processedData);
 
-      // Save entry with AI-generated metadata
+      // Save entry with AI-generated metadata and formatted content
       const { error } = await supabase.from("entries").insert({
-        content,
+        content: processedData.content, // Use the formatted content
         user_id: session.user.id,
         category: processedData.category,
         subcategory: processedData.subcategory,

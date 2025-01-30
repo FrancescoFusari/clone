@@ -6,6 +6,36 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+function formatText(text: string): string {
+  // If text already contains paragraphs (double newlines), preserve them
+  if (text.includes('\n\n')) {
+    return text;
+  }
+
+  // Split text into sentences
+  const sentences = text.split(/(?<=[.!?])\s+/);
+  
+  // Group sentences into paragraphs (roughly 3-4 sentences per paragraph)
+  const paragraphs = [];
+  let currentParagraph = [];
+  
+  for (const sentence of sentences) {
+    currentParagraph.push(sentence);
+    if (currentParagraph.length >= 3 || sentence.length > 150) {
+      paragraphs.push(currentParagraph.join(' '));
+      currentParagraph = [];
+    }
+  }
+  
+  // Add any remaining sentences
+  if (currentParagraph.length > 0) {
+    paragraphs.push(currentParagraph.join(' '));
+  }
+  
+  // Join paragraphs with double newlines
+  return paragraphs.join('\n\n');
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
@@ -14,6 +44,10 @@ serve(async (req) => {
   try {
     const { content } = await req.json()
     console.log('Processing entry:', content)
+
+    // Format the content if needed
+    const formattedContent = formatText(content);
+    console.log('Formatted content:', formattedContent);
 
     const openAIApiKey = Deno.env.get('OPENAI_API_KEY')
     if (!openAIApiKey) {
@@ -42,7 +76,7 @@ serve(async (req) => {
           },
           {
             role: 'user',
-            content
+            content: formattedContent
           }
         ]
       })
@@ -58,6 +92,8 @@ serve(async (req) => {
     console.log('AI processing result:', aiResult)
     
     const processedData = JSON.parse(aiResult.choices[0].message.content)
+    // Add the formatted content to the response
+    processedData.content = formattedContent;
 
     return new Response(
       JSON.stringify(processedData),
