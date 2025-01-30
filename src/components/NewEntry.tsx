@@ -68,15 +68,15 @@ export const NewEntry = () => {
   };
 
   return (
-    <div className="relative min-h-[calc(100vh-4rem)]">
+    <div className="relative min-h-screen">
       <BackgroundCircles 
         title="AI Journal Assistant"
         description="Share your thoughts, and I'll help organize and analyze them"
         variant="quaternary"
-        className="absolute inset-0 -z-10"
+        className="absolute inset-0"
       />
       
-      <div className="relative z-10 flex flex-col items-center justify-center p-6 min-h-[calc(100vh-4rem)]">
+      <div className="relative z-10 flex flex-col items-center justify-center min-h-screen p-6">
         <div className="w-full max-w-2xl space-y-6">
           <div className="rounded-xl border bg-white/80 dark:bg-black/50 backdrop-blur-lg p-6 shadow-lg">
             <form onSubmit={handleSubmit} className="space-y-4">
