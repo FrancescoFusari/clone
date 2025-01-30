@@ -6,9 +6,17 @@ import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./AuthProvider";
 import { PrivacyNotice } from "./PrivacyNotice";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export const NewEntry = () => {
   const [content, setContent] = useState("");
+  const [category, setCategory] = useState<"personal" | "work" | "social" | "interests_and_hobbies" | "school">("personal");
   const [loading, setLoading] = useState(false);
   const { session } = useAuth();
   const { toast } = useToast();
@@ -21,6 +29,7 @@ export const NewEntry = () => {
     setLoading(true);
     const { error } = await supabase.from("entries").insert({
       content,
+      category,
       user_id: session.user.id,
     });
 
@@ -44,6 +53,21 @@ export const NewEntry = () => {
     <div className="container max-w-2xl py-8">
       <PrivacyNotice />
       <form onSubmit={handleSubmit} className="space-y-4">
+        <Select
+          value={category}
+          onValueChange={(value: typeof category) => setCategory(value)}
+        >
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Select a category" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="personal">Personal</SelectItem>
+            <SelectItem value="work">Work</SelectItem>
+            <SelectItem value="social">Social</SelectItem>
+            <SelectItem value="interests_and_hobbies">Interests & Hobbies</SelectItem>
+            <SelectItem value="school">School</SelectItem>
+          </SelectContent>
+        </Select>
         <Textarea
           value={content}
           onChange={(e) => setContent(e.target.value)}
