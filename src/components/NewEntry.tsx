@@ -6,6 +6,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./AuthProvider";
 import { PrivacyNotice } from "./PrivacyNotice";
+import { Squares } from "@/components/ui/squares-background";
 
 export const NewEntry = () => {
   const [content, setContent] = useState("");
@@ -67,33 +68,42 @@ export const NewEntry = () => {
   };
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] flex flex-col items-center justify-center p-6">
-      <div className="w-full max-w-2xl space-y-6">
+    <div className="relative min-h-[calc(100vh-4rem)] flex flex-col items-center justify-center p-6">
+      <div className="absolute inset-0 -z-10">
+        <Squares 
+          direction="diagonal"
+          speed={0.5}
+          squareSize={40}
+          borderColor="#333" 
+          hoverFillColor="#222"
+        />
+      </div>
+      <div className="w-full max-w-2xl space-y-6 z-10">
         <div className="text-center space-y-2">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+          <h1 className="text-3xl font-bold text-white">
             AI Journal Assistant
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-gray-400">
             Share your thoughts, and I'll help organize and analyze them
           </p>
         </div>
 
-        <div className="rounded-xl border bg-card p-6 shadow-lg backdrop-blur-lg">
+        <div className="rounded-xl border bg-black/50 backdrop-blur-xl p-6 shadow-lg">
           <form onSubmit={handleSubmit} className="space-y-4">
             <Textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
               placeholder="Write your entry here... I'll help categorize and analyze it"
-              className="min-h-[200px] text-base resize-none bg-background/50"
+              className="min-h-[200px] text-base resize-none bg-black/50 border-gray-800 text-white placeholder:text-gray-500"
             />
             <div className="flex items-center justify-between">
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-gray-400">
                 Your entry will be processed with AI to help organize your thoughts
               </p>
               <Button 
                 type="submit" 
                 disabled={loading || !content.trim()}
-                className="relative overflow-hidden"
+                className="relative overflow-hidden bg-white/10 hover:bg-white/20 text-white"
               >
                 {loading ? "Processing..." : "Save Entry"}
               </Button>
