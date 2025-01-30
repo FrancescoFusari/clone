@@ -68,14 +68,13 @@ export const NewEntry = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center relative">
+    <div className="relative min-h-screen flex items-center justify-center">
       <BackgroundCircles 
-        variant="quaternary"
         className="absolute inset-0"
       />
       
-      <div className="w-full max-w-2xl mx-auto p-6 relative z-10">
-        <div className="rounded-xl border bg-white/80 dark:bg-black/50 backdrop-blur-lg p-6 shadow-lg">
+      <div className="w-full max-w-md mx-auto px-4 sm:px-6 relative z-10">
+        <div className="rounded-xl border bg-white/80 dark:bg-black/50 backdrop-blur-lg p-4 sm:p-6 shadow-lg">
           <form onSubmit={handleSubmit} className="space-y-4">
             <Textarea
               value={content}
@@ -83,14 +82,14 @@ export const NewEntry = () => {
               placeholder="Write your entry here... I'll help categorize and analyze it"
               className="min-h-[200px] text-base resize-none bg-white/50 dark:bg-black/20"
             />
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-slate-600 dark:text-slate-400">
-                Your entry will be processed with AI to help organize your thoughts
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              <p className="text-sm text-slate-600 dark:text-slate-400 text-center sm:text-left">
+                Your entry will be processed with AI
               </p>
               <Button 
                 type="submit" 
                 disabled={loading || !content.trim()}
-                className="relative overflow-hidden"
+                className="w-full sm:w-auto"
               >
                 {loading ? "Processing..." : "Save Entry"}
               </Button>
