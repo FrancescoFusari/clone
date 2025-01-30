@@ -21,7 +21,7 @@ export const PrivacyNotice = () => {
         .from('user_consent')
         .select('ai_processing_consent')
         .eq('user_id', session.user.id)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error('Error checking consent:', error);
