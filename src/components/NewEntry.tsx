@@ -70,23 +70,12 @@ export const NewEntry = () => {
   return (
     <div className="fixed inset-0 overflow-hidden">
       <BackgroundCircles 
-        title="AI Journal Assistant"
-        description="Share your thoughts, and I'll help organize and analyze them"
         variant="quaternary"
         className="absolute inset-0"
       />
       
       <div className="relative z-10 flex items-center justify-center h-full p-6">
         <div className="w-full max-w-2xl">
-          <div className="text-center mb-6">
-            <h1 className="text-3xl font-bold tracking-tight md:text-4xl bg-gradient-to-b from-slate-950 to-slate-700 dark:from-slate-100 dark:to-slate-300 bg-clip-text text-transparent">
-              AI Journal Assistant
-            </h1>
-            <p className="mt-2 text-base md:text-lg text-slate-600 dark:text-slate-400">
-              Share your thoughts, and I'll help organize and analyze them
-            </p>
-          </div>
-
           <div className="rounded-xl border bg-white/80 dark:bg-black/50 backdrop-blur-lg p-6 shadow-lg">
             <form onSubmit={handleSubmit} className="space-y-4">
               <Textarea
