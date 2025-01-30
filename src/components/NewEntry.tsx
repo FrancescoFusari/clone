@@ -16,23 +16,12 @@ export const NewEntry = () => {
 
   const processEntry = async (content: string) => {
     try {
-      const response = await fetch(
-        "https://bupbikzhhouzlwzpkwxp.functions.supabase.co/process-entry",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${process.env.SUPABASE_ANON_KEY}`,
-          },
-          body: JSON.stringify({ content }),
-        }
-      );
+      const { data, error } = await supabase.functions.invoke('process-entry', {
+        body: { content }
+      });
 
-      if (!response.ok) {
-        throw new Error("Failed to process entry");
-      }
-
-      const data = await response.json();
+      if (error) throw error;
+      console.log("Processed data:", data);
       return data;
     } catch (error) {
       console.error("Error processing entry:", error);
