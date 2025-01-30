@@ -81,10 +81,10 @@ export const NewEntry = () => {
       <div className="w-full max-w-2xl space-y-6 z-10">
         <div className="text-center space-y-2">
           <h1 className="text-3xl font-bold text-white">
-            AI Journal Assistant
+            Share your thoughts
           </h1>
           <p className="text-gray-400">
-            Share your thoughts, and I'll help organize and analyze them
+            I'll help organize and analyze them
           </p>
         </div>
 
