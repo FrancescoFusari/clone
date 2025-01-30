@@ -5,8 +5,6 @@ import clsx from "clsx";
 import { useState } from "react";
 
 interface BackgroundCirclesProps {
-    title?: string;
-    description?: string;
     className?: string;
     variant?: keyof typeof COLOR_VARIANTS;
 }
@@ -95,8 +93,6 @@ const AnimatedGrid = () => (
 );
 
 export function BackgroundCircles({
-    title = "Background Circles",
-    description = "Optional Description",
     className,
     variant = "octonary",
 }: BackgroundCirclesProps) {
@@ -143,32 +139,6 @@ export function BackgroundCircles({
                         />
                     </motion.div>
                 ))}
-            </motion.div>
-
-            <motion.div
-                className="relative z-10 text-center"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, ease: "easeOut" }}
-            >
-                <h1
-                    className={clsx(
-                        "text-5xl font-bold tracking-tight md:text-7xl",
-                        "bg-gradient-to-b from-slate-950 to-slate-700 dark:from-slate-100 dark:to-slate-300 bg-clip-text text-transparent",
-                        "drop-shadow-[0_0_32px_rgba(94,234,212,0.4)]"
-                    )}
-                >
-                    {title}
-                </h1>
-
-                <motion.p
-                    className="mt-6 text-lg md:text-xl dark:text-white text-slate-950"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.2 }}
-                >
-                    {description}
-                </motion.p>
             </motion.div>
 
             <div className="absolute inset-0 [mask-image:radial-gradient(90%_60%_at_50%_50%,#000_40%,transparent)]">
