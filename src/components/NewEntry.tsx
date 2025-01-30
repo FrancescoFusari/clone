@@ -68,9 +68,9 @@ export const NewEntry = () => {
   };
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center">
+    <div className="fixed inset-0 flex items-center justify-center">
       <BackgroundCircles 
-        className="absolute inset-0"
+        className="fixed inset-0"
       />
       
       <div className="w-full max-w-md mx-auto px-4 sm:px-6 relative z-10">
