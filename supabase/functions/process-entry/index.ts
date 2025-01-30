@@ -7,7 +7,6 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
@@ -21,7 +20,6 @@ serve(async (req) => {
       throw new Error('OpenAI API key not configured')
     }
 
-    // Initialize OpenAI
     const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -33,7 +31,7 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `You are an AI that categorizes and summarizes journal entries. 
+            content: `You are an AI that analyzes journal entries. 
             Analyze the entry and return a JSON object with the following structure:
             {
               "category": one of ["personal", "work", "social", "interests_and_hobbies", "school"],
@@ -44,7 +42,7 @@ serve(async (req) => {
           },
           {
             role: 'user',
-            content: content
+            content
           }
         ]
       })

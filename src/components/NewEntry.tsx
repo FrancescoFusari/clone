@@ -6,68 +6,83 @@ import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./AuthProvider";
 import { PrivacyNotice } from "./PrivacyNotice";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 export const NewEntry = () => {
   const [content, setContent] = useState("");
-  const [category, setCategory] = useState<"personal" | "work" | "social" | "interests_and_hobbies" | "school">("personal");
   const [loading, setLoading] = useState(false);
   const { session } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  const processEntry = async (content: string) => {
+    try {
+      const response = await fetch(
+        "https://bupbikzhhouzlwzpkwxp.functions.supabase.co/process-entry",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${process.env.SUPABASE_ANON_KEY}`,
+          },
+          body: JSON.stringify({ content }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to process entry");
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error("Error processing entry:", error);
+      throw error;
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!content.trim() || !session?.user.id) return;
 
     setLoading(true);
-    const { error } = await supabase.from("entries").insert({
-      content,
-      category,
-      user_id: session.user.id,
-    });
+    try {
+      // Process the entry with AI
+      const processedData = await processEntry(content);
+      console.log("Processed data:", processedData);
 
-    if (error) {
-      toast({
-        title: "Error",
-        description: "Failed to save entry. Please try again.",
-        variant: "destructive",
+      // Save entry with AI-generated metadata
+      const { error } = await supabase.from("entries").insert({
+        content,
+        user_id: session.user.id,
+        category: processedData.category,
+        subcategory: processedData.subcategory,
+        summary: processedData.summary,
+        tags: processedData.tags,
       });
-    } else {
+
+      if (error) throw error;
+
       toast({
         title: "Success",
         description: "Entry saved successfully!",
       });
       navigate("/");
+    } catch (error) {
+      console.error("Error saving entry:", error);
+      toast({
+        title: "Error",
+        description: "Failed to save entry. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
     <div className="container max-w-2xl py-8">
       <PrivacyNotice />
       <form onSubmit={handleSubmit} className="space-y-4">
-        <Select
-          value={category}
-          onValueChange={(value: typeof category) => setCategory(value)}
-        >
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Select a category" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="personal">Personal</SelectItem>
-            <SelectItem value="work">Work</SelectItem>
-            <SelectItem value="social">Social</SelectItem>
-            <SelectItem value="interests_and_hobbies">Interests & Hobbies</SelectItem>
-            <SelectItem value="school">School</SelectItem>
-          </SelectContent>
-        </Select>
         <Textarea
           value={content}
           onChange={(e) => setContent(e.target.value)}
@@ -75,7 +90,7 @@ export const NewEntry = () => {
           className="min-h-[200px]"
         />
         <Button type="submit" disabled={loading || !content.trim()}>
-          {loading ? "Saving..." : "Save Entry"}
+          {loading ? "Processing and Saving..." : "Save Entry"}
         </Button>
       </form>
     </div>
