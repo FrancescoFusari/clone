@@ -14,6 +14,26 @@ import {
 } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 
+const formatContent = (text: string) => {
+  // Split text into paragraphs
+  const paragraphs = text.split(/\n\s*\n/);
+  
+  // Format each paragraph
+  return paragraphs.map((paragraph, index) => {
+    // Remove extra whitespace and newlines within paragraphs
+    const formattedParagraph = paragraph
+      .trim()
+      .replace(/\s+/g, ' ')
+      .replace(/\n/g, ' ');
+    
+    return formattedParagraph.length > 0 ? (
+      <p key={index} className="mb-4">
+        {formattedParagraph}
+      </p>
+    ) : null;
+  });
+};
+
 const EntryDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -90,14 +110,14 @@ const EntryDetails = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="prose max-w-none mb-6">
-            <p className="text-lg">{entry.content}</p>
+          <div className="prose max-w-none mb-6 dark:prose-invert">
+            {formatContent(entry.content)}
           </div>
 
           {entry.summary && (
             <div className="mb-6">
               <h3 className="text-lg font-semibold mb-2">AI Summary</h3>
-              <p className="text-gray-600">{entry.summary}</p>
+              <p className="text-muted-foreground">{entry.summary}</p>
             </div>
           )}
 
