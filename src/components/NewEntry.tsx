@@ -68,7 +68,7 @@ export const NewEntry = () => {
   };
 
   return (
-    <div className="relative min-h-screen">
+    <div className="fixed inset-0 overflow-hidden">
       <BackgroundCircles 
         title="AI Journal Assistant"
         description="Share your thoughts, and I'll help organize and analyze them"
@@ -76,7 +76,7 @@ export const NewEntry = () => {
         className="absolute inset-0"
       />
       
-      <div className="relative z-10 flex flex-col items-center justify-center min-h-screen p-6">
+      <div className="relative z-10 flex items-center justify-center h-full p-6">
         <div className="w-full max-w-2xl space-y-6">
           <div className="rounded-xl border bg-white/80 dark:bg-black/50 backdrop-blur-lg p-6 shadow-lg">
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -101,7 +101,7 @@ export const NewEntry = () => {
             </form>
           </div>
 
-          <div className="mt-8">
+          <div className="mt-4">
             <PrivacyNotice />
           </div>
         </div>
