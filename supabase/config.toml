@@ -1,1 +1,10 @@
 project_id = "bupbikzhhouzlwzpkwxp"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "storage", "graphql_public"]
+
+[[functions]]
+name = "process-entry"
+verify_jwt = true

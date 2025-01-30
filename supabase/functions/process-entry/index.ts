@@ -1,0 +1,65 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import "https://deno.land/x/xhr@0.1.0/mod.ts"
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4'
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
+
+serve(async (req) => {
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders })
+  }
+
+  try {
+    const { content } = await req.json()
+
+    // Initialize OpenAI
+    const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [
+          {
+            role: 'system',
+            content: `You are an AI that categorizes and summarizes journal entries. 
+            Analyze the entry and return a JSON object with the following structure:
+            {
+              "category": one of ["personal", "work", "social", "interests_and_hobbies", "school"],
+              "subcategory": a specific subcategory based on the content,
+              "tags": an array of relevant keywords (max 5),
+              "summary": a brief 1-2 sentence summary of the entry
+            }`
+          },
+          {
+            role: 'user',
+            content: content
+          }
+        ]
+      })
+    })
+
+    const aiResult = await openAIResponse.json()
+    const processedData = JSON.parse(aiResult.choices[0].message.content)
+
+    return new Response(
+      JSON.stringify(processedData),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
+  } catch (error) {
+    console.error('Error:', error)
+    return new Response(
+      JSON.stringify({ error: error.message }),
+      { 
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      }
+    )
+  }
+})

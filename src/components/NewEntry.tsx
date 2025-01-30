@@ -3,10 +3,15 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "./AuthProvider";
+import { Loader2 } from "lucide-react";
 
 export const NewEntry = () => {
   const [content, setContent] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+  const { session } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -19,12 +24,44 @@ export const NewEntry = () => {
       return;
     }
 
-    // TODO: Implement actual submission logic
-    toast({
-      title: "Success",
-      description: "Entry saved successfully",
-    });
-    setContent("");
+    setIsSubmitting(true);
+    try {
+      // Process entry with AI
+      const { data: processedData, error: aiError } = await supabase.functions.invoke('process-entry', {
+        body: { content }
+      });
+
+      if (aiError) throw aiError;
+
+      // Save to database
+      const { error: dbError } = await supabase
+        .from('entries')
+        .insert({
+          content,
+          user_id: session?.user.id,
+          category: processedData.category,
+          subcategory: processedData.subcategory,
+          tags: processedData.tags,
+          summary: processedData.summary
+        });
+
+      if (dbError) throw dbError;
+
+      toast({
+        title: "Success",
+        description: "Entry saved successfully",
+      });
+      setContent("");
+    } catch (error) {
+      console.error('Error saving entry:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save entry. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -37,9 +74,21 @@ export const NewEntry = () => {
             onChange={(e) => setContent(e.target.value)}
             placeholder="What's on your mind?"
             className="min-h-[200px] resize-none"
+            disabled={isSubmitting}
           />
-          <Button type="submit" className="w-full">
-            Save Entry
+          <Button 
+            type="submit" 
+            className="w-full"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Processing...
+              </>
+            ) : (
+              'Save Entry'
+            )}
           </Button>
         </form>
       </Card>

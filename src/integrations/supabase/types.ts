@@ -9,6 +9,39 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      entries: {
+        Row: {
+          category: Database["public"]["Enums"]["entry_category"]
+          content: string
+          created_at: string
+          id: string
+          subcategory: string | null
+          summary: string | null
+          tags: string[] | null
+          user_id: string
+        }
+        Insert: {
+          category: Database["public"]["Enums"]["entry_category"]
+          content: string
+          created_at?: string
+          id?: string
+          subcategory?: string | null
+          summary?: string | null
+          tags?: string[] | null
+          user_id: string
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["entry_category"]
+          content?: string
+          created_at?: string
+          id?: string
+          subcategory?: string | null
+          summary?: string | null
+          tags?: string[] | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -41,7 +74,12 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      entry_category:
+        | "personal"
+        | "work"
+        | "social"
+        | "interests_and_hobbies"
+        | "school"
     }
     CompositeTypes: {
       [_ in never]: never
