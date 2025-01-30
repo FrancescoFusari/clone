@@ -141,6 +141,15 @@ serve(async (req) => {
     }
     const supabase = createClient(supabaseUrl, supabaseKey)
 
+    // Get popular tags for context
+    const { data: popularTags } = await supabase
+      .from('tag_analytics')
+      .select('tag')
+      .order('usage_count', { ascending: false })
+      .limit(10);
+
+    const popularTagsList = popularTags?.map(t => t.tag).join(', ') || '';
+
     const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -153,6 +162,8 @@ serve(async (req) => {
           {
             role: 'system',
             content: `You are an AI that analyzes journal entries. 
+            Here are the most popular tags currently in use: ${popularTagsList}
+            When suggesting tags, prefer to reuse existing tags when they fit well.
             Analyze the entry and return a JSON object with the following structure:
             {
               "category": one of ["personal", "work", "social", "interests_and_hobbies", "school"],
