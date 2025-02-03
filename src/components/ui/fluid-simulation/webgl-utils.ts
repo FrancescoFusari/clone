@@ -10,9 +10,8 @@ export function getWebGLContext(canvas: HTMLCanvasElement) {
   };
 
   let gl = canvas.getContext("webgl2", params) as WebGL2RenderingContext;
-  const isWebGL2 = !!gl;
   
-  if (!isWebGL2) {
+  if (!gl) {
     gl = (canvas.getContext("webgl", params) ||
       canvas.getContext("experimental-webgl", params)) as WebGL2RenderingContext;
   }
@@ -27,27 +26,25 @@ export function getWebGLContext(canvas: HTMLCanvasElement) {
   let halfFloat;
   let supportLinearFiltering;
   
-  if (isWebGL2) {
-    gl.getExtension("EXT_color_buffer_float");
-    supportLinearFiltering = gl.getExtension("OES_texture_float_linear");
-  } else {
-    halfFloat = gl.getExtension("OES_texture_half_float");
-    supportLinearFiltering = gl.getExtension("OES_texture_half_float_linear");
-  }
+  halfFloat = gl.getExtension("OES_texture_half_float");
+  supportLinearFiltering = gl.getExtension("OES_texture_half_float_linear");
 
   gl.clearColor(0.0, 0.0, 0.0, 1.0);
+  gl.enable(gl.BLEND);
+  gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+  gl.disable(gl.DEPTH_TEST);
 
-  const halfFloatTexType = isWebGL2 ? gl.HALF_FLOAT : halfFloat?.HALF_FLOAT_OES;
+  const ext = {
+    formatRGBA: getSupportedFormat(gl, gl.RGBA, gl.RGBA, halfFloat?.HALF_FLOAT),
+    formatRG: getSupportedFormat(gl, gl.RGBA, gl.RGBA, halfFloat?.HALF_FLOAT),
+    formatR: getSupportedFormat(gl, gl.RGBA, gl.RGBA, halfFloat?.HALF_FLOAT),
+    halfFloatTexType: halfFloat?.HALF_FLOAT,
+    supportLinearFiltering,
+  };
 
   return {
     gl,
-    ext: {
-      formatRGBA: getSupportedFormat(gl, gl.RGBA16F, gl.RGBA, halfFloatTexType),
-      formatRG: getSupportedFormat(gl, gl.RG16F, gl.RG, halfFloatTexType),
-      formatR: getSupportedFormat(gl, gl.R16F, gl.RED, halfFloatTexType),
-      halfFloatTexType,
-      supportLinearFiltering,
-    },
+    ext,
   };
 }
 
@@ -75,7 +72,8 @@ export function compileShader(type: number, source: string, keywords: string[] =
   gl.compileShader(shader);
 
   if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-    console.trace(gl.getShaderInfoLog(shader));
+    console.error('Shader compilation error:', gl.getShaderInfoLog(shader));
+    throw new Error('Shader compilation failed');
   }
 
   return shader;
@@ -93,7 +91,8 @@ export function createProgram(vertexShader: WebGLShader, fragmentShader: WebGLSh
   gl.linkProgram(program);
 
   if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-    console.trace(gl.getProgramInfoLog(program));
+    console.error('Program linking error:', gl.getProgramInfoLog(program));
+    throw new Error('Program linking failed');
   }
 
   return program;
@@ -101,11 +100,11 @@ export function createProgram(vertexShader: WebGLShader, fragmentShader: WebGLSh
 
 export function getUniforms(program: WebGLProgram) {
   const gl = getGLContext();
-  const uniforms: Record<string, WebGLUniformLocation> = {};
-  const uniformCount = gl.getProgramParameter(program, gl.ACTIVE_UNIFORMS);
+  let uniforms: { [key: string]: WebGLUniformLocation } = {};
+  let uniformCount = gl.getProgramParameter(program, gl.ACTIVE_UNIFORMS);
 
   for (let i = 0; i < uniformCount; i++) {
-    const uniformName = gl.getActiveUniform(program, i)?.name;
+    let uniformName = gl.getActiveUniform(program, i)?.name;
     if (uniformName) {
       uniforms[uniformName] = gl.getUniformLocation(program, uniformName) as WebGLUniformLocation;
     }
@@ -143,7 +142,7 @@ function supportRenderTextureFormat(gl: WebGL2RenderingContext, internalFormat: 
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
   gl.texImage2D(gl.TEXTURE_2D, 0, internalFormat, 4, 4, 0, format, type, null);
 
-  const fbo = gl.createFramebuffer();
+  let fbo = gl.createFramebuffer();
   gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
   gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
 
@@ -157,13 +156,14 @@ export function hashCode(s: string): number {
   let hash = 0;
   for (let i = 0; i < s.length; i++) {
     hash = ((hash << 5) - hash) + s.charCodeAt(i);
-    hash |= 0; // Convert to 32bit integer
+    hash |= 0; // Convert to 32-bit integer
   }
   return hash;
 }
 
 export function addKeywords(source: string, keywords: string[]): string {
-  if (keywords == null) return source;
+  if (keywords.length === 0) return source;
+
   let keywordsString = '';
   keywords.forEach(keyword => {
     keywordsString += '#define ' + keyword + '\n';

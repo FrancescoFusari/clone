@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef } from "react";
 import { Config } from "./fluid-simulation/types";
-import { getWebGLContext, setGLContext, compileShader } from "./fluid-simulation/webgl-utils";
+import { getWebGLContext, compileShader } from "./fluid-simulation/webgl-utils";
 import { MaterialClass } from "./fluid-simulation/material";
 import { ProgramClass } from "./fluid-simulation/program";
 import { Pointer } from "./fluid-simulation/pointer";
@@ -41,9 +41,24 @@ function SplashCursor({
     const canvas = canvasRef.current;
     if (!canvas) return;
 
+    // Set initial canvas size
+    canvas.width = canvas.clientWidth;
+    canvas.height = canvas.clientHeight;
+
+    // Initialize WebGL context
     const { gl, ext } = getWebGLContext(canvas);
-    
+    if (!gl) {
+      console.error('WebGL not supported');
+      return;
+    }
+
+    console.log('WebGL context initialized:', gl);
+
+    // Create shaders
     const baseVertex = compileShader(gl.VERTEX_SHADER, baseVertexShader, []);
+    console.log('Base vertex shader compiled');
+
+    // Initialize programs
     const copyProgram = new ProgramClass(baseVertex, compileShader(gl.FRAGMENT_SHADER, copyShader, []));
     const clearProgram = new ProgramClass(baseVertex, compileShader(gl.FRAGMENT_SHADER, clearShader, []));
     const displayMaterial = new MaterialClass(baseVertex, displayShaderSource);
@@ -54,6 +69,8 @@ function SplashCursor({
     const vorticityProgram = new ProgramClass(baseVertex, compileShader(gl.FRAGMENT_SHADER, vorticityShader, []));
     const pressureProgram = new ProgramClass(baseVertex, compileShader(gl.FRAGMENT_SHADER, pressureShader, []));
     const gradientSubtractProgram = new ProgramClass(baseVertex, compileShader(gl.FRAGMENT_SHADER, gradientSubtractShader, []));
+
+    console.log('All programs initialized');
 
     let dye, velocity, divergence, curl, pressure;
 
@@ -715,11 +732,19 @@ function SplashCursor({
   ]);
 
   return (
-    <div className="fixed top-0 left-0 z-50 pointer-events-none">
-      <canvas ref={canvasRef} id="fluid" className="w-screen h-screen" />
+    <div className="fixed inset-0 -z-10 pointer-events-none">
+      <canvas 
+        ref={canvasRef}
+        style={{
+          width: '100%',
+          height: '100%',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+        }}
+      />
     </div>
   );
 }
 
 export { SplashCursor };
-
