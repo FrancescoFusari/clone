@@ -26,21 +26,30 @@ export function getWebGLContext(canvas: HTMLCanvasElement) {
   let halfFloat;
   let supportLinearFiltering;
   
-  halfFloat = gl.getExtension("OES_texture_half_float");
-  supportLinearFiltering = gl.getExtension("OES_texture_half_float_linear");
+  if (gl instanceof WebGL2RenderingContext) {
+    halfFloat = gl.HALF_FLOAT;
+    supportLinearFiltering = true;
+  } else {
+    halfFloat = gl.getExtension("OES_texture_half_float");
+    supportLinearFiltering = gl.getExtension("OES_texture_half_float_linear");
+  }
 
   gl.clearColor(0.0, 0.0, 0.0, 1.0);
   gl.enable(gl.BLEND);
   gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
   gl.disable(gl.DEPTH_TEST);
 
+  console.log('Initializing WebGL formats...');
+
   const ext = {
-    formatRGBA: getSupportedFormat(gl, gl.RGBA, gl.RGBA, halfFloat?.HALF_FLOAT),
-    formatRG: getSupportedFormat(gl, gl.RGBA, gl.RGBA, halfFloat?.HALF_FLOAT),
-    formatR: getSupportedFormat(gl, gl.RGBA, gl.RGBA, halfFloat?.HALF_FLOAT),
-    halfFloatTexType: halfFloat?.HALF_FLOAT,
+    formatRGBA: getSupportedFormat(gl, gl.RGBA, gl.RGBA, halfFloat?.HALF_FLOAT_OES || halfFloat),
+    formatRG: getSupportedFormat(gl, gl.RGBA, gl.RGBA, halfFloat?.HALF_FLOAT_OES || halfFloat),
+    formatR: getSupportedFormat(gl, gl.RGBA, gl.RGBA, halfFloat?.HALF_FLOAT_OES || halfFloat),
+    halfFloatTexType: halfFloat?.HALF_FLOAT_OES || halfFloat,
     supportLinearFiltering,
   };
+
+  console.log('WebGL formats initialized:', ext);
 
   return {
     gl,
@@ -114,14 +123,34 @@ export function getUniforms(program: WebGLProgram) {
 }
 
 function getSupportedFormat(gl: WebGL2RenderingContext, internalFormat: number, format: number, type: number | undefined) {
+  if (!type) {
+    console.warn('Texture type is undefined, falling back to UNSIGNED_BYTE');
+    type = gl.UNSIGNED_BYTE;
+  }
+
   if (!supportRenderTextureFormat(gl, internalFormat, format, type)) {
-    switch (internalFormat) {
-      case gl.R16F:
-        return getSupportedFormat(gl, gl.RG16F, gl.RG, type);
-      case gl.RG16F:
-        return getSupportedFormat(gl, gl.RGBA16F, gl.RGBA, type);
-      default:
-        return null;
+    // Try different format combinations
+    if (gl instanceof WebGL2RenderingContext) {
+      switch (internalFormat) {
+        case gl.R16F:
+          return getSupportedFormat(gl, gl.RG16F, gl.RG, type);
+        case gl.RG16F:
+          return getSupportedFormat(gl, gl.RGBA16F, gl.RGBA, type);
+        case gl.RGBA16F:
+          return getSupportedFormat(gl, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE);
+        default:
+          console.warn('No supported format found, using RGBA/UNSIGNED_BYTE');
+          return {
+            internalFormat: gl.RGBA,
+            format: gl.RGBA
+          };
+      }
+    } else {
+      // WebGL 1 fallback
+      return {
+        internalFormat: gl.RGBA,
+        format: gl.RGBA
+      };
     }
   }
 
@@ -131,9 +160,7 @@ function getSupportedFormat(gl: WebGL2RenderingContext, internalFormat: number, 
   };
 }
 
-function supportRenderTextureFormat(gl: WebGL2RenderingContext, internalFormat: number, format: number, type: number | undefined) {
-  if (!type) return false;
-  
+function supportRenderTextureFormat(gl: WebGL2RenderingContext, internalFormat: number, format: number, type: number): boolean {
   const texture = gl.createTexture();
   gl.bindTexture(gl.TEXTURE_2D, texture);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
@@ -142,11 +169,17 @@ function supportRenderTextureFormat(gl: WebGL2RenderingContext, internalFormat: 
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
   gl.texImage2D(gl.TEXTURE_2D, 0, internalFormat, 4, 4, 0, format, type, null);
 
-  let fbo = gl.createFramebuffer();
+  const fbo = gl.createFramebuffer();
   gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
   gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
 
   const status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+  
+  // Cleanup
+  gl.deleteTexture(texture);
+  gl.deleteFramebuffer(fbo);
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
   return status === gl.FRAMEBUFFER_COMPLETE;
 }
 
