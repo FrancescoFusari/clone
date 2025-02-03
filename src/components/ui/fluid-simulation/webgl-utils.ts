@@ -1,3 +1,5 @@
+let glContext: WebGL2RenderingContext | null = null;
+
 export function getWebGLContext(canvas: HTMLCanvasElement) {
   const params = {
     alpha: true,
@@ -14,6 +16,13 @@ export function getWebGLContext(canvas: HTMLCanvasElement) {
     gl = (canvas.getContext("webgl", params) ||
       canvas.getContext("experimental-webgl", params)) as WebGL2RenderingContext;
   }
+
+  if (!gl) {
+    throw new Error("WebGL not supported");
+  }
+
+  // Set the global context
+  setGLContext(gl);
 
   let halfFloat;
   let supportLinearFiltering;
@@ -42,18 +51,32 @@ export function getWebGLContext(canvas: HTMLCanvasElement) {
   };
 }
 
+export function setGLContext(gl: WebGL2RenderingContext) {
+  glContext = gl;
+}
+
+export function getGLContext(): WebGL2RenderingContext {
+  if (!glContext) {
+    throw new Error("WebGL context not initialized");
+  }
+  return glContext;
+}
+
 export function compileShader(type: number, source: string, keywords: string[] = []) {
   const gl = getGLContext();
   source = addKeywords(source, keywords);
 
   const shader = gl.createShader(type);
-  if (!shader) throw new Error('Failed to create shader');
+  if (!shader) {
+    throw new Error('Failed to create shader');
+  }
   
   gl.shaderSource(shader, source);
   gl.compileShader(shader);
 
-  if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS))
+  if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
     console.trace(gl.getShaderInfoLog(shader));
+  }
 
   return shader;
 }
@@ -61,14 +84,17 @@ export function compileShader(type: number, source: string, keywords: string[] =
 export function createProgram(vertexShader: WebGLShader, fragmentShader: WebGLShader) {
   const gl = getGLContext();
   const program = gl.createProgram();
-  if (!program) throw new Error('Failed to create program');
+  if (!program) {
+    throw new Error('Failed to create program');
+  }
   
   gl.attachShader(program, vertexShader);
   gl.attachShader(program, fragmentShader);
   gl.linkProgram(program);
 
-  if (!gl.getProgramParameter(program, gl.LINK_STATUS))
+  if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
     console.trace(gl.getProgramInfoLog(program));
+  }
 
   return program;
 }
@@ -88,7 +114,7 @@ export function getUniforms(program: WebGLProgram) {
   return uniforms;
 }
 
-function getSupportedFormat(gl: WebGL2RenderingContext, internalFormat: number, format: number, type: number) {
+function getSupportedFormat(gl: WebGL2RenderingContext, internalFormat: number, format: number, type: number | undefined) {
   if (!supportRenderTextureFormat(gl, internalFormat, format, type)) {
     switch (internalFormat) {
       case gl.R16F:
@@ -106,7 +132,9 @@ function getSupportedFormat(gl: WebGL2RenderingContext, internalFormat: number, 
   };
 }
 
-function supportRenderTextureFormat(gl: WebGL2RenderingContext, internalFormat: number, format: number, type: number) {
+function supportRenderTextureFormat(gl: WebGL2RenderingContext, internalFormat: number, format: number, type: number | undefined) {
+  if (!type) return false;
+  
   const texture = gl.createTexture();
   gl.bindTexture(gl.TEXTURE_2D, texture);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
@@ -121,17 +149,6 @@ function supportRenderTextureFormat(gl: WebGL2RenderingContext, internalFormat: 
 
   const status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
   return status === gl.FRAMEBUFFER_COMPLETE;
-}
-
-let glContext: WebGL2RenderingContext | null = null;
-
-export function setGLContext(gl: WebGL2RenderingContext) {
-  glContext = gl;
-}
-
-export function getGLContext(): WebGL2RenderingContext {
-  if (!glContext) throw new Error('WebGL context not initialized');
-  return glContext;
 }
 
 export function hashCode(s: string): number {
