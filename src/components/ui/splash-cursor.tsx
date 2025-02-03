@@ -1,10 +1,23 @@
 "use client";
 import { useEffect, useRef } from "react";
-import { Config, Pointer } from "./fluid-simulation/types";
-import { getWebGLContext } from "./fluid-simulation/webgl-utils";
+import { Config } from "./fluid-simulation/types";
+import { getWebGLContext, setGLContext, compileShader } from "./fluid-simulation/webgl-utils";
 import { MaterialClass } from "./fluid-simulation/material";
 import { ProgramClass } from "./fluid-simulation/program";
-import { baseVertexShader, copyShader, clearShader, displayShaderSource, splatShader, advectionShader, divergenceShader, curlShader, vorticityShader, pressureShader, gradientSubtractShader } from "./fluid-simulation/shaders";
+import { Pointer } from "./fluid-simulation/pointer";
+import {
+  baseVertexShader,
+  copyShader,
+  clearShader,
+  displayShaderSource,
+  splatShader,
+  advectionShader,
+  divergenceShader,
+  curlShader,
+  vorticityShader,
+  pressureShader,
+  gradientSubtractShader,
+} from "./fluid-simulation/shaders";
 
 function SplashCursor({
   SIM_RESOLUTION = 128,
@@ -709,3 +722,4 @@ function SplashCursor({
 }
 
 export { SplashCursor };
+
