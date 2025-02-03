@@ -9,51 +9,56 @@ export function getWebGLContext(canvas: HTMLCanvasElement) {
     preserveDrawingBuffer: false,
   };
 
-  let gl = canvas.getContext("webgl2", params) as WebGL2RenderingContext | null;
-  
-  if (!gl) {
-    gl = (canvas.getContext("webgl", params) ||
-      canvas.getContext("experimental-webgl", params)) as WebGLRenderingContext | null;
+  // Try WebGL2 first
+  const gl2 = canvas.getContext("webgl2", params);
+  if (gl2) {
+    console.log('Using WebGL 2.0');
+    setGLContext(gl2);
+    return {
+      gl: gl2,
+      ext: getWebGL2Extensions(gl2),
+    };
   }
 
-  if (!gl) {
+  // Fallback to WebGL1
+  const gl1 = canvas.getContext("webgl", params) || 
+              canvas.getContext("experimental-webgl", params);
+  
+  if (!gl1) {
     throw new Error("WebGL not supported");
   }
 
-  // Set the global context
-  setGLContext(gl);
-
-  let halfFloat;
-  let supportLinearFiltering;
-  
-  if (gl instanceof WebGL2RenderingContext) {
-    halfFloat = gl.HALF_FLOAT;
-    supportLinearFiltering = true;
-  } else {
-    halfFloat = gl.getExtension("OES_texture_half_float");
-    supportLinearFiltering = gl.getExtension("OES_texture_half_float_linear");
-  }
-
-  gl.clearColor(0.0, 0.0, 0.0, 1.0);
-  gl.enable(gl.BLEND);
-  gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-  gl.disable(gl.DEPTH_TEST);
-
-  console.log('Initializing WebGL formats...');
-
-  const ext = {
-    formatRGBA: getSupportedFormat(gl, gl.RGBA, gl.RGBA, halfFloat?.HALF_FLOAT_OES || halfFloat),
-    formatRG: getSupportedFormat(gl, gl.RGBA, gl.RGBA, halfFloat?.HALF_FLOAT_OES || halfFloat),
-    formatR: getSupportedFormat(gl, gl.RGBA, gl.RGBA, halfFloat?.HALF_FLOAT_OES || halfFloat),
-    halfFloatTexType: halfFloat?.HALF_FLOAT_OES || halfFloat,
-    supportLinearFiltering,
+  console.log('Using WebGL 1.0');
+  setGLContext(gl1);
+  return {
+    gl: gl1,
+    ext: getWebGL1Extensions(gl1),
   };
+}
 
-  console.log('WebGL formats initialized:', ext);
+function getWebGL2Extensions(gl: WebGL2RenderingContext) {
+  const halfFloat = gl.HALF_FLOAT;
+  const supportLinearFiltering = true;
 
   return {
-    gl,
-    ext,
+    formatRGBA: getSupportedFormat(gl, gl.RGBA16F, gl.RGBA, halfFloat),
+    formatRG: getSupportedFormat(gl, gl.RG16F, gl.RG, halfFloat),
+    formatR: getSupportedFormat(gl, gl.R16F, gl.RED, halfFloat),
+    halfFloatTexType: halfFloat,
+    supportLinearFiltering,
+  };
+}
+
+function getWebGL1Extensions(gl: WebGLRenderingContext) {
+  const halfFloat = gl.getExtension('OES_texture_half_float');
+  const supportLinearFiltering = gl.getExtension('OES_texture_half_float_linear');
+
+  return {
+    formatRGBA: getSupportedFormat(gl, gl.RGBA, gl.RGBA, halfFloat?.HALF_FLOAT_OES || gl.UNSIGNED_BYTE),
+    formatRG: getSupportedFormat(gl, gl.RGBA, gl.RGBA, halfFloat?.HALF_FLOAT_OES || gl.UNSIGNED_BYTE),
+    formatR: getSupportedFormat(gl, gl.RGBA, gl.RGBA, halfFloat?.HALF_FLOAT_OES || gl.UNSIGNED_BYTE),
+    halfFloatTexType: halfFloat?.HALF_FLOAT_OES || gl.UNSIGNED_BYTE,
+    supportLinearFiltering: !!supportLinearFiltering,
   };
 }
 
@@ -122,36 +127,13 @@ export function getUniforms(program: WebGLProgram) {
   return uniforms;
 }
 
-function getSupportedFormat(gl: WebGL2RenderingContext | WebGLRenderingContext, internalFormat: number, format: number, type: number | undefined) {
-  if (!type) {
-    console.warn('Texture type is undefined, falling back to UNSIGNED_BYTE');
-    type = gl.UNSIGNED_BYTE;
-  }
-
+function getSupportedFormat(gl: WebGL2RenderingContext | WebGLRenderingContext, internalFormat: number, format: number, type: number) {
   if (!supportRenderTextureFormat(gl, internalFormat, format, type)) {
-    // Try different format combinations
-    if (gl instanceof WebGL2RenderingContext) {
-      switch (internalFormat) {
-        case gl.R16F:
-          return getSupportedFormat(gl, gl.RG16F, gl.RG, type);
-        case gl.RG16F:
-          return getSupportedFormat(gl, gl.RGBA16F, gl.RGBA, type);
-        case gl.RGBA16F:
-          return getSupportedFormat(gl, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE);
-        default:
-          console.warn('No supported format found, using RGBA/UNSIGNED_BYTE');
-          return {
-            internalFormat: gl.RGBA,
-            format: gl.RGBA
-          };
-      }
-    } else {
-      // WebGL 1 fallback
-      return {
-        internalFormat: gl.RGBA,
-        format: gl.RGBA
-      };
-    }
+    // Fallback to RGBA/UNSIGNED_BYTE
+    return {
+      internalFormat: gl.RGBA,
+      format: gl.RGBA
+    };
   }
 
   return {
