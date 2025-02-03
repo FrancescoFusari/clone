@@ -144,3 +144,12 @@ export function hashCode(s: string): number {
   }
   return hash;
 }
+
+export function addKeywords(source: string, keywords: string[]): string {
+  if (keywords == null) return source;
+  let keywordsString = '';
+  keywords.forEach(keyword => {
+    keywordsString += '#define ' + keyword + '\n';
+  });
+  return keywordsString + source;
+}

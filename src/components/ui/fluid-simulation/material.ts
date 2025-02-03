@@ -1,5 +1,5 @@
 import { Material, MaterialUniforms } from './types';
-import { compileShader, createProgram, getUniforms } from './webgl-utils';
+import { compileShader, createProgram, getUniforms, getGLContext, hashCode } from './webgl-utils';
 
 export class MaterialClass implements Material {
   vertexShader: WebGLShader;
@@ -24,6 +24,7 @@ export class MaterialClass implements Material {
 
     let program = this.programs[hash];
     if (program == null) {
+      const gl = getGLContext();
       let fragmentShader = compileShader(
         gl.FRAGMENT_SHADER,
         this.fragmentShaderSource,
@@ -40,10 +41,9 @@ export class MaterialClass implements Material {
   }
 
   bind() {
+    const gl = getGLContext();
     if (this.activeProgram) {
       gl.useProgram(this.activeProgram);
     }
   }
 }
-
-// Add helper functions used by Material class
