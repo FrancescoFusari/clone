@@ -1,4 +1,4 @@
-let glContext: WebGL2RenderingContext | null = null;
+let glContext: WebGL2RenderingContext | WebGLRenderingContext | null = null;
 
 export function getWebGLContext(canvas: HTMLCanvasElement) {
   const params = {
@@ -9,11 +9,11 @@ export function getWebGLContext(canvas: HTMLCanvasElement) {
     preserveDrawingBuffer: false,
   };
 
-  let gl = canvas.getContext("webgl2", params) as WebGL2RenderingContext;
+  let gl = canvas.getContext("webgl2", params) as WebGL2RenderingContext | null;
   
   if (!gl) {
     gl = (canvas.getContext("webgl", params) ||
-      canvas.getContext("experimental-webgl", params)) as WebGL2RenderingContext;
+      canvas.getContext("experimental-webgl", params)) as WebGLRenderingContext | null;
   }
 
   if (!gl) {
@@ -57,11 +57,11 @@ export function getWebGLContext(canvas: HTMLCanvasElement) {
   };
 }
 
-export function setGLContext(gl: WebGL2RenderingContext) {
+export function setGLContext(gl: WebGL2RenderingContext | WebGLRenderingContext) {
   glContext = gl;
 }
 
-export function getGLContext(): WebGL2RenderingContext {
+export function getGLContext(): WebGL2RenderingContext | WebGLRenderingContext {
   if (!glContext) {
     throw new Error("WebGL context not initialized");
   }
@@ -122,7 +122,7 @@ export function getUniforms(program: WebGLProgram) {
   return uniforms;
 }
 
-function getSupportedFormat(gl: WebGL2RenderingContext, internalFormat: number, format: number, type: number | undefined) {
+function getSupportedFormat(gl: WebGL2RenderingContext | WebGLRenderingContext, internalFormat: number, format: number, type: number | undefined) {
   if (!type) {
     console.warn('Texture type is undefined, falling back to UNSIGNED_BYTE');
     type = gl.UNSIGNED_BYTE;
@@ -160,7 +160,7 @@ function getSupportedFormat(gl: WebGL2RenderingContext, internalFormat: number, 
   };
 }
 
-function supportRenderTextureFormat(gl: WebGL2RenderingContext, internalFormat: number, format: number, type: number): boolean {
+function supportRenderTextureFormat(gl: WebGL2RenderingContext | WebGLRenderingContext, internalFormat: number, format: number, type: number): boolean {
   const texture = gl.createTexture();
   gl.bindTexture(gl.TEXTURE_2D, texture);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
