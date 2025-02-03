@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
-import { FluidBackground } from "@/components/ui/fluid-background";
+import { SplashCursor } from "@/components/ui/splash-cursor";
 
 const Entries = () => {
   const { toast } = useToast();
@@ -52,7 +52,7 @@ const Entries = () => {
 
   return (
     <>
-      <FluidBackground 
+      <SplashCursor 
         COLOR_UPDATE_SPEED={5}
         SPLAT_FORCE={4000}
         BACK_COLOR={{ r: 0.1, g: 0.1, b: 0.2 }}
