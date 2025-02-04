@@ -55,34 +55,38 @@ const Entries = () => {
       <SplashCursor 
         COLOR_UPDATE_SPEED={5}
         SPLAT_FORCE={4000}
-        BACK_COLOR={{ r: 0.1, g: 0.1, b: 0.2 }}
+        BACK_COLOR={{ r: 0.1, g: 0.1, b: 0.15 }}
       />
-      <div className="container mx-auto px-4 py-8 mb-24 relative z-10">
-        <h1 className="text-3xl font-bold mb-8 text-white">Your Entries</h1>
+      <div className="container mx-auto px-4 py-8 mb-24 relative z-50">
+        <h1 className="text-3xl font-bold mb-8 text-white/90">Your Entries</h1>
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {entries?.map((entry) => (
             <Card 
               key={entry.id} 
-              className="hover:shadow-lg transition-shadow cursor-pointer backdrop-blur-sm bg-white/90"
+              className="hover:shadow-lg transition-all duration-300 cursor-pointer backdrop-blur-lg bg-white/5 border border-white/10 rounded-2xl hover:scale-[1.02]"
               onClick={() => navigate(`/entries/${entry.id}`)}
             >
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2 text-white/90">
                   <FileText className="h-5 w-5" />
                   <span className="capitalize">{entry.category}</span>
                 </CardTitle>
-                <CardDescription className="flex items-center gap-2">
+                <CardDescription className="flex items-center gap-2 text-white/60">
                   <Calendar className="h-4 w-4" />
                   {format(new Date(entry.created_at), "PPp")}
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-gray-600 mb-4 line-clamp-3">{entry.content}</p>
+                <p className="text-sm text-white/80 mb-4 line-clamp-3">{entry.content}</p>
                 {entry.tags && entry.tags.length > 0 && (
                   <div className="flex items-center gap-2 flex-wrap">
-                    <Tag className="h-4 w-4 text-gray-500" />
+                    <Tag className="h-4 w-4 text-white/60" />
                     {entry.tags.map((tag: string) => (
-                      <Badge key={tag} variant="secondary">
+                      <Badge 
+                        key={tag} 
+                        variant="secondary"
+                        className="bg-white/10 text-white/80 hover:bg-white/20 rounded-full"
+                      >
                         {tag}
                       </Badge>
                     ))}

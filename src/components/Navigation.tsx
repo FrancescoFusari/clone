@@ -30,15 +30,15 @@ export const Navigation = () => {
   if (!session) return null;
 
   return (
-    <nav className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-card backdrop-blur-lg rounded-full px-6 py-3 shadow-lg border border-gray-200/20 z-50">
+    <nav className="fixed bottom-6 left-1/2 transform -translate-x-1/2 glass-morphism rounded-full px-6 py-3 shadow-lg z-50">
       <ul className="flex items-center space-x-8">
         <li>
           <Link
             to="/"
-            className={`flex items-center justify-center w-12 h-12 rounded-full transition-colors ${
+            className={`flex items-center justify-center w-12 h-12 rounded-full transition-all duration-300 ${
               isActive("/")
-                ? "bg-primary text-white"
-                : "text-gray-600 hover:bg-secondary"
+                ? "bg-white/20 text-white shadow-lg"
+                : "text-white/60 hover:bg-white/10 hover:text-white"
             }`}
           >
             <List className="w-6 h-6" />
@@ -47,10 +47,10 @@ export const Navigation = () => {
         <li>
           <Link
             to="/new"
-            className={`flex items-center justify-center w-12 h-12 rounded-full transition-colors ${
+            className={`flex items-center justify-center w-12 h-12 rounded-full transition-all duration-300 ${
               isActive("/new")
-                ? "bg-primary text-white"
-                : "text-gray-600 hover:bg-secondary"
+                ? "bg-white/20 text-white shadow-lg"
+                : "text-white/60 hover:bg-white/10 hover:text-white"
             }`}
           >
             <Plus className="w-6 h-6" />
@@ -61,7 +61,7 @@ export const Navigation = () => {
             variant="ghost"
             size="icon"
             onClick={handleLogout}
-            className="w-12 h-12 rounded-full text-gray-600 hover:bg-secondary"
+            className="w-12 h-12 rounded-full text-white/60 hover:bg-white/10 hover:text-white transition-all duration-300"
           >
             <LogOut className="w-6 h-6" />
           </Button>

@@ -23,7 +23,7 @@
     --border: 240 3.7% 15.9%;
     --input: 240 3.7% 15.9%;
     --ring: 240 4.9% 83.9%;
-    --radius: 0.75rem;
+    --radius: 1.5rem;
   }
 }
 
@@ -33,7 +33,7 @@
   }
   
   body {
-    @apply bg-background text-foreground antialiased overflow-hidden;
+    @apply bg-[#1A1F2C] text-foreground antialiased overflow-hidden;
     font-feature-settings: "ss01", "ss02", "cv01", "cv02", "cv03";
   }
 
