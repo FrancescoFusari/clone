@@ -3,18 +3,18 @@ import { useEffect, useRef } from "react";
 
 function FluidBackground({
   SIM_RESOLUTION = 128,
-  DYE_RESOLUTION = 1440,
+  DYE_RESOLUTION = 2048, // Increased from 1440 for larger effect
   CAPTURE_RESOLUTION = 512,
-  DENSITY_DISSIPATION = 3.5,
-  VELOCITY_DISSIPATION = 2,
+  DENSITY_DISSIPATION = 1.5, // Reduced from 3.5 to make the trail persist longer
+  VELOCITY_DISSIPATION = 1.2, // Reduced from 2 for longer trails
   PRESSURE = 0.1,
   PRESSURE_ITERATIONS = 20,
   CURL = 3,
-  SPLAT_RADIUS = 0.2,
-  SPLAT_FORCE = 6000,
+  SPLAT_RADIUS = 0.35, // Increased from 0.2 for larger splats
+  SPLAT_FORCE = 8000, // Increased from 6000 for more pronounced effect
   SHADING = true,
   COLOR_UPDATE_SPEED = 10,
-  BACK_COLOR = { r: 0.05, g: 0.05, b: 0.05 }, // Darker background
+  BACK_COLOR = { r: 0.05, g: 0.05, b: 0.05 },
   TRANSPARENT = true,
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
