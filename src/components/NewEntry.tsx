@@ -61,7 +61,7 @@ export const NewEntry = () => {
 
   return (
     <CenteredLayout>
-      <div className="rounded-xl border bg-white/80 dark:bg-black/50 backdrop-blur-lg p-4 sm:p-6 shadow-lg">
+      <div className="glass-morphism rounded-2xl p-4 sm:p-6 backdrop-blur-xl">
         <EntryForm onSubmit={handleSubmit} />
       </div>
       <div className="mt-4">
