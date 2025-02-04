@@ -3,15 +3,15 @@ import { useEffect, useRef } from "react";
 
 function FluidBackground({
   SIM_RESOLUTION = 128,
-  DYE_RESOLUTION = 2048, // Increased from 1440 for larger effect
+  DYE_RESOLUTION = 2048,
   CAPTURE_RESOLUTION = 512,
-  DENSITY_DISSIPATION = 1.5, // Reduced from 3.5 to make the trail persist longer
-  VELOCITY_DISSIPATION = 1.2, // Reduced from 2 for longer trails
+  DENSITY_DISSIPATION = 1.5,
+  VELOCITY_DISSIPATION = 1.2,
   PRESSURE = 0.1,
   PRESSURE_ITERATIONS = 20,
   CURL = 3,
-  SPLAT_RADIUS = 0.35, // Increased from 0.2 for larger splats
-  SPLAT_FORCE = 8000, // Increased from 6000 for more pronounced effect
+  SPLAT_RADIUS = 0.35,
+  SPLAT_FORCE = 8000,
   SHADING = true,
   COLOR_UPDATE_SPEED = 10,
   BACK_COLOR = { r: 0.05, g: 0.05, b: 0.05 },
@@ -44,7 +44,7 @@ function FluidBackground({
         const dx = Math.cos(angle) * SPLAT_FORCE;
         const dy = Math.sin(angle) * SPLAT_FORCE;
         const color = { 
-          r: Math.random() * 0.3, // Darker colors
+          r: Math.random() * 0.3,
           g: Math.random() * 0.3,
           b: Math.random() * 0.3 
         };
@@ -65,7 +65,7 @@ function FluidBackground({
   }, [COLOR_UPDATE_SPEED, SPLAT_FORCE]);
 
   return (
-    <div className="fixed inset-0 -z-10 pointer-events-none bg-background">
+    <div className="fixed inset-0 -z-10 pointer-events-auto">
       <canvas 
         ref={canvasRef} 
         className="w-full h-full"
