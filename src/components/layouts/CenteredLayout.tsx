@@ -6,12 +6,10 @@ interface CenteredLayoutProps {
 
 export const CenteredLayout = ({ children }: CenteredLayoutProps) => {
   return (
-    <div className="relative w-full h-screen overflow-hidden">
-      <div className="absolute inset-0">
-        <FluidBackground />
-      </div>
-      <div className="absolute inset-0 flex items-center justify-center">
-        <div className="w-full max-w-md mx-auto px-4 sm:px-6 z-10">
+    <div className="fixed inset-0 w-full h-screen overflow-hidden">
+      <FluidBackground />
+      <div className="relative h-full flex items-center justify-center">
+        <div className="w-full max-w-md mx-auto px-4 sm:px-6">
           {children}
         </div>
       </div>

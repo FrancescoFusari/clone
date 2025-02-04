@@ -28,7 +28,7 @@ export const EntryForm = ({ onSubmit }: EntryFormProps) => {
         value={content}
         onChange={(e) => setContent(e.target.value)}
         placeholder="Write your entry here... I'll help categorize and analyze it"
-        className="min-h-[200px] text-base resize-none glass-morphism border-0 focus-visible:ring-white/20"
+        className="min-h-[200px] text-base resize-none neo-blur border-0 focus-visible:ring-white/20 placeholder:text-white/40"
       />
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
         <p className="text-sm text-white/60 text-center sm:text-left">
@@ -37,7 +37,7 @@ export const EntryForm = ({ onSubmit }: EntryFormProps) => {
         <Button 
           type="submit" 
           disabled={loading || !content.trim()}
-          className="w-full sm:w-auto glass-morphism hover:bg-white/10 border-0"
+          className="w-full sm:w-auto neo-blur hover:bg-white/10 border-0"
         >
           {loading ? "Processing..." : "Save Entry"}
         </Button>
