@@ -13,18 +13,21 @@ import { format } from "date-fns";
 import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
 import { SplashCursor } from "@/components/ui/splash-cursor";
+import { useAuth } from "@/components/AuthProvider";
 
 const Entries = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { session } = useAuth();
   
   const { data: entries, isLoading } = useQuery({
-    queryKey: ["entries"],
+    queryKey: ["entries", session?.user.id],
     queryFn: async () => {
-      console.log("Fetching entries...");
+      console.log("Fetching entries for user:", session?.user.id);
       const { data, error } = await supabase
         .from("entries")
         .select("*")
+        .eq('user_id', session?.user.id)
         .order("created_at", { ascending: false });
 
       if (error) {
@@ -40,6 +43,7 @@ const Entries = () => {
       console.log("Fetched entries:", data);
       return data;
     },
+    enabled: !!session?.user.id,
   });
 
   if (isLoading) {
