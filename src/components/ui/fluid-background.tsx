@@ -14,7 +14,7 @@ function FluidBackground({
   SPLAT_FORCE = 6000,
   SHADING = true,
   COLOR_UPDATE_SPEED = 10,
-  BACK_COLOR = { r: 0.5, g: 0, b: 0 },
+  BACK_COLOR = { r: 0.05, g: 0.05, b: 0.05 }, // Darker background
   TRANSPARENT = true,
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -29,10 +29,8 @@ function FluidBackground({
       return;
     }
 
-    // Initialize WebGL context and set up shaders
-    // This is where you would add the WebGL initialization code
-    // For now, we'll just set a basic color to show the canvas is working
-    gl.clearColor(0.1, 0.1, 0.1, 1.0);
+    // Initialize WebGL context with dark background
+    gl.clearColor(0.05, 0.05, 0.05, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT);
 
     let lastSplatTime = Date.now();
@@ -40,23 +38,16 @@ function FluidBackground({
     function applyAutoForces() {
       const now = Date.now();
       if (now - lastSplatTime > 1000 / COLOR_UPDATE_SPEED) {
-        // Generate random position
         const x = Math.random();
         const y = Math.random();
-        
-        // Generate random direction
         const angle = Math.random() * Math.PI * 2;
         const dx = Math.cos(angle) * SPLAT_FORCE;
         const dy = Math.sin(angle) * SPLAT_FORCE;
-        
-        // Generate random color
         const color = { 
-          r: Math.random(), 
-          g: Math.random(), 
-          b: Math.random() 
+          r: Math.random() * 0.3, // Darker colors
+          g: Math.random() * 0.3,
+          b: Math.random() * 0.3 
         };
-        
-        // Here you would call your splat function
         console.log('Splat:', { x, y, dx, dy, color });
       }
     }
@@ -66,17 +57,15 @@ function FluidBackground({
       requestAnimationFrame(updateFrame);
     }
 
-    // Start the animation loop
     updateFrame();
 
-    // Cleanup
     return () => {
       // Cleanup WebGL resources if needed
     };
   }, [COLOR_UPDATE_SPEED, SPLAT_FORCE]);
 
   return (
-    <div className="fixed inset-0 -z-10 pointer-events-none">
+    <div className="fixed inset-0 -z-10 pointer-events-none bg-background">
       <canvas 
         ref={canvasRef} 
         className="w-full h-full"
