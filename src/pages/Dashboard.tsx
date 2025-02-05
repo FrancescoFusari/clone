@@ -1,11 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { ChartContainer, ChartTooltip } from "@/components/ui/chart";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer } from "recharts";
-import { Tag, Calendar, List, ChartBar, Info } from "lucide-react";
+import { AreaChart, Area, XAxis, YAxis, ResponsiveContainer, CartesianGrid } from "recharts";
+import { Tag, Calendar, List, ChartBar } from "lucide-react";
 import { format } from "date-fns";
 import { CenteredLayout } from "@/components/layouts/CenteredLayout";
 import { useToast } from "@/components/ui/use-toast";
@@ -15,7 +15,6 @@ const Dashboard = () => {
   const { toast } = useToast();
   const isMobile = useIsMobile();
 
-  // Fetch tag analytics
   const { data: tagAnalytics, isLoading: isLoadingTags } = useQuery({
     queryKey: ["tagAnalytics"],
     queryFn: async () => {
@@ -78,9 +77,8 @@ const Dashboard = () => {
     }
     
     return acc;
-  }, []).slice(0, isMobile ? 30 : 60).reverse() || [];
+  }, []).slice(0, isMobile ? 14 : 30).reverse() || [];
 
-  // Process entries data for category distribution
   const categoryData = entries?.reduce((acc: any[], entry) => {
     const existingCategory = acc.find((item) => item.category === entry.category);
     
@@ -161,14 +159,24 @@ const Dashboard = () => {
                 Entry Timeline
               </CardTitle>
               <p className="text-sm text-white/60">
-                Last {isMobile ? "30" : "60"} days of activity
+                Last {isMobile ? "14" : "30"} days of activity
               </p>
             </CardHeader>
             <CardContent>
-              <div className="h-[300px]">
+              <div className="h-[300px] w-full">
                 <ChartContainer config={{}}>
                   <ResponsiveContainer>
-                    <BarChart data={timelineData}>
+                    <AreaChart
+                      data={timelineData}
+                      margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+                    >
+                      <defs>
+                        <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="rgba(255,255,255,0.2)" stopOpacity={0.8}/>
+                          <stop offset="95%" stopColor="rgba(255,255,255,0.2)" stopOpacity={0}/>
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
                       <XAxis
                         dataKey="date"
                         stroke="#94a3b8"
@@ -176,6 +184,9 @@ const Dashboard = () => {
                         tickLine={false}
                         axisLine={false}
                         interval={isMobile ? 2 : 1}
+                        angle={isMobile ? -45 : 0}
+                        textAnchor={isMobile ? "end" : "middle"}
+                        height={isMobile ? 60 : 30}
                       />
                       <YAxis
                         stroke="#94a3b8"
@@ -184,16 +195,19 @@ const Dashboard = () => {
                         axisLine={false}
                         tickFormatter={(value) => `${value}`}
                       />
-                      <Bar
+                      <Area
+                        type="monotone"
                         dataKey="count"
-                        fill="rgba(255, 255, 255, 0.2)"
-                        radius={[4, 4, 0, 0]}
+                        stroke="rgba(255,255,255,0.5)"
+                        fillOpacity={1}
+                        fill="url(#colorCount)"
+                        strokeWidth={2}
                       />
                       <ChartTooltip
                         content={({ active, payload }) => {
                           if (!active || !payload?.length) return null;
                           return (
-                            <div className="glass-morphism p-2 rounded-lg">
+                            <div className="glass-morphism p-2 rounded-lg shadow-lg">
                               <p className="text-sm font-medium text-white/90">
                                 {payload[0].payload.date}
                               </p>
@@ -204,14 +218,13 @@ const Dashboard = () => {
                           );
                         }}
                       />
-                    </BarChart>
+                    </AreaChart>
                   </ResponsiveContainer>
                 </ChartContainer>
               </div>
             </CardContent>
           </Card>
 
-          {/* Popular Tags Card */}
           <Card className="glass-morphism">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-white/90">
@@ -246,7 +259,6 @@ const Dashboard = () => {
             </CardContent>
           </Card>
 
-          {/* Category Distribution */}
           <Card className="glass-morphism md:col-span-2">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-white/90">
