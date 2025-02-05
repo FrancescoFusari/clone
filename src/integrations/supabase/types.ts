@@ -6,6 +6,13 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
+export interface ResearchData {
+  key_concepts: string[];
+  related_topics: string[];
+  insights: string;
+  questions: string[];
+}
+
 export type Database = {
   public: {
     Tables: {
