@@ -1,12 +1,3 @@
-export interface ResearchData {
-  sources?: string[];
-  topics?: string[];
-  key_points?: string[];
-  related_concepts?: string[];
-  sentiment?: string;
-  [key: string]: any;
-}
-
 export type Json =
   | string
   | number
@@ -243,4 +234,3 @@ export type CompositeTypes<
   : PublicCompositeTypeNameOrOptions extends keyof PublicSchema["CompositeTypes"]
     ? PublicSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
-

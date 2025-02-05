@@ -76,37 +76,39 @@ const Dashboard = () => {
 
   return (
     <CenteredLayout>
-      <div className="space-y-8 pb-24">
+      <div className="space-y-8">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="sticky top-0 z-10 bg-background/80 backdrop-blur-lg pb-4"
         >
           <h1 className="text-3xl font-bold mb-2 text-gradient">Activity Timeline</h1>
           <p className="text-white/60">Your recent entries and activities</p>
         </motion.div>
 
-        <ScrollArea className="h-[calc(100vh-12rem)] md:h-[calc(100vh-16rem)]">
+        <ScrollArea className="h-[calc(100vh-200px)]">
           <motion.div 
             variants={container}
             initial="hidden"
             animate="show"
-            className="relative px-4 md:px-8 pb-24"
+            className="relative px-4 md:px-8"
           >
+            {/* Timeline line - thinner on mobile */}
             <div className="absolute left-[12px] md:left-1/2 h-full w-[2px] bg-gradient-to-b from-white/5 via-white/10 to-transparent transform md:-translate-x-1/2" />
 
-            {entries?.map((entry) => (
+            {entries?.map((entry, index) => (
               <motion.div
                 key={entry.id}
                 variants={item}
                 viewport={{ once: true }}
                 className={`mb-8 flex flex-col ${isMobile ? 'ml-6' : 'md:flex-row md:justify-between group'}`}
               >
+                {/* Timeline dot with pulse effect */}
                 <div className="absolute left-[12px] md:left-1/2 w-2 h-2 md:w-3 md:h-3 bg-primary rounded-full transform md:-translate-x-1/2 transition-all duration-300 group-hover:scale-150 hover:scale-150">
                   <div className="absolute inset-0 rounded-full animate-ping bg-primary/30" />
                 </div>
 
+                {/* Content card */}
                 <Card 
                   className={`
                     ${isMobile ? 'w-full' : 'md:w-[45%]'}
@@ -175,6 +177,7 @@ const Dashboard = () => {
                   </AnimatePresence>
                 </Card>
 
+                {/* Spacer for alternating layout on desktop */}
                 {!isMobile && <div className="hidden md:block md:w-[45%]" />}
               </motion.div>
             ))}
