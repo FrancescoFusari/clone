@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChartContainer, ChartTooltip } from "@/components/ui/chart";
+import { ChartContainer } from "@/components/ui/chart";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AreaChart, Area, XAxis, YAxis, ResponsiveContainer, CartesianGrid } from "recharts";
@@ -165,7 +165,7 @@ const Dashboard = () => {
             <CardContent>
               <div className="h-[300px] w-full">
                 <ChartContainer config={{}}>
-                  <ResponsiveContainer>
+                  <ResponsiveContainer width="100%" height="100%">
                     <AreaChart
                       data={timelineData}
                       margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
@@ -202,21 +202,6 @@ const Dashboard = () => {
                         fillOpacity={1}
                         fill="url(#colorCount)"
                         strokeWidth={2}
-                      />
-                      <ChartTooltip
-                        content={({ active, payload }) => {
-                          if (!active || !payload?.length) return null;
-                          return (
-                            <div className="glass-morphism p-2 rounded-lg shadow-lg">
-                              <p className="text-sm font-medium text-white/90">
-                                {payload[0].payload.date}
-                              </p>
-                              <p className="text-sm text-white/60">
-                                {payload[0].value} entries
-                              </p>
-                            </div>
-                          );
-                        }}
                       />
                     </AreaChart>
                   </ResponsiveContainer>
@@ -270,7 +255,7 @@ const Dashboard = () => {
             <CardContent>
               <div className="h-[300px]">
                 <ChartContainer config={{}}>
-                  <ResponsiveContainer>
+                  <ResponsiveContainer width="100%" height="100%">
                     <AreaChart
                       data={categoryData}
                       margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
@@ -298,21 +283,6 @@ const Dashboard = () => {
                         stroke="rgba(255,255,255,0.5)"
                         fill="url(#categoryColor)"
                         fillOpacity={1}
-                      />
-                      <ChartTooltip
-                        content={({ active, payload }) => {
-                          if (!active || !payload?.length) return null;
-                          return (
-                            <div className="glass-morphism p-2 rounded-lg">
-                              <p className="text-sm font-medium text-white/90">
-                                {payload[0].payload.category}
-                              </p>
-                              <p className="text-sm text-white/60">
-                                {payload[0].value} entries
-                              </p>
-                            </div>
-                          );
-                        }}
                       />
                     </AreaChart>
                   </ResponsiveContainer>
