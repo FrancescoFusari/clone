@@ -22,9 +22,9 @@ export const Navigation = () => {
               <Button
                 variant="ghost"
                 className={cn(
-                  "flex-1 max-w-[120px] gap-2",
+                  "flex-1 max-w-[120px] gap-2 transition-colors",
                   isActive("/") &&
-                    "bg-white/10 text-white hover:bg-white/20 hover:text-white"
+                    "bg-primary/20 text-primary hover:bg-primary/30 hover:text-primary"
                 )}
                 asChild
               >
@@ -42,9 +42,9 @@ export const Navigation = () => {
               <Button
                 variant="ghost"
                 className={cn(
-                  "flex-1 max-w-[120px] gap-2",
+                  "flex-1 max-w-[120px] gap-2 transition-colors",
                   isActive("/timeline") &&
-                    "bg-white/10 text-white hover:bg-white/20 hover:text-white"
+                    "bg-primary/20 text-primary hover:bg-primary/30 hover:text-primary"
                 )}
                 asChild
               >
@@ -62,9 +62,9 @@ export const Navigation = () => {
               <Button
                 variant="ghost"
                 className={cn(
-                  "flex-1 max-w-[120px] gap-2",
+                  "flex-1 max-w-[120px] gap-2 transition-colors",
                   isActive("/new") &&
-                    "bg-white/10 text-white hover:bg-white/20 hover:text-white"
+                    "bg-primary/20 text-primary hover:bg-primary/30 hover:text-primary"
                 )}
                 asChild
               >
