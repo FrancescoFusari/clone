@@ -10,11 +10,13 @@ import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const Dashboard = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [expandedEntryId, setExpandedEntryId] = useState<string | null>(null);
+  const isMobile = useIsMobile();
 
   const { data: entries, isLoading } = useQuery({
     queryKey: ["entriesTimeline"],
@@ -70,33 +72,46 @@ const Dashboard = () => {
   return (
     <CenteredLayout>
       <div className="space-y-8">
-        <div>
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
           <h1 className="text-3xl font-bold mb-2 text-gradient">Activity Timeline</h1>
           <p className="text-white/60">Your recent entries and activities</p>
-        </div>
+        </motion.div>
 
-        <ScrollArea className="h-[calc(100vh-200px)] pr-4">
+        <ScrollArea className="h-[calc(100vh-200px)]">
           <motion.div 
             variants={container}
             initial="hidden"
             animate="show"
-            className="relative"
+            className="relative px-4 md:px-8"
           >
-            {/* Timeline line */}
-            <div className="absolute left-0 md:left-1/2 h-full w-px bg-white/10 transform -translate-x-1/2" />
+            {/* Timeline line - thinner on mobile */}
+            <div className="absolute left-[12px] md:left-1/2 h-full w-[2px] bg-gradient-to-b from-white/5 via-white/10 to-transparent transform md:-translate-x-1/2" />
 
-            {entries?.map((entry) => (
+            {entries?.map((entry, index) => (
               <motion.div
                 key={entry.id}
                 variants={item}
-                className="mb-8 flex flex-col md:flex-row md:justify-between group"
+                viewport={{ once: true }}
+                className={`mb-8 flex flex-col ${isMobile ? 'ml-6' : 'md:flex-row md:justify-between group'}`}
               >
-                {/* Timeline dot */}
-                <div className="absolute left-0 md:left-1/2 w-3 h-3 bg-primary rounded-full transform -translate-x-1/2 transition-transform duration-200 group-hover:scale-150" />
+                {/* Timeline dot with pulse effect */}
+                <div className="absolute left-[12px] md:left-1/2 w-2 h-2 md:w-3 md:h-3 bg-primary rounded-full transform md:-translate-x-1/2 transition-all duration-300 group-hover:scale-150 hover:scale-150">
+                  <div className="absolute inset-0 rounded-full animate-ping bg-primary/30" />
+                </div>
 
                 {/* Content card */}
                 <Card 
-                  className="ml-6 md:ml-0 md:w-[45%] transition-all duration-300 cursor-pointer backdrop-blur-lg bg-white/5 border border-white/10 rounded-2xl group-hover:scale-[1.02]"
+                  className={`
+                    ${isMobile ? 'w-full' : 'md:w-[45%]'}
+                    transition-all duration-300 cursor-pointer 
+                    backdrop-blur-lg bg-white/5 border border-white/10 
+                    rounded-xl hover:bg-white/10 
+                    group-hover:scale-[1.02] hover:scale-[1.02]
+                  `}
                   onClick={() => toggleEntry(entry.id)}
                 >
                   <CardHeader className="p-4">
@@ -157,8 +172,8 @@ const Dashboard = () => {
                   </AnimatePresence>
                 </Card>
 
-                {/* Spacer for alternating layout */}
-                <div className="hidden md:block md:w-[45%]" />
+                {/* Spacer for alternating layout on desktop */}
+                {!isMobile && <div className="hidden md:block md:w-[45%]" />}
               </motion.div>
             ))}
           </motion.div>
