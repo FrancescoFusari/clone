@@ -1,4 +1,3 @@
-
 import { CenteredLayout } from "@/components/layouts/CenteredLayout";
 import { EntryForm } from "@/components/EntryForm";
 import { supabase } from "@/integrations/supabase/client";
@@ -87,11 +86,9 @@ const NewEntry = () => {
   };
 
   return (
-    <div className="bg-[#1A1F2C] min-h-screen">
-      <CenteredLayout>
-        <EntryForm onSubmit={handleSubmit} />
-      </CenteredLayout>
-    </div>
+    <CenteredLayout>
+      <EntryForm onSubmit={handleSubmit} />
+    </CenteredLayout>
   );
 };
 
