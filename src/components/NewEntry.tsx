@@ -35,6 +35,7 @@ export const NewEntry = () => {
 
       const { error } = await supabase.from("entries").insert({
         content: processedData.content,
+        title: processedData.title,
         user_id: session.user.id,
         category: processedData.category,
         subcategory: processedData.subcategory,

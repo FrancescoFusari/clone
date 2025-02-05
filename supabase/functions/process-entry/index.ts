@@ -1,11 +1,13 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import "https://deno.land/x/xhr@0.1.0/mod.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+};
 
 async function getSimilarTags(supabase: any, tags: string[]): Promise<string[]> {
   const normalizedTags = tags.map(tag => tag.toLowerCase().trim());
@@ -61,7 +63,6 @@ async function getSimilarSubcategory(supabase: any, category: string, subcategor
   return similarSubcategory || normalizedSubcategory;
 }
 
-// Levenshtein distance for string similarity
 function levenshteinDistance(str1: string, str2: string): number {
   const track = Array(str2.length + 1).fill(null).map(() =>
     Array(str1.length + 1).fill(null));
@@ -118,37 +119,37 @@ function formatText(text: string): string {
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { content } = await req.json()
-    console.log('Processing entry:', content)
+    const { content } = await req.json();
+    console.log('Processing entry:', content);
 
     const formattedContent = formatText(content);
     console.log('Formatted content:', formattedContent);
 
-    const openAIApiKey = Deno.env.get('OPENAI_API_KEY')
     if (!openAIApiKey) {
-      throw new Error('OpenAI API key not configured')
+      throw new Error('OpenAI API key not configured');
     }
 
     // Initialize Supabase client
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
     if (!supabaseUrl || !supabaseKey) {
-      throw new Error('Supabase configuration missing')
+      throw new Error('Supabase configuration missing');
     }
-    const supabase = createClient(supabaseUrl, supabaseKey)
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+    // First, get the category, tags, and summary
+    const categoryResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${openAIApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4',
+        model: 'gpt-4o-mini',
         messages: [
           {
             role: 'system',
@@ -165,20 +166,37 @@ serve(async (req) => {
             role: 'user',
             content: formattedContent
           }
-        ]
-      })
-    })
+        ],
+      }),
+    });
 
-    if (!openAIResponse.ok) {
-      const errorData = await openAIResponse.json()
-      console.error('OpenAI API error:', errorData)
-      throw new Error(`OpenAI API error: ${errorData.error?.message || 'Unknown error'}`)
-    }
+    const categoryData = await categoryResponse.json();
+    const processedData = JSON.parse(categoryData.choices[0].message.content);
 
-    const aiResult = await openAIResponse.json()
-    console.log('AI processing result:', aiResult)
-    
-    const processedData = JSON.parse(aiResult.choices[0].message.content)
+    // Then, generate a title
+    const titleResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openAIApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [
+          {
+            role: 'system',
+            content: 'Generate a short, engaging title (max 60 characters) for this journal entry. The title should capture the main theme or emotion of the entry.'
+          },
+          {
+            role: 'user',
+            content: formattedContent
+          }
+        ],
+      }),
+    });
+
+    const titleData = await titleResponse.json();
+    const generatedTitle = titleData.choices[0].message.content.replace(/["']/g, '');
 
     // Normalize and find similar tags
     processedData.tags = await getSimilarTags(supabase, processedData.tags);
@@ -192,23 +210,24 @@ serve(async (req) => {
       );
     }
 
-    // Add the formatted content to the response
+    // Add the formatted content and title to the response
     processedData.content = formattedContent;
+    processedData.title = generatedTitle;
 
     console.log('Final processed data:', processedData);
 
     return new Response(
       JSON.stringify(processedData),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
+    );
   } catch (error) {
-    console.error('Error:', error)
+    console.error('Error:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
-    )
+    );
   }
-})
+});

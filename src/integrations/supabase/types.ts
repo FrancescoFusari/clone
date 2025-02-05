@@ -18,6 +18,7 @@ export type Database = {
           subcategory: string | null
           summary: string | null
           tags: string[] | null
+          title: string
           user_id: string
         }
         Insert: {
@@ -28,6 +29,7 @@ export type Database = {
           subcategory?: string | null
           summary?: string | null
           tags?: string[] | null
+          title: string
           user_id: string
         }
         Update: {
@@ -38,6 +40,7 @@ export type Database = {
           subcategory?: string | null
           summary?: string | null
           tags?: string[] | null
+          title?: string
           user_id?: string
         }
         Relationships: []
