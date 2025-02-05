@@ -11,11 +11,12 @@ export const NewEntry = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  const processEntry = async (content: string) => {
+  const processEntry = async (content: string, isUrl = false) => {
     try {
-      const { data, error } = await supabase.functions.invoke('process-entry', {
-        body: { content }
-      });
+      const { data, error } = await supabase.functions.invoke(
+        isUrl ? 'analyze-url' : 'process-entry',
+        { body: isUrl ? { url: content } : { content } }
+      );
 
       if (error) throw error;
       console.log("Processed data:", data);
@@ -26,11 +27,11 @@ export const NewEntry = () => {
     }
   };
 
-  const handleSubmit = async (content: string) => {
+  const handleSubmit = async (content: string, isUrl = false) => {
     if (!session?.user.id) return;
 
     try {
-      const processedData = await processEntry(content);
+      const processedData = await processEntry(content, isUrl);
       console.log("Processed data:", processedData);
 
       const { error } = await supabase.from("entries").insert({
