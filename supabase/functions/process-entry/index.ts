@@ -173,7 +173,7 @@ serve(async (req) => {
     const categoryData = await categoryResponse.json();
     const processedData = JSON.parse(categoryData.choices[0].message.content);
 
-    // Then, generate a title
+    // Generate a title with improved prompt
     const titleResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -185,7 +185,17 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: 'Generate a short, engaging title (max 60 characters) for this journal entry. The title should capture the main theme or emotion of the entry.'
+            content: `Generate a concise, engaging title (max 50 characters) for this journal entry. 
+            The title should:
+            - Capture the main theme or key event
+            - Be specific and descriptive
+            - Not use generic phrases like "Journal Entry" or "My Thoughts"
+            - Be written in title case
+            - Not end with "..."
+            Example good titles:
+            - "First Day at New Tech Startup"
+            - "Hiking Mount Rainier's Summit"
+            - "Learning to Play Piano Again"`
           },
           {
             role: 'user',
