@@ -152,18 +152,11 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4',  // Fixed: Changed from gpt-4o to gpt-4
+        model: 'gpt-4o-mini',
         messages: [
           {
             role: 'system',
-            content: `You are an AI that analyzes journal entries. 
-            Analyze the entry and return a JSON object with the following structure:
-            {
-              "category": one of ["personal", "work", "social", "interests_and_hobbies", "school"],
-              "subcategory": a specific subcategory based on the content,
-              "tags": an array of relevant keywords (max 5),
-              "summary": a brief 1-2 sentence summary of the entry
-            }`
+            content: 'You are an AI that analyzes journal entries. Analyze the entry and return a JSON object with the following structure: {"category": one of ["personal", "work", "social", "interests_and_hobbies", "school"], "subcategory": a specific subcategory based on the content, "tags": an array of relevant keywords (max 5), "summary": a brief 1-2 sentence summary of the entry}'
           },
           {
             role: 'user',
@@ -186,9 +179,15 @@ serve(async (req) => {
       throw new Error('Invalid response from OpenAI API (category)');
     }
 
-    const processedData = JSON.parse(categoryData.choices[0].message.content);
+    let processedData;
+    try {
+      processedData = JSON.parse(categoryData.choices[0].message.content.trim());
+    } catch (error) {
+      console.error('Error parsing category response:', error);
+      throw new Error('Failed to parse OpenAI response');
+    }
 
-    // Generate a title with improved prompt
+    // Generate a title
     const titleResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -196,7 +195,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4',  // Fixed: Changed from gpt-4o to gpt-4
+        model: 'gpt-4o-mini',
         messages: [
           {
             role: 'system',
@@ -246,8 +245,28 @@ serve(async (req) => {
 
     console.log('Final processed data:', processedData);
 
+    // Create the entry in the database
+    const { data: entry, error: insertError } = await supabase
+      .from('entries')
+      .insert([{
+        user_id,
+        content: processedData.content,
+        title: processedData.title,
+        category: processedData.category,
+        subcategory: processedData.subcategory,
+        tags: processedData.tags,
+        summary: processedData.summary
+      }])
+      .select()
+      .single();
+
+    if (insertError) {
+      console.error('Error inserting entry:', insertError);
+      throw new Error(`Database error: ${insertError.message}`);
+    }
+
     return new Response(
-      JSON.stringify(processedData),
+      JSON.stringify(entry),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
