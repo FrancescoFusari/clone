@@ -123,14 +123,14 @@ serve(async (req) => {
 
   try {
     const { content, user_id } = await req.json();
-    console.log('Processing entry:', content);
+    console.log('Processing entry:', content.substring(0, 100) + '...');
 
     if (!content) {
       throw new Error('Content is required');
     }
 
     const formattedContent = formatText(content);
-    console.log('Formatted content:', formattedContent);
+    console.log('Formatted content:', formattedContent.substring(0, 100) + '...');
 
     if (!openAIApiKey) {
       throw new Error('OpenAI API key not configured');
@@ -145,6 +145,7 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     // First, get the category, tags, and summary
+    console.log('Requesting category analysis from OpenAI...');
     const categoryResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -156,13 +157,15 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: 'You are an AI that analyzes journal entries. Analyze the entry and return a JSON object with the following structure: {"category": one of ["personal", "work", "social", "interests_and_hobbies", "school"], "subcategory": a specific subcategory based on the content, "tags": an array of relevant keywords (max 5), "summary": a brief 1-2 sentence summary of the entry}'
+            content: 'You are an AI that analyzes journal entries. Return a JSON object with: category (one of: personal, work, social, interests_and_hobbies, school), subcategory (specific topic), tags (max 5 relevant keywords), and summary (1-2 sentences).'
           },
           {
             role: 'user',
             content: formattedContent
           }
         ],
+        temperature: 0.7,
+        max_tokens: 500
       }),
     });
 
@@ -176,18 +179,29 @@ serve(async (req) => {
     console.log('Category API response:', categoryData);
 
     if (!categoryData.choices?.[0]?.message?.content) {
+      console.error('Invalid OpenAI response structure:', categoryData);
       throw new Error('Invalid response from OpenAI API (category)');
     }
 
     let processedData;
     try {
-      processedData = JSON.parse(categoryData.choices[0].message.content.trim());
+      const rawContent = categoryData.choices[0].message.content.trim();
+      console.log('Attempting to parse OpenAI response:', rawContent);
+      processedData = JSON.parse(rawContent);
+      
+      // Validate the parsed data
+      if (!processedData.category || !Array.isArray(processedData.tags)) {
+        console.error('Invalid data structure in parsed response:', processedData);
+        throw new Error('Invalid data structure in OpenAI response');
+      }
     } catch (error) {
       console.error('Error parsing category response:', error);
+      console.error('Raw content:', categoryData.choices[0].message.content);
       throw new Error('Failed to parse OpenAI response');
     }
 
     // Generate a title
+    console.log('Requesting title generation from OpenAI...');
     const titleResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -199,13 +213,15 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: 'Generate a concise, engaging title (max 50 characters) that captures the main theme or key event of this journal entry. Be specific and descriptive. Do not use generic phrases like "Journal Entry" or "My Thoughts". Write in title case.'
+            content: 'Generate a concise, engaging title (max 50 characters) for this journal entry. Be specific and descriptive. Do not use generic phrases.'
           },
           {
             role: 'user',
             content: formattedContent
           }
         ],
+        temperature: 0.7,
+        max_tokens: 50
       }),
     });
 
@@ -219,6 +235,7 @@ serve(async (req) => {
     console.log('Title API response:', titleData);
     
     if (!titleData.choices?.[0]?.message?.content) {
+      console.error('Invalid title response structure:', titleData);
       throw new Error('Invalid response from OpenAI API (title)');
     }
 
