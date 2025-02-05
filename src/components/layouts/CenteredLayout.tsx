@@ -1,4 +1,4 @@
-import { BackgroundCircles } from "../ui/background-circles";
+import { SplashCursor } from "../ui/splash-cursor";
 
 interface CenteredLayoutProps {
   children: React.ReactNode;
@@ -7,13 +7,13 @@ interface CenteredLayoutProps {
 export const CenteredLayout = ({ children }: CenteredLayoutProps) => {
   return (
     <div className="relative w-full h-screen">
-      <div className="absolute inset-0">
-        <BackgroundCircles />
-      </div>
-      <div className="absolute inset-0 flex items-center justify-center">
-        <div className="w-full max-w-md mx-auto px-4 sm:px-6">
-          {children}
-        </div>
+      <SplashCursor 
+        COLOR_UPDATE_SPEED={5}
+        SPLAT_FORCE={4000}
+        BACK_COLOR={{ r: 0.1, g: 0.1, b: 0.15 }}
+      />
+      <div className="container mx-auto px-4 py-8 mb-24 relative z-50">
+        {children}
       </div>
     </div>
   );
