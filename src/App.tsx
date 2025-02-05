@@ -14,9 +14,9 @@ const Auth = lazy(() => import("./pages/Auth"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Entries = lazy(() => import("./pages/Entries"));
 const EntryDetails = lazy(() => import("./pages/EntryDetails"));
-const Timeline = lazy(() => import("./pages/Timeline"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
 
-// Configure React Query
+// Configure React Query for optimal performance
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -89,7 +89,7 @@ const AppRoutes = () => {
           path="/dashboard"
           element={
             <ProtectedRoute>
-              <Timeline />
+              <Dashboard />
             </ProtectedRoute>
           }
         />
@@ -99,23 +99,21 @@ const AppRoutes = () => {
   );
 };
 
-const App = () => {
-  return (
-    <BrowserRouter>
-      <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <TooltipProvider>
-            <div className="min-h-screen bg-background overflow-y-auto">
-              <Toaster />
-              <Sonner />
-              <AppRoutes />
-              <Navigation />
-            </div>
-          </TooltipProvider>
-        </AuthProvider>
-      </QueryClientProvider>
-    </BrowserRouter>
-  );
-};
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <AuthProvider>
+      <TooltipProvider>
+        <div className="min-h-screen bg-background">
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <AppRoutes />
+            <Navigation />
+          </BrowserRouter>
+        </div>
+      </TooltipProvider>
+    </AuthProvider>
+  </QueryClientProvider>
+);
 
 export default App;
