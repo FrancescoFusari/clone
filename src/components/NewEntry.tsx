@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/components/AuthProvider";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
 const NewEntry = () => {
   const navigate = useNavigate();
@@ -38,7 +39,6 @@ const NewEntry = () => {
 
         console.log("URL processed successfully:", data);
         
-        // Invalidate queries and navigate to index
         await queryClient.invalidateQueries({ queryKey: ['entries'] });
         await queryClient.invalidateQueries({ queryKey: ['timeline-entries'] });
         
@@ -65,7 +65,6 @@ const NewEntry = () => {
 
       console.log("Entry processed successfully:", data);
 
-      // Invalidate queries and navigate to index
       await queryClient.invalidateQueries({ queryKey: ['entries'] });
       await queryClient.invalidateQueries({ queryKey: ['timeline-entries'] });
       
@@ -87,16 +86,22 @@ const NewEntry = () => {
 
   return (
     <CenteredLayout>
-      <div className="max-w-2xl mx-auto space-y-6">
-        <div className="space-y-2">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-primary/90 to-primary/60 bg-clip-text text-transparent">
-            Create New Entry
-          </h1>
-          <p className="text-lg text-white/80">
-            Share your thoughts, ideas, or paste a URL. Our AI will help analyze and organize your content, making it easier to find and reference later.
-          </p>
-        </div>
-        <EntryForm onSubmit={handleSubmit} />
+      <div className="max-w-2xl mx-auto space-y-6 p-4">
+        <Card className="backdrop-blur-xl bg-black/20 border border-white/10 shadow-xl">
+          <CardHeader className="space-y-2">
+            <div className="space-y-2">
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-primary/90 via-primary/80 to-primary/70 bg-clip-text text-transparent">
+                Create New Entry
+              </h1>
+              <p className="text-lg text-white/80 leading-relaxed">
+                Transform your thoughts into organized insights. Share your ideas or analyze content from around the web - our AI assistant will help structure and enhance your entries.
+              </p>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <EntryForm onSubmit={handleSubmit} />
+          </CardContent>
+        </Card>
       </div>
     </CenteredLayout>
   );
