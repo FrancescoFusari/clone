@@ -47,7 +47,7 @@ const EntryDetails = () => {
         .from("entries")
         .select("*")
         .eq("id", id)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error("Error fetching entry:", error);
@@ -57,6 +57,11 @@ const EntryDetails = () => {
           description: "Failed to load entry details",
         });
         throw error;
+      }
+
+      if (!data) {
+        console.log("No entry found with id:", id);
+        return null;
       }
 
       console.log("Fetched entry details:", data);
@@ -75,8 +80,12 @@ const EntryDetails = () => {
   if (!entry) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold mb-4">Entry not found</h1>
-        <Button onClick={() => navigate(-1)}>
+        <h1 className="text-2xl font-bold mb-4 text-white/90">Entry not found</h1>
+        <Button 
+          onClick={() => navigate(-1)}
+          variant="outline"
+          className="bg-white/5 border-white/10 text-white/90 hover:bg-white/10"
+        >
           <ArrowLeft className="mr-2 h-4 w-4" /> Go Back
         </Button>
       </div>
@@ -88,44 +97,43 @@ const EntryDetails = () => {
       <Button
         variant="outline"
         onClick={() => navigate(-1)}
-        className="mb-6"
+        className="mb-6 bg-white/5 border-white/10 text-white/90 hover:bg-white/10"
       >
         <ArrowLeft className="mr-2 h-4 w-4" /> Back to Entries
       </Button>
 
-      <Card className="mb-6">
+      <Card className="mb-6 backdrop-blur-lg bg-white/5 border-white/10">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-white/90">
             <FileText className="h-5 w-5" />
-            <span className="capitalize">{entry.category}</span>
-            {entry.subcategory && (
-              <span className="text-muted-foreground">
-                / {entry.subcategory}
-              </span>
-            )}
+            {entry.title || "Untitled Entry"}
           </CardTitle>
-          <CardDescription className="flex items-center gap-2">
+          <CardDescription className="flex items-center gap-2 text-white/60">
             <Calendar className="h-4 w-4" />
             {format(new Date(entry.created_at), "PPp")}
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="prose max-w-none mb-6 dark:prose-invert">
+          <div className="prose max-w-none mb-6 dark:prose-invert text-white/80">
             {formatContent(entry.content)}
           </div>
 
           {entry.summary && (
             <div className="mb-6">
-              <h3 className="text-lg font-semibold mb-2">AI Summary</h3>
-              <p className="text-muted-foreground">{entry.summary}</p>
+              <h3 className="text-lg font-semibold mb-2 text-white/90">AI Summary</h3>
+              <p className="text-white/60">{entry.summary}</p>
             </div>
           )}
 
           {entry.tags && entry.tags.length > 0 && (
             <div className="flex items-center gap-2 flex-wrap">
-              <Tag className="h-4 w-4 text-gray-500" />
+              <Tag className="h-4 w-4 text-white/60" />
               {entry.tags.map((tag: string) => (
-                <Badge key={tag} variant="secondary">
+                <Badge 
+                  key={tag} 
+                  variant="secondary"
+                  className="bg-white/10 text-white/80 hover:bg-white/20"
+                >
                   {tag}
                 </Badge>
               ))}
