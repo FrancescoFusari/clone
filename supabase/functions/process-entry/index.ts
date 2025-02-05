@@ -129,7 +129,8 @@ serve(async (req) => {
       throw new Error('Content is required');
     }
 
-    const formattedContent = formatText(content);
+    // Don't format the content, preserve its original formatting
+    const formattedContent = content;
     console.log('Formatted content:', formattedContent.substring(0, 100) + '...');
 
     if (!openAIApiKey) {

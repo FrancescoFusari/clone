@@ -21,6 +21,7 @@ export const EntryForm = ({ onSubmit }: EntryFormProps) => {
 
     setLoading(true);
     try {
+      // Preserve line breaks by not modifying the content
       await onSubmit(activeContent, activeTab === "url");
       if (activeTab === "text") {
         setContent("");
@@ -52,7 +53,8 @@ export const EntryForm = ({ onSubmit }: EntryFormProps) => {
             value={content}
             onChange={(e) => setContent(e.target.value)}
             placeholder="Write your entry here... I'll help categorize and analyze it"
-            className="min-h-[200px] text-base resize-none bg-black/20 border-white/10 text-white/90 placeholder:text-white/60"
+            className="min-h-[200px] text-base resize-none bg-black/20 border-white/10 text-white/90 placeholder:text-white/60 whitespace-pre-wrap"
+            style={{ whiteSpace: 'pre-wrap' }}
           />
         </TabsContent>
         <TabsContent value="url" className="mt-4">
