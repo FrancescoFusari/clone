@@ -65,32 +65,36 @@ const Timeline = () => {
 
   return (
     <CenteredLayout>
-      <div className="w-full max-w-3xl mx-auto px-4 py-8 mb-20">
-        <h1 className="text-3xl font-bold mb-8 text-white/90">Timeline</h1>
-        <div className="space-y-4">
+      <div className="w-full max-w-2xl mx-auto px-4 py-6 mb-20">
+        <h1 className="text-2xl font-bold mb-6 text-white/90">Timeline</h1>
+        <div className="space-y-3">
           {entries?.map((entry) => (
             <Card
               key={entry.id}
               className="backdrop-blur-lg bg-white/5 border-white/10 hover:bg-white/10 transition-colors"
             >
-              <CardHeader className="cursor-pointer" onClick={() => toggleExpand(entry.id)}>
+              <CardHeader className="cursor-pointer py-3" onClick={() => toggleExpand(entry.id)}>
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle className="text-white/90">{entry.title}</CardTitle>
-                    <CardDescription className="text-white/60">
+                    <CardTitle className="text-base text-white/90">{entry.title}</CardTitle>
+                    <CardDescription className="text-sm text-white/60">
                       {format(new Date(entry.created_at), "PPp")}
                     </CardDescription>
                   </div>
                   {expandedEntries.has(entry.id) ? (
-                    <ChevronUp className="h-5 w-5 text-white/60" />
+                    <ChevronUp className="h-4 w-4 text-white/60" />
                   ) : (
-                    <ChevronDown className="h-5 w-5 text-white/60" />
+                    <ChevronDown className="h-4 w-4 text-white/60" />
                   )}
                 </div>
               </CardHeader>
               {expandedEntries.has(entry.id) && (
-                <CardContent>
-                  <p className="text-white/80 mb-4">{entry.content}</p>
+                <CardContent className="py-3">
+                  <p className="text-sm text-white/80 mb-3">
+                    {entry.content.length > 200
+                      ? `${entry.content.substring(0, 200)}...`
+                      : entry.content}
+                  </p>
                   <Button
                     variant="outline"
                     className="bg-white/5 border-white/10 text-white/90 hover:bg-white/10"
