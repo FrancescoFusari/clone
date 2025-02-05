@@ -15,6 +15,7 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const Entries = lazy(() => import("./pages/Entries"));
 const EntryDetails = lazy(() => import("./pages/EntryDetails"));
 const Timeline = lazy(() => import("./pages/Timeline"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
 
 // Configure React Query for optimal performance
 const queryClient = new QueryClient({
@@ -90,6 +91,14 @@ const AppRoutes = () => {
           element={
             <ProtectedRoute>
               <Timeline />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <Dashboard />
             </ProtectedRoute>
           }
         />
