@@ -3,10 +3,12 @@ import { EntryForm } from "@/components/EntryForm";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
+import { useQueryClient } from "@tanstack/react-query";
 
 const NewEntry = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const handleSubmit = async (content: string, isUrl?: boolean) => {
     try {
@@ -31,12 +33,15 @@ const NewEntry = () => {
 
         if (error) throw error;
         
-        // Navigate to entries page after successful submission
+        // Invalidate queries and navigate
+        await queryClient.invalidateQueries({ queryKey: ['entries'] });
+        await queryClient.invalidateQueries({ queryKey: ['timeline-entries'] });
+        
         toast({
           title: "URL processed successfully",
           description: "Your entry has been created",
         });
-        navigate('/entries');
+        navigate('/');
         return;
       }
 
@@ -47,11 +52,15 @@ const NewEntry = () => {
 
       if (error) throw error;
 
+      // Invalidate queries and navigate
+      await queryClient.invalidateQueries({ queryKey: ['entries'] });
+      await queryClient.invalidateQueries({ queryKey: ['timeline-entries'] });
+      
       toast({
         title: "Entry created successfully",
         description: "Your entry has been processed and saved",
       });
-      navigate('/entries');
+      navigate('/');
 
     } catch (error) {
       console.error('Error creating entry:', error);
