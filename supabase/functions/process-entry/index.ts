@@ -157,15 +157,22 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: 'You are an AI that analyzes journal entries. Return a JSON object with: category (one of: personal, work, social, interests_and_hobbies, school), subcategory (specific topic), tags (max 5 relevant keywords), and summary (1-2 sentences).'
+            content: `You are an AI that analyzes journal entries. You must respond with a valid JSON object containing exactly these fields:
+            {
+              "category": "personal" | "work" | "social" | "interests_and_hobbies" | "school",
+              "subcategory": "string describing specific topic",
+              "tags": ["array of 1-5 relevant keywords"],
+              "summary": "1-2 sentence summary"
+            }`
           },
           {
             role: 'user',
             content: formattedContent
           }
         ],
-        temperature: 0.7,
-        max_tokens: 500
+        temperature: 0.3,
+        max_tokens: 500,
+        response_format: { type: "json_object" }
       }),
     });
 
@@ -185,8 +192,8 @@ serve(async (req) => {
 
     let processedData;
     try {
-      const rawContent = categoryData.choices[0].message.content.trim();
-      console.log('Attempting to parse OpenAI response:', rawContent);
+      const rawContent = categoryData.choices[0].message.content;
+      console.log('Raw OpenAI response:', rawContent);
       processedData = JSON.parse(rawContent);
       
       // Validate the parsed data
@@ -196,7 +203,6 @@ serve(async (req) => {
       }
     } catch (error) {
       console.error('Error parsing category response:', error);
-      console.error('Raw content:', categoryData.choices[0].message.content);
       throw new Error('Failed to parse OpenAI response');
     }
 
@@ -213,15 +219,19 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: 'Generate a concise, engaging title (max 50 characters) for this journal entry. Be specific and descriptive. Do not use generic phrases.'
+            content: `Generate a concise title (max 50 characters) for this journal entry. Respond with a JSON object in this format:
+            {
+              "title": "The generated title here"
+            }`
           },
           {
             role: 'user',
             content: formattedContent
           }
         ],
-        temperature: 0.7,
-        max_tokens: 50
+        temperature: 0.3,
+        max_tokens: 50,
+        response_format: { type: "json_object" }
       }),
     });
 
@@ -239,7 +249,15 @@ serve(async (req) => {
       throw new Error('Invalid response from OpenAI API (title)');
     }
 
-    const generatedTitle = titleData.choices[0].message.content
+    let titleJson;
+    try {
+      titleJson = JSON.parse(titleData.choices[0].message.content);
+    } catch (error) {
+      console.error('Error parsing title response:', error);
+      throw new Error('Failed to parse title response');
+    }
+
+    const generatedTitle = titleJson.title
       .replace(/["']/g, '')
       .replace(/\.{3,}$/, '')
       .trim();
