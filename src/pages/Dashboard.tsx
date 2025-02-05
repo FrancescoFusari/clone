@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
 import { CenteredLayout } from "@/components/layouts/CenteredLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
-import { User, Image, Tag, PieChart as PieChartIcon } from "lucide-react";
+import { User, Image, Tag, PieChartIcon } from "lucide-react";
 import { useAuth } from "@/components/AuthProvider";
 import { useToast } from "@/components/ui/use-toast";
 
@@ -15,7 +15,62 @@ const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 const Dashboard = () => {
   const { session } = useAuth();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [preferences, setPreferences] = useState<any>(null);
+
+  // Create default preferences mutation
+  const createDefaultPreferences = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase
+        .from('dashboard_preferences')
+        .insert([
+          {
+            user_id: session?.user.id,
+            layout: [],
+          },
+        ])
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['preferences'] });
+    },
+    onError: (error) => {
+      console.error('Error creating default preferences:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create dashboard preferences",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const { data: preferences, isLoading: loadingPreferences } = useQuery({
+    queryKey: ['preferences', session?.user.id],
+    queryFn: async () => {
+      console.log('Fetching preferences for user:', session?.user.id);
+      const { data, error } = await supabase
+        .from('dashboard_preferences')
+        .select('*')
+        .eq('user_id', session?.user.id)
+        .maybeSingle();
+
+      if (error) throw error;
+      
+      // If no preferences exist, create default ones
+      if (!data && session?.user.id) {
+        console.log('No preferences found, creating defaults');
+        createDefaultPreferences.mutate();
+        return null;
+      }
+
+      return data;
+    },
+    enabled: !!session?.user.id,
+  });
 
   const { data: categoryStats, isLoading: loadingStats } = useQuery({
     queryKey: ['categoryStats'],
@@ -61,7 +116,7 @@ const Dashboard = () => {
         .from('profiles')
         .select('*')
         .eq('id', session?.user.id)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
       return data;
@@ -69,25 +124,7 @@ const Dashboard = () => {
     enabled: !!session?.user.id,
   });
 
-  useEffect(() => {
-    const fetchPreferences = async () => {
-      const { data, error } = await supabase
-        .from('dashboard_preferences')
-        .select('*')
-        .eq('user_id', session?.user.id)
-        .single();
-
-      if (!error) {
-        setPreferences(data);
-      }
-    };
-
-    if (session?.user.id) {
-      fetchPreferences();
-    }
-  }, [session?.user.id]);
-
-  if (loadingStats || loadingTags || loadingProfile) {
+  if (loadingStats || loadingTags || loadingProfile || loadingPreferences) {
     return <LoadingSkeleton />;
   }
 
