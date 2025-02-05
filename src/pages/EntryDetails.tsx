@@ -35,6 +35,7 @@ const EntryDetails = () => {
         throw error;
       }
 
+      console.log("Entry data:", data); // Debug log
       return data;
     },
   });
@@ -58,13 +59,13 @@ const EntryDetails = () => {
     );
   }
 
-  const researchData = entry.research_data as ResearchData;
+  const researchData = entry.research_data as ResearchData | null;
 
   return (
     <CenteredLayout>
-      <Card className="p-6">
+      <Card className="p-6 max-w-3xl w-full">
         <h1 className="text-2xl font-bold mb-4">{entry.title}</h1>
-        <div className="space-y-4">
+        <div className="space-y-6">
           <div>
             <h2 className="text-lg font-semibold mb-2">Content</h2>
             <p className="whitespace-pre-wrap">{entry.content}</p>
@@ -78,11 +79,18 @@ const EntryDetails = () => {
           )}
 
           {researchData && (
-            <>
-              {researchData.key_insights && (
+            <div className="space-y-4">
+              {researchData.summary && (
+                <div>
+                  <h2 className="text-lg font-semibold mb-2">AI Summary</h2>
+                  <p>{researchData.summary}</p>
+                </div>
+              )}
+
+              {researchData.key_insights && researchData.key_insights.length > 0 && (
                 <div>
                   <h2 className="text-lg font-semibold mb-2">Key Insights</h2>
-                  <ul className="list-disc pl-5">
+                  <ul className="list-disc pl-5 space-y-1">
                     {researchData.key_insights.map((insight, index) => (
                       <li key={index}>{insight}</li>
                     ))}
@@ -90,7 +98,7 @@ const EntryDetails = () => {
                 </div>
               )}
 
-              {researchData.related_topics && (
+              {researchData.related_topics && researchData.related_topics.length > 0 && (
                 <div>
                   <h2 className="text-lg font-semibold mb-2">Related Topics</h2>
                   <div className="flex flex-wrap gap-2">
@@ -105,7 +113,7 @@ const EntryDetails = () => {
                   </div>
                 </div>
               )}
-            </>
+            </div>
           )}
 
           {entry.tags && entry.tags.length > 0 && (
@@ -124,7 +132,7 @@ const EntryDetails = () => {
             </div>
           )}
 
-          <div className="text-sm text-gray-500">
+          <div className="text-sm text-muted-foreground">
             Created: {new Date(entry.created_at).toLocaleDateString()}
           </div>
         </div>
