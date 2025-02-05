@@ -1,14 +1,10 @@
 import { Waves } from "@/components/ui/waves-background"
-import { useIsMobile } from "@/hooks/use-mobile"
-import { cn } from "@/lib/utils"
 
 interface CenteredLayoutProps {
   children: React.ReactNode;
 }
 
 export const CenteredLayout = ({ children }: CenteredLayoutProps) => {
-  const isMobile = useIsMobile();
-  
   return (
     <div className="relative w-full min-h-screen">
       <div className="absolute inset-0 z-0">
@@ -26,10 +22,7 @@ export const CenteredLayout = ({ children }: CenteredLayoutProps) => {
           yGap={36}
         />
       </div>
-      <div className={cn(
-        "container mx-auto py-8 mb-24 relative z-50",
-        isMobile ? "px-2" : "px-4"
-      )}>
+      <div className="container mx-auto px-4 py-8 mb-24 relative z-50">
         {children}
       </div>
     </div>
