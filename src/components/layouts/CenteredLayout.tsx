@@ -6,7 +6,7 @@ interface CenteredLayoutProps {
 
 export const CenteredLayout = ({ children }: CenteredLayoutProps) => {
   return (
-    <div className="relative min-h-screen w-full overflow-y-auto pb-24">
+    <div className="min-h-screen w-full">
       <div className="fixed inset-0 z-0">
         <Waves
           lineColor="rgba(255, 255, 255, 0.1)"
@@ -22,7 +22,7 @@ export const CenteredLayout = ({ children }: CenteredLayoutProps) => {
           yGap={36}
         />
       </div>
-      <div className="relative z-50 container mx-auto px-4 py-8">
+      <div className="relative z-50 container mx-auto px-4 py-8 pb-24">
         {children}
       </div>
     </div>
