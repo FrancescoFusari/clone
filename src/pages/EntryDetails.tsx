@@ -2,7 +2,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Calendar, Tag, FileText, Sparkles } from "lucide-react";
+import { ArrowLeft, Calendar, Tag, FileText, Sparkles, Search, Lightbulb, BookOpen, HelpCircle } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -13,6 +13,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const formatContent = (text: string) => {
   // Split text into paragraphs
@@ -67,6 +69,27 @@ const EntryDetails = () => {
       console.log("Fetched entry details:", data);
       return data;
     },
+  });
+
+  const { data: research, isLoading: isResearchLoading } = useQuery({
+    queryKey: ["research", id],
+    queryFn: async () => {
+      if (!entry) return null;
+      
+      console.log("Fetching research for entry:", id);
+      const response = await supabase.functions.invoke('research-content', {
+        body: { content: entry.content, title: entry.title },
+      });
+
+      if (response.error) {
+        console.error("Error fetching research:", response.error);
+        throw response.error;
+      }
+
+      console.log("Research results:", response.data);
+      return response.data;
+    },
+    enabled: !!entry,
   });
 
   if (isLoading) {
@@ -142,7 +165,7 @@ const EntryDetails = () => {
           )}
 
           {entry.tags && entry.tags.length > 0 && (
-            <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex items-center gap-2 flex-wrap mb-6">
               <Tag className="h-4 w-4 text-white/60" />
               {entry.tags.map((tag: string) => (
                 <Badge 
@@ -155,6 +178,86 @@ const EntryDetails = () => {
               ))}
             </div>
           )}
+
+          <div className="mt-8 space-y-6">
+            <div className="flex items-center gap-2">
+              <Search className="h-5 w-5 text-white/60" />
+              <h3 className="text-lg font-semibold text-white/90">AI Research Insights</h3>
+            </div>
+
+            {isResearchLoading ? (
+              <div className="space-y-4">
+                <Skeleton className="h-4 w-3/4 bg-white/5" />
+                <Skeleton className="h-4 w-1/2 bg-white/5" />
+                <Skeleton className="h-4 w-2/3 bg-white/5" />
+              </div>
+            ) : research ? (
+              <div className="grid gap-6">
+                <Alert className="bg-white/5 border-white/10">
+                  <Lightbulb className="h-4 w-4" />
+                  <AlertTitle>Key Concepts</AlertTitle>
+                  <AlertDescription>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {research.key_concepts.map((concept: string) => (
+                        <Badge 
+                          key={concept}
+                          variant="secondary" 
+                          className="bg-white/10 text-white/80 hover:bg-white/20"
+                        >
+                          {concept}
+                        </Badge>
+                      ))}
+                    </div>
+                  </AlertDescription>
+                </Alert>
+
+                <Alert className="bg-white/5 border-white/10">
+                  <BookOpen className="h-4 w-4" />
+                  <AlertTitle>Related Topics</AlertTitle>
+                  <AlertDescription>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {research.related_topics.map((topic: string) => (
+                        <Badge 
+                          key={topic}
+                          variant="secondary"
+                          className="bg-white/10 text-white/80 hover:bg-white/20"
+                        >
+                          {topic}
+                        </Badge>
+                      ))}
+                    </div>
+                  </AlertDescription>
+                </Alert>
+
+                <Alert className="bg-white/5 border-white/10">
+                  <Sparkles className="h-4 w-4" />
+                  <AlertTitle>AI Insights</AlertTitle>
+                  <AlertDescription className="mt-2 text-white/80">
+                    {research.insights}
+                  </AlertDescription>
+                </Alert>
+
+                <Alert className="bg-white/5 border-white/10">
+                  <HelpCircle className="h-4 w-4" />
+                  <AlertTitle>Questions to Consider</AlertTitle>
+                  <AlertDescription>
+                    <ul className="list-disc pl-4 mt-2 space-y-2 text-white/80">
+                      {research.questions.map((question: string) => (
+                        <li key={question}>{question}</li>
+                      ))}
+                    </ul>
+                  </AlertDescription>
+                </Alert>
+              </div>
+            ) : (
+              <Alert className="bg-white/5 border-white/10">
+                <AlertTitle>No research results available</AlertTitle>
+                <AlertDescription>
+                  We couldn't generate research insights for this entry. Please try again later.
+                </AlertDescription>
+              </Alert>
+            )}
+          </div>
         </CardContent>
       </Card>
     </div>
