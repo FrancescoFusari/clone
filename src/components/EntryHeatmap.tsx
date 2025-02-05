@@ -1,5 +1,5 @@
 import React from "react";
-import { format, parseISO, eachDayOfInterval, subDays } from "date-fns";
+import { format, parseISO, eachDayOfInterval, subDays, startOfWeek, addDays, getMonth } from "date-fns";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface EntryHeatmapProps {
@@ -30,30 +30,100 @@ export const EntryHeatmap = ({ entries, days = 365 }: EntryHeatmapProps) => {
     return "bg-emerald-300/50";
   };
 
+  // Create weeks array for calendar-like display
+  const weeks: Date[][] = [];
+  let currentWeek: Date[] = [];
+  let currentMonth = -1;
+  const monthLabels: { month: string, index: number }[] = [];
+
+  daysArray.forEach((date, index) => {
+    // Check if we need to start a new week
+    if (index === 0) {
+      // Fill in days from start of week if necessary
+      const weekStart = startOfWeek(date);
+      let paddingDay = weekStart;
+      while (paddingDay < date) {
+        currentWeek.push(paddingDay);
+        paddingDay = addDays(paddingDay, 1);
+      }
+    }
+
+    // Track months for labels
+    const month = getMonth(date);
+    if (month !== currentMonth) {
+      monthLabels.push({ month: format(date, 'MMM'), index: weeks.length });
+      currentMonth = month;
+    }
+
+    currentWeek.push(date);
+
+    // Start new week on Sunday or if it's the last day
+    if (currentWeek.length === 7 || index === daysArray.length - 1) {
+      weeks.push(currentWeek);
+      currentWeek = [];
+    }
+  });
+
   return (
     <div className="w-full overflow-x-auto">
-      <div className="flex flex-wrap gap-1">
-        {daysArray.map((date) => {
-          const formattedDate = format(date, 'yyyy-MM-dd');
-          const count = entriesPerDay[formattedDate] || 0;
-          
-          return (
-            <TooltipProvider key={formattedDate}>
-              <Tooltip>
-                <TooltipTrigger>
-                  <div
-                    className={`w-3 h-3 rounded-sm ${getColor(count)} transition-colors hover:opacity-80`}
-                  />
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p className="text-xs">
-                    {format(date, 'MMM d, yyyy')}: {count} entries
-                  </p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          );
-        })}
+      <div className="flex flex-col gap-1">
+        {/* Month labels */}
+        <div className="flex pl-8">
+          {monthLabels.map(({ month, index }, i) => (
+            <div
+              key={`${month}-${index}`}
+              className="text-xs text-white/60"
+              style={{
+                position: 'relative',
+                left: `${index * 16}px`, // Adjust based on square size + gap
+                marginRight: i < monthLabels.length - 1 ? '20px' : '0'
+              }}
+            >
+              {month}
+            </div>
+          ))}
+        </div>
+
+        {/* Day labels and contribution squares */}
+        <div className="flex">
+          {/* Day of week labels */}
+          <div className="flex flex-col gap-1 pr-2">
+            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
+              <div key={day} className="h-3 text-xs text-white/60 flex items-center">
+                {day}
+              </div>
+            ))}
+          </div>
+
+          {/* Contribution squares */}
+          <div className="flex gap-1">
+            {weeks.map((week, weekIndex) => (
+              <div key={weekIndex} className="flex flex-col gap-1">
+                {week.map((date) => {
+                  const formattedDate = format(date, 'yyyy-MM-dd');
+                  const count = entriesPerDay[formattedDate] || 0;
+                  
+                  return (
+                    <TooltipProvider key={formattedDate}>
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <div
+                            className={`w-3 h-3 rounded-sm ${getColor(count)} transition-colors hover:opacity-80`}
+                          />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className="text-xs">
+                            {format(date, 'MMM d, yyyy')}: {count} entries
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  );
+                })}
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );
