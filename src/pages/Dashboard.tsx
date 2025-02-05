@@ -69,6 +69,11 @@ const Dashboard = () => {
     show: { opacity: 1, y: 0 }
   };
 
+  const truncateContent = (content: string, maxLength: number = 200) => {
+    if (content.length <= maxLength) return content;
+    return `${content.slice(0, maxLength)}...`;
+  };
+
   return (
     <CenteredLayout>
       <div className="space-y-8">
@@ -141,7 +146,7 @@ const Dashboard = () => {
                       >
                         <CardContent className="p-4 pt-0">
                           <p className="text-sm text-white/80 mb-3">
-                            {entry.content}
+                            {truncateContent(entry.content)}
                           </p>
                           {entry.tags && entry.tags.length > 0 && (
                             <div className="flex items-center gap-2 flex-wrap">
