@@ -2,7 +2,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Calendar, Tag, FileText } from "lucide-react";
+import { ArrowLeft, Calendar, Tag, FileText, Sparkles } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -118,10 +118,26 @@ const EntryDetails = () => {
             {formatContent(entry.content)}
           </div>
 
-          {entry.summary && (
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold mb-2 text-white/90">AI Summary</h3>
-              <p className="text-white/60">{entry.summary}</p>
+          {(entry.summary || entry.title) && (
+            <div className="mb-6 space-y-4">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-white/60" />
+                <h3 className="text-lg font-semibold text-white/90">AI Generated Content</h3>
+              </div>
+              <div className="grid gap-4 p-4 rounded-lg bg-white/5">
+                {entry.title && (
+                  <div>
+                    <span className="text-sm font-medium text-white/60">Title:</span>
+                    <p className="text-white/80">{entry.title}</p>
+                  </div>
+                )}
+                {entry.summary && (
+                  <div>
+                    <span className="text-sm font-medium text-white/60">Summary:</span>
+                    <p className="text-white/80">{entry.summary}</p>
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
