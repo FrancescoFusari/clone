@@ -4,11 +4,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer } from "recharts";
-import { Tag, Calendar, List, ChartBar } from "lucide-react";
-import { format } from "date-fns";
+import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, LineChart, Line } from "recharts";
+import { Tag, Calendar, List } from "lucide-react";
+import { format, parseISO, eachDayOfInterval, subDays } from "date-fns";
 import { CenteredLayout } from "@/components/layouts/CenteredLayout";
 import { useToast } from "@/components/ui/use-toast";
+import { EntryHeatmap } from "@/components/EntryHeatmap";
 
 const Dashboard = () => {
   const { toast } = useToast();
@@ -64,19 +65,25 @@ const Dashboard = () => {
     },
   });
 
-  // Process entries data for the timeline chart
-  const timelineData = entries?.reduce((acc: any[], entry) => {
-    const date = format(new Date(entry.created_at), "MMM d");
-    const existingDate = acc.find((item) => item.date === date);
+  // Process entries data for the line chart
+  const lineChartData = React.useMemo(() => {
+    if (!entries) return [];
     
-    if (existingDate) {
-      existingDate.count += 1;
-    } else {
-      acc.push({ date, count: 1 });
-    }
+    const today = new Date();
+    const startDate = subDays(today, 30); // Last 30 days
+    const daysArray = eachDayOfInterval({ start: startDate, end: today });
     
-    return acc;
-  }, []) || [];
+    const entriesPerDay = entries.reduce((acc: Record<string, number>, entry) => {
+      const date = format(parseISO(entry.created_at), 'yyyy-MM-dd');
+      acc[date] = (acc[date] || 0) + 1;
+      return acc;
+    }, {});
+    
+    return daysArray.map(date => ({
+      date: format(date, 'MMM d'),
+      count: entriesPerDay[format(date, 'yyyy-MM-dd')] || 0
+    }));
+  }, [entries]);
 
   // Process entries data for category distribution
   const categoryData = entries?.reduce((acc: any[], entry) => {
@@ -138,7 +145,7 @@ const Dashboard = () => {
           </CardContent>
         </Card>
 
-        {/* Timeline Card */}
+        {/* Entry Timeline Card */}
         <Card className="backdrop-blur-lg bg-white/5 border border-white/10">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-white/90">
@@ -147,47 +154,58 @@ const Dashboard = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-[300px]">
-              <ChartContainer config={{}}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={timelineData}>
-                    <XAxis
-                      dataKey="date"
-                      stroke="#94a3b8"
-                      fontSize={12}
-                      tickLine={false}
-                      axisLine={false}
-                    />
-                    <YAxis
-                      stroke="#94a3b8"
-                      fontSize={12}
-                      tickLine={false}
-                      axisLine={false}
-                      tickFormatter={(value) => `${value}`}
-                    />
-                    <Bar
-                      dataKey="count"
-                      fill="rgba(255, 255, 255, 0.2)"
-                      radius={[4, 4, 0, 0]}
-                    />
-                    <ChartTooltip
-                      content={({ active, payload }) => {
-                        if (!active || !payload?.length) return null;
-                        return (
-                          <ChartTooltipContent>
-                            <div className="text-sm font-medium text-white/90">
-                              {payload[0].payload.date}
-                            </div>
-                            <div className="text-sm text-white/60">
-                              {payload[0].value} entries
-                            </div>
-                          </ChartTooltipContent>
-                        );
-                      }}
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
-              </ChartContainer>
+            <div className="space-y-6">
+              {/* GitHub-style contribution graph */}
+              <div className="p-4 rounded-lg bg-white/5">
+                <h3 className="text-sm font-medium mb-4 text-white/80">Contribution Activity</h3>
+                <EntryHeatmap entries={entries || []} days={365} />
+              </div>
+              
+              {/* Line chart for daily entries */}
+              <div className="h-[200px]">
+                <ChartContainer config={{}}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={lineChartData}>
+                      <XAxis
+                        dataKey="date"
+                        stroke="#94a3b8"
+                        fontSize={12}
+                        tickLine={false}
+                        axisLine={false}
+                      />
+                      <YAxis
+                        stroke="#94a3b8"
+                        fontSize={12}
+                        tickLine={false}
+                        axisLine={false}
+                        tickFormatter={(value) => `${value}`}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="count"
+                        stroke="#10b981"
+                        strokeWidth={2}
+                        dot={false}
+                      />
+                      <ChartTooltip
+                        content={({ active, payload }) => {
+                          if (!active || !payload?.length) return null;
+                          return (
+                            <ChartTooltipContent>
+                              <div className="text-sm font-medium text-white/90">
+                                {payload[0].payload.date}
+                              </div>
+                              <div className="text-sm text-white/60">
+                                {payload[0].value} entries
+                              </div>
+                            </ChartTooltipContent>
+                          );
+                        }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </ChartContainer>
+              </div>
             </div>
           </CardContent>
         </Card>
