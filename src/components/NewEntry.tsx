@@ -87,16 +87,19 @@ const NewEntry = () => {
 
   return (
     <CenteredLayout>
-      <div className="max-w-2xl mx-auto space-y-6">
-        <div className="space-y-2">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-primary/90 to-primary/60 bg-clip-text text-transparent">
+      <div className="max-w-2xl mx-auto space-y-8">
+        <div className="space-y-4">
+          <h1 className="text-4xl font-bold tracking-tight text-gradient">
             Create New Entry
           </h1>
-          <p className="text-lg text-white/80">
-            Share your thoughts, ideas, or paste a URL. Our AI will help analyze and organize your content, making it easier to find and reference later.
+          <p className="text-lg text-white/80 leading-relaxed">
+            Share your thoughts, ideas, or paste a URL. Our AI will help analyze and organize your content, 
+            making it easier to find and reference later.
           </p>
         </div>
-        <EntryForm onSubmit={handleSubmit} />
+        <div className="glass-morphism rounded-2xl p-6">
+          <EntryForm onSubmit={handleSubmit} />
+        </div>
       </div>
     </CenteredLayout>
   );

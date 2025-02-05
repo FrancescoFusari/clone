@@ -53,11 +53,11 @@
   }
 
   .glass-morphism {
-    @apply backdrop-blur-xl bg-secondary/30 border border-white/10 shadow-[0_8px_16px_-4px_rgba(0,0,0,0.3)] hover:bg-secondary/40 transition-colors;
+    @apply backdrop-blur-xl bg-white/[0.06] border border-white/10 shadow-[0_8px_16px_-4px_rgba(0,0,0,0.3)] hover:bg-white/[0.08] transition-colors;
   }
   
   .neo-blur {
-    @apply backdrop-blur-2xl bg-secondary/40 border border-white/10 hover:bg-secondary/50 transition-colors;
+    @apply backdrop-blur-2xl bg-white/[0.06] border border-white/10 hover:bg-white/[0.08] transition-colors;
   }
   
   .text-gradient {
@@ -69,6 +69,6 @@
   }
 
   .card-hover {
-    @apply hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 hover:scale-[1.02] hover:bg-secondary/40;
+    @apply hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 hover:scale-[1.02] hover:bg-white/[0.08];
   }
 }
