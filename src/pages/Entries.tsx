@@ -16,6 +16,20 @@ import { useNavigate } from "react-router-dom";
 import { CenteredLayout } from "@/components/layouts/CenteredLayout";
 import { useAuth } from "@/components/AuthProvider";
 
+type Entry = {
+  id: string;
+  title: string;
+  content: string;
+  created_at: string;
+  tags: string[];
+  research_data?: {
+    insights?: string;
+    questions?: string[];
+    key_concepts?: string[];
+    related_topics?: string[];
+  } | null;
+};
+
 const Entries = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -33,6 +47,7 @@ const Entries = () => {
       const { data, error } = await supabase
         .from("entries")
         .select("*")
+        .eq("user_id", session.user.id)
         .order("created_at", { ascending: false });
 
       if (error) {
@@ -46,7 +61,7 @@ const Entries = () => {
       }
 
       console.log("Fetched entries:", data);
-      return data || [];
+      return data as Entry[];
     },
     enabled: !!session?.user,
   });

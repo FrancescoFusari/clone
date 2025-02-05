@@ -15,7 +15,13 @@ import {
 import { useToast } from "@/components/ui/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ResearchData } from "@/integrations/supabase/types";
+
+type ResearchData = {
+  insights: string;
+  questions: string[];
+  key_concepts: string[];
+  related_topics: string[];
+};
 
 const formatContent = (text: string) => {
   const paragraphs = text.split(/\n\s*\n/);

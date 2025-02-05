@@ -53,7 +53,10 @@ const NewEntry = () => {
 
       console.log("Processing text content");
       const { data, error } = await supabase.functions.invoke('process-entry', {
-        body: { content }
+        body: { 
+          content,
+          user_id: session.user.id
+        }
       });
 
       if (error) {
