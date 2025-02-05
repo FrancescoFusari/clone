@@ -74,30 +74,34 @@ const Timeline = () => {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
+      <CenteredLayout>
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white/20"></div>
+        </div>
+      </CenteredLayout>
     );
   }
 
   return (
     <CenteredLayout>
-      <div className="w-full max-w-2xl mx-auto py-6 mb-20">
-        <h1 className="text-2xl font-bold mb-6 text-white/90">Timeline</h1>
+      <div className="w-full max-w-2xl mx-auto py-6 space-y-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-white/90">Timeline</h1>
+        </div>
         
-        <div className="mb-6 overflow-x-auto">
+        <div className="overflow-x-auto -mx-4 px-4 pb-2">
           <ToggleGroup
             type="multiple"
             value={selectedCategories}
             onValueChange={setSelectedCategories}
-            className="inline-flex flex-nowrap min-w-full pb-2"
+            className="inline-flex flex-nowrap min-w-full"
           >
             {categories.map((category) => (
               <ToggleGroupItem
                 key={category}
                 value={category}
                 aria-label={`Filter by ${category}`}
-                className="whitespace-nowrap capitalize"
+                className="whitespace-nowrap capitalize text-sm bg-white/5 data-[state=on]:bg-white/10"
               >
                 {category.replace(/_/g, " ")}
               </ToggleGroupItem>
@@ -111,31 +115,36 @@ const Timeline = () => {
               key={entry.id}
               className="backdrop-blur-lg bg-white/5 border-white/10 hover:bg-white/10 transition-colors"
             >
-              <CardHeader className="cursor-pointer py-3" onClick={() => toggleExpand(entry.id)}>
+              <CardHeader 
+                className="cursor-pointer py-3 select-none" 
+                onClick={() => toggleExpand(entry.id)}
+              >
                 <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="text-base text-white/90">{entry.title}</CardTitle>
+                  <div className="space-y-1">
+                    <CardTitle className="text-base text-white/90 line-clamp-1">
+                      {entry.title}
+                    </CardTitle>
                     <CardDescription className="text-sm text-white/60">
                       {format(new Date(entry.created_at), "PPp")}
                     </CardDescription>
                   </div>
                   {expandedEntries.has(entry.id) ? (
-                    <ChevronUp className="h-4 w-4 text-white/60" />
+                    <ChevronUp className="h-4 w-4 text-white/60 shrink-0" />
                   ) : (
-                    <ChevronDown className="h-4 w-4 text-white/60" />
+                    <ChevronDown className="h-4 w-4 text-white/60 shrink-0" />
                   )}
                 </div>
               </CardHeader>
               {expandedEntries.has(entry.id) && (
-                <CardContent className="py-3">
-                  <p className="text-sm text-white/80 mb-3">
+                <CardContent className="py-3 space-y-3">
+                  <p className="text-sm text-white/80 whitespace-pre-wrap">
                     {entry.content.length > 200
                       ? `${entry.content.substring(0, 200)}...`
                       : entry.content}
                   </p>
                   <Button
                     variant="outline"
-                    className="bg-white/5 border-white/10 text-white/90 hover:bg-white/10"
+                    className="w-full sm:w-auto bg-white/5 border-white/10 text-white/90 hover:bg-white/10"
                     onClick={() => navigate(`/entries/${entry.id}`)}
                   >
                     View Details
@@ -144,6 +153,12 @@ const Timeline = () => {
               )}
             </Card>
           ))}
+          
+          {filteredEntries?.length === 0 && (
+            <div className="text-center py-8">
+              <p className="text-white/60">No entries found</p>
+            </div>
+          )}
         </div>
       </div>
     </CenteredLayout>
