@@ -119,6 +119,12 @@ const EntryDetails = () => {
   const research = entry?.research_data ? (entry.research_data as ResearchData) : null;
   const isResearchLoading = researchMutation.isPending;
 
+  const handleGenerateResearch = () => {
+    if (!research) {
+      researchMutation.mutate();
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
