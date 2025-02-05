@@ -39,7 +39,7 @@ const NewEntry = () => {
 
         console.log("URL processed successfully:", data);
         
-        // Invalidate queries and navigate
+        // Invalidate queries and navigate to index
         await queryClient.invalidateQueries({ queryKey: ['entries'] });
         await queryClient.invalidateQueries({ queryKey: ['timeline-entries'] });
         
@@ -47,7 +47,7 @@ const NewEntry = () => {
           title: "URL processed successfully",
           description: "Your entry has been created",
         });
-        navigate('/entries');
+        navigate('/');
         return;
       }
 
@@ -66,7 +66,7 @@ const NewEntry = () => {
 
       console.log("Entry processed successfully:", data);
 
-      // Invalidate queries and navigate
+      // Invalidate queries and navigate to index
       await queryClient.invalidateQueries({ queryKey: ['entries'] });
       await queryClient.invalidateQueries({ queryKey: ['timeline-entries'] });
       
@@ -74,7 +74,7 @@ const NewEntry = () => {
         title: "Entry created successfully",
         description: "Your entry has been processed and saved",
       });
-      navigate('/entries');
+      navigate('/');
 
     } catch (error) {
       console.error('Error creating entry:', error);
