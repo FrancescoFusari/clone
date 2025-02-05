@@ -69,7 +69,7 @@ const Dashboard = () => {
 
   return (
     <CenteredLayout>
-      <div className="space-y-8 px-4 md:px-0">
+      <div className="space-y-8">
         <div>
           <h1 className="text-3xl font-bold mb-2 text-gradient">Activity Timeline</h1>
           <p className="text-white/60">Your recent entries and activities</p>
