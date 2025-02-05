@@ -6,7 +6,7 @@ import { PrivacyNotice } from "./PrivacyNotice";
 import { EntryForm } from "./EntryForm";
 import { CenteredLayout } from "./layouts/CenteredLayout";
 
-export const NewEntry = () => {
+const NewEntry = () => {
   const { session } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -73,3 +73,5 @@ export const NewEntry = () => {
     </CenteredLayout>
   );
 };
+
+export default NewEntry;
