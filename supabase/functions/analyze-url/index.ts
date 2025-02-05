@@ -17,18 +17,52 @@ serve(async (req) => {
     const { url } = await req.json();
     console.log('Analyzing URL:', url);
 
-    // Fetch URL content
-    const response = await fetch(url);
-    const htmlContent = await response.text();
+    // Validate URL
+    try {
+      new URL(url);
+    } catch (e) {
+      console.error('Invalid URL:', e);
+      throw new Error('Invalid URL provided');
+    }
 
-    // Extract text content from HTML (basic implementation)
+    // Fetch URL content with timeout and error handling
+    let response;
+    try {
+      response = await fetch(url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+    } catch (error) {
+      console.error('Error fetching URL:', error);
+      throw new Error(`Failed to fetch URL: ${error.message}`);
+    }
+
+    // Get content type and handle accordingly
+    const contentType = response.headers.get('content-type') || '';
+    if (!contentType.includes('text/html') && !contentType.includes('text/plain')) {
+      throw new Error('URL must point to an HTML or text document');
+    }
+
+    const htmlContent = await response.text();
+    
+    // Extract text content from HTML (improved implementation)
     const textContent = htmlContent
       .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '') // Remove scripts
       .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '') // Remove styles
-      .replace(/<[^>]*>/g, ' ') // Remove HTML tags
+      .replace(/<[^>]+>/g, ' ') // Remove HTML tags
+      .replace(/&nbsp;/g, ' ') // Replace &nbsp; with spaces
       .replace(/\s+/g, ' ') // Normalize whitespace
       .trim()
       .slice(0, 8000); // Limit content length
+
+    if (!textContent) {
+      throw new Error('No text content found in the URL');
+    }
 
     console.log('Extracted text content:', textContent.substring(0, 200) + '...');
 
