@@ -30,6 +30,8 @@ serve(async (req) => {
       .trim()
       .slice(0, 8000); // Limit content length
 
+    console.log('Extracted text content:', textContent.substring(0, 200) + '...');
+
     // Process with OpenAI
     const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -38,11 +40,19 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4o',
         messages: [
           {
             role: 'system',
-            content: 'Analyze the following webpage content and return a JSON object with these fields: category (one of: personal, work, social, interests_and_hobbies, school), subcategory (specific based on content), tags (array of relevant keywords, max 5), summary (1-2 sentence summary), and title (concise, max 50 chars)'
+            content: `You are a webpage content analyzer. Analyze the provided content and return a JSON object with the following structure EXACTLY:
+{
+  "category": "personal" | "work" | "social" | "interests_and_hobbies" | "school",
+  "subcategory": "string describing specific topic",
+  "tags": ["tag1", "tag2", "tag3"],
+  "summary": "1-2 sentence summary",
+  "title": "concise title under 50 chars"
+}
+Do not include any additional text or formatting in your response, only the JSON object.`
           },
           {
             role: 'user',
@@ -53,6 +63,7 @@ serve(async (req) => {
     });
 
     if (!aiResponse.ok) {
+      console.error('OpenAI API error:', aiResponse.status);
       throw new Error(`OpenAI API error: ${aiResponse.status}`);
     }
 
@@ -60,21 +71,30 @@ serve(async (req) => {
     console.log('OpenAI response:', aiData);
 
     if (!aiData.choices?.[0]?.message?.content) {
+      console.error('Invalid OpenAI response structure:', aiData);
       throw new Error('Invalid response from OpenAI');
     }
 
     let processedData;
     try {
-      processedData = JSON.parse(aiData.choices[0].message.content);
+      const content = aiData.choices[0].message.content.trim();
+      console.log('Attempting to parse JSON:', content);
+      processedData = JSON.parse(content);
     } catch (e) {
       console.error('Failed to parse OpenAI response:', e);
       throw new Error('Failed to parse analysis results');
     }
 
+    // Validate the processed data structure
+    if (!processedData.category || !processedData.tags || !processedData.summary || !processedData.title) {
+      console.error('Invalid data structure:', processedData);
+      throw new Error('Invalid data structure in analysis results');
+    }
+
     // Add the original URL and content to the response
     processedData.content = `URL: ${url}\n\n${textContent}`;
 
-    console.log('Processed URL data:', processedData);
+    console.log('Final processed data:', processedData);
 
     return new Response(
       JSON.stringify(processedData),
