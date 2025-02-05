@@ -15,14 +15,12 @@ import {
 import { useToast } from "@/components/ui/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ResearchData } from "@/integrations/supabase/types";
 
 const formatContent = (text: string) => {
-  // Split text into paragraphs
   const paragraphs = text.split(/\n\s*\n/);
   
-  // Format each paragraph
   return paragraphs.map((paragraph, index) => {
-    // Remove extra whitespace and newlines within paragraphs
     const formattedParagraph = paragraph
       .trim()
       .replace(/\s+/g, ' ')
@@ -86,10 +84,11 @@ const EntryDetails = () => {
         throw response.error;
       }
 
-      // Save research data to the database
+      const researchData = response.data as ResearchData;
+
       const { error: updateError } = await supabase
         .from('entries')
-        .update({ research_data: response.data })
+        .update({ research_data: researchData })
         .eq('id', id);
 
       if (updateError) {
@@ -97,8 +96,8 @@ const EntryDetails = () => {
         throw updateError;
       }
 
-      console.log("Research results saved:", response.data);
-      return response.data;
+      console.log("Research results saved:", researchData);
+      return researchData;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["entry", id] });
@@ -117,7 +116,7 @@ const EntryDetails = () => {
     },
   });
 
-  const research = entry?.research_data;
+  const research = entry?.research_data as ResearchData | null;
   const isResearchLoading = researchMutation.isPending;
 
   const handleGenerateResearch = () => {
