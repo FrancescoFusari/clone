@@ -14,7 +14,7 @@ const Auth = lazy(() => import("./pages/Auth"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Entries = lazy(() => import("./pages/Entries"));
 const EntryDetails = lazy(() => import("./pages/EntryDetails"));
-const Dashboard = lazy(() => import("./pages/Dashboard"));
+const Timeline = lazy(() => import("./pages/Timeline")); // Updated import
 
 // Configure React Query for optimal performance
 const queryClient = new QueryClient({
@@ -89,7 +89,7 @@ const AppRoutes = () => {
           path="/dashboard"
           element={
             <ProtectedRoute>
-              <Dashboard />
+              <Timeline />
             </ProtectedRoute>
           }
         />
