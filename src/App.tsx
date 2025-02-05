@@ -8,7 +8,6 @@ import { Navigation } from "./components/Navigation";
 import { AuthProvider, useAuth } from "./components/AuthProvider";
 import { Skeleton } from "@/components/ui/skeleton";
 
-// Lazy load components
 const NewEntry = lazy(() => import("./components/NewEntry"));
 const Auth = lazy(() => import("./pages/Auth"));
 const NotFound = lazy(() => import("./pages/NotFound"));
@@ -16,19 +15,17 @@ const Entries = lazy(() => import("./pages/Entries"));
 const EntryDetails = lazy(() => import("./pages/EntryDetails"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 
-// Configure React Query for optimal performance
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutes
-      gcTime: 1000 * 60 * 30, // 30 minutes
+      staleTime: 1000 * 60 * 5,
+      gcTime: 1000 * 60 * 30,
       retry: 2,
       refetchOnWindowFocus: false,
     },
   },
 });
 
-// Loading component for suspense fallback
 const LoadingFallback = () => (
   <div className="p-8">
     <Skeleton className="h-8 w-3/4 mb-4" />
@@ -103,7 +100,7 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <TooltipProvider>
-        <div className="min-h-screen bg-background">
+        <div className="min-h-screen bg-background touch-pan-y">
           <Toaster />
           <Sonner />
           <BrowserRouter>
