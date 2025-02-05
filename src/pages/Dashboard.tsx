@@ -1,3 +1,4 @@
+import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -86,17 +87,20 @@ const Dashboard = () => {
   }, [entries]);
 
   // Process entries data for category distribution
-  const categoryData = entries?.reduce((acc: any[], entry) => {
-    const existingCategory = acc.find((item) => item.category === entry.category);
-    
-    if (existingCategory) {
-      existingCategory.count += 1;
-    } else {
-      acc.push({ category: entry.category, count: 1 });
-    }
-    
-    return acc;
-  }, []) || [];
+  const categoryData = React.useMemo(() => {
+    if (!entries) return [];
+    return entries.reduce((acc: any[], entry) => {
+      const existingCategory = acc.find((item) => item.category === entry.category);
+      
+      if (existingCategory) {
+        existingCategory.count += 1;
+      } else {
+        acc.push({ category: entry.category, count: 1 });
+      }
+      
+      return acc;
+    }, []);
+  }, [entries]);
 
   if (isLoadingTags || isLoadingEntries) {
     return (
