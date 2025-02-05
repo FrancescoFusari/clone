@@ -152,7 +152,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'o3-mini',
+        model: 'gpt-4o',
         messages: [
           {
             role: 'system',
@@ -196,7 +196,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'o3-mini',
+        model: 'gpt-4o',
         messages: [
           {
             role: 'system',
