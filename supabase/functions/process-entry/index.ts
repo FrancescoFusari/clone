@@ -122,7 +122,7 @@ serve(async (req) => {
   }
 
   try {
-    const { content } = await req.json();
+    const { content, user_id } = await req.json();
     console.log('Processing entry:', content);
 
     if (!content) {
@@ -152,7 +152,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o',
+        model: 'gpt-4',  // Fixed: Changed from gpt-4o to gpt-4
         messages: [
           {
             role: 'system',
@@ -196,7 +196,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o',
+        model: 'gpt-4',  // Fixed: Changed from gpt-4o to gpt-4
         messages: [
           {
             role: 'system',
