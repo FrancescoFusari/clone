@@ -1,5 +1,3 @@
-import { Waves } from "@/components/ui/waves-background"
-
 interface CenteredLayoutProps {
   children: React.ReactNode;
 }
@@ -7,21 +5,6 @@ interface CenteredLayoutProps {
 export const CenteredLayout = ({ children }: CenteredLayoutProps) => {
   return (
     <div className="relative w-full min-h-screen">
-      <div className="absolute inset-0 z-0">
-        <Waves
-          lineColor="rgba(255, 255, 255, 0.1)"
-          backgroundColor="transparent"
-          waveSpeedX={0.02}
-          waveSpeedY={0.01}
-          waveAmpX={40}
-          waveAmpY={20}
-          friction={0.9}
-          tension={0.01}
-          maxCursorMove={120}
-          xGap={12}
-          yGap={36}
-        />
-      </div>
       <div className="container mx-auto px-4 py-8 mb-24 relative z-50">
         {children}
       </div>

@@ -15,7 +15,6 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const Entries = lazy(() => import("./pages/Entries"));
 const EntryDetails = lazy(() => import("./pages/EntryDetails"));
 const Timeline = lazy(() => import("./pages/Timeline"));
-const Test = lazy(() => import("./pages/Test"));
 
 // Configure React Query for optimal performance
 const queryClient = new QueryClient({
@@ -91,14 +90,6 @@ const AppRoutes = () => {
           element={
             <ProtectedRoute>
               <Timeline />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/test"
-          element={
-            <ProtectedRoute>
-              <Test />
             </ProtectedRoute>
           }
         />
