@@ -13,18 +13,22 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { CenteredLayout } from "@/components/layouts/CenteredLayout";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import type { Database } from "@/integrations/supabase/types";
 
 type TimelineEntry = {
   id: string;
   title: string;
   content: string;
   created_at: string;
+  category: Database["public"]["Enums"]["entry_category"];
   expanded?: boolean;
 };
 
 const Timeline = () => {
   const navigate = useNavigate();
   const [expandedEntries, setExpandedEntries] = useState<Set<string>>(new Set());
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
 
   const { data: entries, isLoading } = useQuery({
     queryKey: ["timeline-entries"],
@@ -32,7 +36,7 @@ const Timeline = () => {
       console.log("Fetching entries for timeline...");
       const { data, error } = await supabase
         .from("entries")
-        .select("id, title, content, created_at")
+        .select("id, title, content, created_at, category")
         .order("created_at", { ascending: false });
 
       if (error) {
@@ -55,6 +59,19 @@ const Timeline = () => {
     setExpandedEntries(newExpanded);
   };
 
+  const filteredEntries = entries?.filter(
+    (entry) =>
+      selectedCategories.length === 0 || selectedCategories.includes(entry.category)
+  );
+
+  const categories: Database["public"]["Enums"]["entry_category"][] = [
+    "personal",
+    "work",
+    "social",
+    "interests_and_hobbies",
+    "school",
+  ];
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -67,8 +84,29 @@ const Timeline = () => {
     <CenteredLayout>
       <div className="w-full max-w-2xl mx-auto py-6 mb-20">
         <h1 className="text-2xl font-bold mb-6 text-white/90">Timeline</h1>
+        
+        <div className="mb-6 overflow-x-auto">
+          <ToggleGroup
+            type="multiple"
+            value={selectedCategories}
+            onValueChange={setSelectedCategories}
+            className="inline-flex flex-nowrap min-w-full pb-2"
+          >
+            {categories.map((category) => (
+              <ToggleGroupItem
+                key={category}
+                value={category}
+                aria-label={`Filter by ${category}`}
+                className="whitespace-nowrap capitalize"
+              >
+                {category.replace(/_/g, " ")}
+              </ToggleGroupItem>
+            ))}
+          </ToggleGroup>
+        </div>
+
         <div className="space-y-3">
-          {entries?.map((entry) => (
+          {filteredEntries?.map((entry) => (
             <Card
               key={entry.id}
               className="backdrop-blur-lg bg-white/5 border-white/10 hover:bg-white/10 transition-colors"
