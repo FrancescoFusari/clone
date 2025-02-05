@@ -11,6 +11,7 @@ export interface ResearchData {
   related_topics: string[];
   insights: string;
   questions: string[];
+  [key: string]: string[] | string; // Add index signature
 }
 
 export type Database = {
@@ -241,3 +242,4 @@ export type CompositeTypes<
   : PublicCompositeTypeNameOrOptions extends keyof PublicSchema["CompositeTypes"]
     ? PublicSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
+

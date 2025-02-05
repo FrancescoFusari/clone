@@ -15,7 +15,7 @@ import {
 import { useToast } from "@/components/ui/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ResearchData } from "@/integrations/supabase/types";
+import { ResearchData, Json } from "@/integrations/supabase/types";
 
 const formatContent = (text: string) => {
   const paragraphs = text.split(/\n\s*\n/);
@@ -88,7 +88,7 @@ const EntryDetails = () => {
 
       const { error: updateError } = await supabase
         .from('entries')
-        .update({ research_data: researchData })
+        .update({ research_data: researchData as Json })
         .eq('id', id);
 
       if (updateError) {
@@ -116,14 +116,8 @@ const EntryDetails = () => {
     },
   });
 
-  const research = entry?.research_data as ResearchData | null;
+  const research = entry?.research_data ? (entry.research_data as ResearchData) : null;
   const isResearchLoading = researchMutation.isPending;
-
-  const handleGenerateResearch = () => {
-    if (!research) {
-      researchMutation.mutate();
-    }
-  };
 
   if (isLoading) {
     return (
