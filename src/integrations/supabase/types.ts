@@ -6,6 +6,14 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
+export interface ResearchData {
+  summary?: string;
+  sources?: string[];
+  keywords?: string[];
+  analysis?: string;
+  [key: string]: any; // Allow for additional fields
+}
+
 export type Database = {
   public: {
     Tables: {
@@ -15,7 +23,7 @@ export type Database = {
           content: string
           created_at: string
           id: string
-          research_data: Json | null
+          research_data: ResearchData | null
           subcategory: string | null
           summary: string | null
           tags: string[] | null
@@ -27,7 +35,7 @@ export type Database = {
           content: string
           created_at?: string
           id?: string
-          research_data?: Json | null
+          research_data?: ResearchData | null
           subcategory?: string | null
           summary?: string | null
           tags?: string[] | null
@@ -39,7 +47,7 @@ export type Database = {
           content?: string
           created_at?: string
           id?: string
-          research_data?: Json | null
+          research_data?: ResearchData | null
           subcategory?: string | null
           summary?: string | null
           tags?: string[] | null
