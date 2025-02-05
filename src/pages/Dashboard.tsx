@@ -271,35 +271,33 @@ const Dashboard = () => {
               <div className="h-[300px]">
                 <ChartContainer config={{}}>
                   <ResponsiveContainer>
-                    <BarChart
+                    <AreaChart
                       data={categoryData}
-                      layout={isMobile ? "vertical" : "horizontal"}
                       margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
                     >
-                      {isMobile ? (
-                        <>
-                          <XAxis type="number" />
-                          <YAxis
-                            dataKey="category"
-                            type="category"
-                            width={100}
-                            tick={{ fontSize: 12 }}
-                          />
-                        </>
-                      ) : (
-                        <>
-                          <XAxis
-                            dataKey="category"
-                            stroke="#94a3b8"
-                            fontSize={12}
-                          />
-                          <YAxis stroke="#94a3b8" fontSize={12} />
-                        </>
-                      )}
-                      <Bar
+                      <defs>
+                        <linearGradient id="categoryColor" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="rgba(255,255,255,0.2)" stopOpacity={0.8}/>
+                          <stop offset="95%" stopColor="rgba(255,255,255,0.2)" stopOpacity={0}/>
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                      <XAxis
+                        dataKey="category"
+                        stroke="#94a3b8"
+                        fontSize={12}
+                        interval={0}
+                        angle={isMobile ? -45 : 0}
+                        textAnchor={isMobile ? "end" : "middle"}
+                        height={isMobile ? 80 : 40}
+                      />
+                      <YAxis stroke="#94a3b8" fontSize={12} />
+                      <Area
+                        type="monotone"
                         dataKey="count"
-                        fill="rgba(255, 255, 255, 0.2)"
-                        radius={4}
+                        stroke="rgba(255,255,255,0.5)"
+                        fill="url(#categoryColor)"
+                        fillOpacity={1}
                       />
                       <ChartTooltip
                         content={({ active, payload }) => {
@@ -316,7 +314,7 @@ const Dashboard = () => {
                           );
                         }}
                       />
-                    </BarChart>
+                    </AreaChart>
                   </ResponsiveContainer>
                 </ChartContainer>
               </div>
