@@ -36,43 +36,59 @@ export const EntryForm = ({ onSubmit }: EntryFormProps) => {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "text" | "url")} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 neo-blur">
-          <TabsTrigger value="text" className="flex items-center gap-2 data-[state=active]:bg-primary/20 data-[state=active]:text-primary">
+        <TabsList className="grid w-full grid-cols-2 bg-white/5 border border-white/10">
+          <TabsTrigger 
+            value="text" 
+            className="flex items-center gap-2 data-[state=active]:bg-primary/20 data-[state=active]:text-primary"
+          >
             <FileText className="h-4 w-4" />
-            Text
+            Text Entry
           </TabsTrigger>
-          <TabsTrigger value="url" className="flex items-center gap-2 data-[state=active]:bg-primary/20 data-[state=active]:text-primary">
+          <TabsTrigger 
+            value="url" 
+            className="flex items-center gap-2 data-[state=active]:bg-primary/20 data-[state=active]:text-primary"
+          >
             <Link className="h-4 w-4" />
-            URL
+            URL Analysis
           </TabsTrigger>
         </TabsList>
         <TabsContent value="text" className="mt-4">
-          <Textarea
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            placeholder="Write your entry here... I'll help categorize and analyze it"
-            className="min-h-[200px] text-base resize-none neo-blur border-white/10 text-white/90 placeholder:text-white/60 whitespace-pre-wrap focus-visible:ring-primary/50"
-            style={{ whiteSpace: 'pre-wrap' }}
-          />
+          <div className="space-y-2">
+            <p className="text-sm text-white/60">
+              Write or paste your text below. Our AI will help categorize and analyze it.
+            </p>
+            <Textarea
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              placeholder="Write your entry here..."
+              className="min-h-[200px] text-base resize-none bg-white/5 border-white/10 text-white/90 placeholder:text-white/40 focus-visible:ring-primary/30"
+              style={{ whiteSpace: 'pre-wrap' }}
+            />
+          </div>
         </TabsContent>
         <TabsContent value="url" className="mt-4">
-          <Input
-            type="url"
-            value={url}
-            onChange={(e) => setUrl(e.target.value)}
-            placeholder="Enter a URL to analyze..."
-            className="neo-blur border-white/10 text-white/90 placeholder:text-white/60 focus-visible:ring-primary/50"
-          />
+          <div className="space-y-2">
+            <p className="text-sm text-white/60">
+              Enter a URL to analyze its content and save key information.
+            </p>
+            <Input
+              type="url"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              placeholder="https://..."
+              className="bg-white/5 border-white/10 text-white/90 placeholder:text-white/40 focus-visible:ring-primary/30"
+            />
+          </div>
         </TabsContent>
       </Tabs>
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
         <p className="text-sm text-white/60 text-center sm:text-left">
-          Your {activeTab === "text" ? "entry" : "URL"} will be processed with AI
+          Your {activeTab === "text" ? "entry" : "URL"} will be processed with AI to extract insights
         </p>
         <Button 
           type="submit" 
           disabled={loading || !(activeTab === "text" ? content.trim() : url.trim())}
-          className="w-full sm:w-auto bg-primary/20 hover:bg-primary/30 text-primary disabled:bg-secondary/20 disabled:text-white/40"
+          className="w-full sm:w-auto bg-primary/20 hover:bg-primary/30 text-primary disabled:bg-white/5 disabled:text-white/40"
         >
           {loading ? "Processing..." : "Save Entry"}
         </Button>
