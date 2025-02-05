@@ -86,11 +86,12 @@ const NewEntry = () => {
 
   return (
     <CenteredLayout>
-      <div className="max-w-2xl mx-auto space-y-6 p-4">
-        <Card className="backdrop-blur-xl bg-black/20 border border-white/10 shadow-xl">
+      <div className="max-w-2xl mx-auto space-y-8 p-4">
+        {/* Header Card */}
+        <Card className="glass-morphism overflow-hidden">
           <CardHeader className="space-y-2">
             <div className="space-y-2">
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-primary/90 via-primary/80 to-primary/70 bg-clip-text text-transparent">
+              <h1 className="text-4xl font-bold text-gradient">
                 Create New Entry
               </h1>
               <p className="text-lg text-white/80 leading-relaxed">
@@ -98,7 +99,11 @@ const NewEntry = () => {
               </p>
             </div>
           </CardHeader>
-          <CardContent>
+        </Card>
+
+        {/* Form Card */}
+        <Card className="glass-morphism">
+          <CardContent className="pt-6">
             <EntryForm onSubmit={handleSubmit} />
           </CardContent>
         </Card>
