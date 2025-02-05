@@ -23,6 +23,8 @@ serve(async (req) => {
 
     // Extract text content from HTML (basic implementation)
     const textContent = htmlContent
+      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '') // Remove scripts
+      .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '') // Remove styles
       .replace(/<[^>]*>/g, ' ') // Remove HTML tags
       .replace(/\s+/g, ' ') // Normalize whitespace
       .trim()
@@ -40,14 +42,7 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `Analyze the following webpage content and return a JSON object with:
-            {
-              "category": one of ["personal", "work", "social", "interests_and_hobbies", "school"],
-              "subcategory": a specific subcategory based on the content,
-              "tags": an array of relevant keywords (max 5),
-              "summary": a brief 1-2 sentence summary,
-              "title": a concise, descriptive title (max 50 chars)
-            }`
+            content: 'Analyze the following webpage content and return a JSON object with these fields: category (one of: personal, work, social, interests_and_hobbies, school), subcategory (specific based on content), tags (array of relevant keywords, max 5), summary (1-2 sentence summary), and title (concise, max 50 chars)'
           },
           {
             role: 'user',
@@ -57,8 +52,24 @@ serve(async (req) => {
       }),
     });
 
+    if (!aiResponse.ok) {
+      throw new Error(`OpenAI API error: ${aiResponse.status}`);
+    }
+
     const aiData = await aiResponse.json();
-    const processedData = JSON.parse(aiData.choices[0].message.content);
+    console.log('OpenAI response:', aiData);
+
+    if (!aiData.choices?.[0]?.message?.content) {
+      throw new Error('Invalid response from OpenAI');
+    }
+
+    let processedData;
+    try {
+      processedData = JSON.parse(aiData.choices[0].message.content);
+    } catch (e) {
+      console.error('Failed to parse OpenAI response:', e);
+      throw new Error('Failed to parse analysis results');
+    }
 
     // Add the original URL and content to the response
     processedData.content = `URL: ${url}\n\n${textContent}`;
