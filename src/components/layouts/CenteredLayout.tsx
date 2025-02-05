@@ -1,5 +1,6 @@
 import { Waves } from "@/components/ui/waves-background"
 import { useIsMobile } from "@/hooks/use-mobile"
+import { cn } from "@/lib/utils"
 
 interface CenteredLayoutProps {
   children: React.ReactNode;
