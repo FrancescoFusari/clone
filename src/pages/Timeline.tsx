@@ -65,7 +65,7 @@ const Timeline = () => {
 
   return (
     <CenteredLayout>
-      <div className="w-full max-w-2xl mx-auto px-4 py-6 mb-20">
+      <div className="w-full max-w-2xl mx-auto py-6 mb-20">
         <h1 className="text-2xl font-bold mb-6 text-white/90">Timeline</h1>
         <div className="space-y-3">
           {entries?.map((entry) => (
