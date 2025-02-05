@@ -88,7 +88,6 @@ function levenshteinDistance(str1: string, str2: string): number {
 }
 
 function formatText(text: string): string {
-  // If text already contains paragraphs (double newlines), preserve them
   if (text.includes('\n\n')) {
     return text;
   }
@@ -149,7 +148,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4',
         messages: [
           {
             role: 'system',
@@ -181,21 +180,11 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4',
         messages: [
           {
             role: 'system',
-            content: `Generate a concise, engaging title (max 50 characters) for this journal entry. 
-            The title should:
-            - Capture the main theme or key event
-            - Be specific and descriptive
-            - Not use generic phrases like "Journal Entry" or "My Thoughts"
-            - Be written in title case
-            - Not end with "..."
-            Example good titles:
-            - "First Day at New Tech Startup"
-            - "Hiking Mount Rainier's Summit"
-            - "Learning to Play Piano Again"`
+            content: 'Generate a concise, engaging title (max 50 characters) that captures the main theme or key event of this journal entry. Be specific and descriptive. Do not use generic phrases like "Journal Entry" or "My Thoughts". Write in title case.'
           },
           {
             role: 'user',
@@ -206,7 +195,16 @@ serve(async (req) => {
     });
 
     const titleData = await titleResponse.json();
-    const generatedTitle = titleData.choices[0].message.content.replace(/["']/g, '');
+    console.log('Title response:', titleData);
+    
+    if (!titleData.choices?.[0]?.message?.content) {
+      throw new Error('Invalid title response from OpenAI');
+    }
+
+    const generatedTitle = titleData.choices[0].message.content
+      .replace(/["']/g, '') // Remove quotes
+      .replace(/\.{3,}$/, '') // Remove trailing ellipsis
+      .trim();
 
     // Normalize and find similar tags
     processedData.tags = await getSimilarTags(supabase, processedData.tags);
