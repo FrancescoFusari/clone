@@ -1,29 +1,54 @@
-import React from "react";
-import { useParams } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useParams, useNavigate } from "react-router-dom";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Card } from "@/components/ui/card";
-import { CenteredLayout } from "@/components/layouts/CenteredLayout";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft, Calendar, Tag, FileText, Sparkles, Search, Lightbulb, BookOpen, HelpCircle } from "lucide-react";
+import { format } from "date-fns";
+import { Badge } from "@/components/ui/badge";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ResearchData } from "@/integrations/supabase/types";
 
-interface ResearchData {
-  summary?: string;
-  related_topics?: string[];
-  key_insights?: string[];
-}
+const formatContent = (text: string) => {
+  const paragraphs = text.split(/\n\s*\n/);
+  
+  return paragraphs.map((paragraph, index) => {
+    const formattedParagraph = paragraph
+      .trim()
+      .replace(/\s+/g, ' ')
+      .replace(/\n/g, ' ');
+    
+    return formattedParagraph.length > 0 ? (
+      <p key={index} className="mb-4">
+        {formattedParagraph}
+      </p>
+    ) : null;
+  });
+};
 
 const EntryDetails = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const { data: entry, isLoading } = useQuery({
     queryKey: ["entry", id],
     queryFn: async () => {
+      console.log("Fetching entry details for:", id);
       const { data, error } = await supabase
         .from("entries")
         .select("*")
         .eq("id", id)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error("Error fetching entry:", error);
@@ -35,10 +60,70 @@ const EntryDetails = () => {
         throw error;
       }
 
-      console.log("Entry data:", data); // Debug log
+      if (!data) {
+        console.log("No entry found with id:", id);
+        return null;
+      }
+
+      console.log("Fetched entry details:", data);
       return data;
     },
   });
+
+  const researchMutation = useMutation({
+    mutationFn: async () => {
+      if (!entry) return null;
+      
+      console.log("Generating research for entry:", id);
+      const response = await supabase.functions.invoke('research-content', {
+        body: { content: entry.content, title: entry.title },
+      });
+
+      if (response.error) {
+        console.error("Error generating research:", response.error);
+        throw response.error;
+      }
+
+      const researchData = response.data as ResearchData;
+
+      const { error: updateError } = await supabase
+        .from('entries')
+        .update({ research_data: researchData })
+        .eq('id', id);
+
+      if (updateError) {
+        console.error("Error saving research data:", updateError);
+        throw updateError;
+      }
+
+      console.log("Research results saved:", researchData);
+      return researchData;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["entry", id] });
+      toast({
+        title: "Success",
+        description: "Research insights generated and saved",
+      });
+    },
+    onError: (error) => {
+      console.error("Error in research mutation:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to generate research insights",
+      });
+    },
+  });
+
+  const research = entry?.research_data as ResearchData | null;
+  const isResearchLoading = researchMutation.isPending;
+
+  const handleGenerateResearch = () => {
+    if (!research) {
+      researchMutation.mutate();
+    }
+  };
 
   if (isLoading) {
     return (
@@ -50,94 +135,176 @@ const EntryDetails = () => {
 
   if (!entry) {
     return (
-      <CenteredLayout>
-        <Card className="p-6">
-          <h1 className="text-2xl font-bold mb-4">Entry not found</h1>
-          <p>The requested entry could not be found.</p>
-        </Card>
-      </CenteredLayout>
+      <div className="container mx-auto px-4 py-8">
+        <h1 className="text-2xl font-bold mb-4 text-white/90">Entry not found</h1>
+        <Button 
+          onClick={() => navigate(-1)}
+          variant="outline"
+          className="bg-white/5 border-white/10 text-white/90 hover:bg-white/10"
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" /> Go Back
+        </Button>
+      </div>
     );
   }
 
-  const researchData = entry.research_data as ResearchData | null;
-
   return (
-    <CenteredLayout>
-      <Card className="p-6 max-w-3xl w-full">
-        <h1 className="text-2xl font-bold mb-4">{entry.title}</h1>
-        <div className="space-y-6">
-          <div>
-            <h2 className="text-lg font-semibold mb-2">Content</h2>
-            <p className="whitespace-pre-wrap">{entry.content}</p>
+    <div className="container mx-auto px-4 py-8 mb-24">
+      <Button
+        variant="outline"
+        onClick={() => navigate(-1)}
+        className="mb-6 bg-white/5 border-white/10 text-white/90 hover:bg-white/10"
+      >
+        <ArrowLeft className="mr-2 h-4 w-4" /> Back to Entries
+      </Button>
+
+      <Card className="mb-6 backdrop-blur-lg bg-white/5 border-white/10">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-white/90">
+            <FileText className="h-5 w-5" />
+            {entry.title || "Untitled Entry"}
+          </CardTitle>
+          <CardDescription className="flex items-center gap-2 text-white/60">
+            <Calendar className="h-4 w-4" />
+            {format(new Date(entry.created_at), "PPp")}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="prose max-w-none mb-6 dark:prose-invert text-white/80">
+            {formatContent(entry.content)}
           </div>
 
-          {entry.summary && (
-            <div>
-              <h2 className="text-lg font-semibold mb-2">Summary</h2>
-              <p>{entry.summary}</p>
-            </div>
-          )}
-
-          {researchData && (
-            <div className="space-y-4">
-              {researchData.summary && (
-                <div>
-                  <h2 className="text-lg font-semibold mb-2">AI Summary</h2>
-                  <p>{researchData.summary}</p>
-                </div>
-              )}
-
-              {researchData.key_insights && researchData.key_insights.length > 0 && (
-                <div>
-                  <h2 className="text-lg font-semibold mb-2">Key Insights</h2>
-                  <ul className="list-disc pl-5 space-y-1">
-                    {researchData.key_insights.map((insight, index) => (
-                      <li key={index}>{insight}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {researchData.related_topics && researchData.related_topics.length > 0 && (
-                <div>
-                  <h2 className="text-lg font-semibold mb-2">Related Topics</h2>
-                  <div className="flex flex-wrap gap-2">
-                    {researchData.related_topics.map((topic, index) => (
-                      <span
-                        key={index}
-                        className="px-2 py-1 bg-secondary rounded-full text-sm"
-                      >
-                        {topic}
-                      </span>
-                    ))}
+          {(entry.summary || entry.title) && (
+            <div className="mb-6 space-y-4">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-white/60" />
+                <h3 className="text-lg font-semibold text-white/90">AI Generated Content</h3>
+              </div>
+              <div className="grid gap-4 p-4 rounded-lg bg-white/5">
+                {entry.title && (
+                  <div>
+                    <span className="text-sm font-medium text-white/60">Title:</span>
+                    <p className="text-white/80">{entry.title}</p>
                   </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {entry.tags && entry.tags.length > 0 && (
-            <div>
-              <h2 className="text-lg font-semibold mb-2">Tags</h2>
-              <div className="flex flex-wrap gap-2">
-                {entry.tags.map((tag, index) => (
-                  <span
-                    key={index}
-                    className="px-2 py-1 bg-secondary rounded-full text-sm"
-                  >
-                    {tag}
-                  </span>
-                ))}
+                )}
+                {entry.summary && (
+                  <div>
+                    <span className="text-sm font-medium text-white/60">Summary:</span>
+                    <p className="text-white/80">{entry.summary}</p>
+                  </div>
+                )}
               </div>
             </div>
           )}
 
-          <div className="text-sm text-muted-foreground">
-            Created: {new Date(entry.created_at).toLocaleDateString()}
+          {entry.tags && entry.tags.length > 0 && (
+            <div className="flex items-center gap-2 flex-wrap mb-6">
+              <Tag className="h-4 w-4 text-white/60" />
+              {entry.tags.map((tag: string) => (
+                <Badge 
+                  key={tag} 
+                  variant="secondary"
+                  className="bg-white/10 text-white/80 hover:bg-white/20"
+                >
+                  {tag}
+                </Badge>
+              ))}
+            </div>
+          )}
+
+          <div className="mt-8 space-y-6">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <Search className="h-5 w-5 text-white/60" />
+                <h3 className="text-lg font-semibold text-white/90">AI Research Insights</h3>
+              </div>
+              {!research && !isResearchLoading && (
+                <Button
+                  onClick={handleGenerateResearch}
+                  variant="outline"
+                  className="bg-white/5 border-white/10 text-white/90 hover:bg-white/10"
+                >
+                  Generate Insights
+                </Button>
+              )}
+            </div>
+
+            {isResearchLoading ? (
+              <div className="space-y-4">
+                <Skeleton className="h-4 w-3/4 bg-white/5" />
+                <Skeleton className="h-4 w-1/2 bg-white/5" />
+                <Skeleton className="h-4 w-2/3 bg-white/5" />
+              </div>
+            ) : research ? (
+              <div className="grid gap-6">
+                <Alert className="bg-white/5 border-white/10">
+                  <Lightbulb className="h-4 w-4" />
+                  <AlertTitle>Key Concepts</AlertTitle>
+                  <AlertDescription>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {research.key_concepts.map((concept: string) => (
+                        <Badge 
+                          key={concept}
+                          variant="secondary" 
+                          className="bg-white/10 text-white/80 hover:bg-white/20"
+                        >
+                          {concept}
+                        </Badge>
+                      ))}
+                    </div>
+                  </AlertDescription>
+                </Alert>
+
+                <Alert className="bg-white/5 border-white/10">
+                  <BookOpen className="h-4 w-4" />
+                  <AlertTitle>Related Topics</AlertTitle>
+                  <AlertDescription>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {research.related_topics.map((topic: string) => (
+                        <Badge 
+                          key={topic}
+                          variant="secondary"
+                          className="bg-white/10 text-white/80 hover:bg-white/20"
+                        >
+                          {topic}
+                        </Badge>
+                      ))}
+                    </div>
+                  </AlertDescription>
+                </Alert>
+
+                <Alert className="bg-white/5 border-white/10">
+                  <Sparkles className="h-4 w-4" />
+                  <AlertTitle>AI Insights</AlertTitle>
+                  <AlertDescription className="mt-2 text-white/80">
+                    {research.insights}
+                  </AlertDescription>
+                </Alert>
+
+                <Alert className="bg-white/5 border-white/10">
+                  <HelpCircle className="h-4 w-4" />
+                  <AlertTitle>Questions to Consider</AlertTitle>
+                  <AlertDescription>
+                    <ul className="list-disc pl-4 mt-2 space-y-2 text-white/80">
+                      {research.questions.map((question: string) => (
+                        <li key={question}>{question}</li>
+                      ))}
+                    </ul>
+                  </AlertDescription>
+                </Alert>
+              </div>
+            ) : (
+              <Alert className="bg-white/5 border-white/10">
+                <AlertTitle>No research insights available</AlertTitle>
+                <AlertDescription>
+                  Click the "Generate Insights" button to analyze this entry and generate research insights.
+                </AlertDescription>
+              </Alert>
+            )}
           </div>
-        </div>
+        </CardContent>
       </Card>
-    </CenteredLayout>
+    </div>
   );
 };
 
