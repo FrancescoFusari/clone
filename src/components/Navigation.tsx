@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Home, PlusCircle, Clock } from "lucide-react";
+import { Home, PlusCircle, Clock, AlertOctagon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -75,6 +75,26 @@ export const Navigation = () => {
               </Button>
             </TooltipTrigger>
             <TooltipContent>New Entry</TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                className={cn(
+                  "flex-1 max-w-[120px] gap-2",
+                  isActive("/test") &&
+                    "bg-white/10 text-white hover:bg-white/20 hover:text-white"
+                )}
+                asChild
+              >
+                <Link to="/test">
+                  <AlertOctagon className="h-5 w-5" />
+                  <span className="sr-only">Test</span>
+                </Link>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Test Timeline</TooltipContent>
           </Tooltip>
         </div>
       </nav>
