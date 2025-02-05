@@ -61,7 +61,7 @@ export const NewEntry = () => {
 
   return (
     <CenteredLayout>
-      <div className="neo-blur rounded-2xl p-4 sm:p-6">
+      <div className="glass-morphism rounded-2xl p-4 sm:p-6">
         <EntryForm onSubmit={handleSubmit} />
       </div>
       <div className="mt-4">

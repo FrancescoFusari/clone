@@ -17,18 +17,19 @@ export const EntryForm = ({ onSubmit }: EntryFormProps) => {
     setLoading(true);
     try {
       await onSubmit(content);
+      setContent("");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 relative z-10">
+    <form onSubmit={handleSubmit} className="space-y-4">
       <Textarea
         value={content}
         onChange={(e) => setContent(e.target.value)}
         placeholder="Write your entry here... I'll help categorize and analyze it"
-        className="min-h-[200px] text-base resize-none glass-morphism bg-transparent border-0 focus-visible:ring-white/20 placeholder:text-white/40"
+        className="min-h-[200px] text-base resize-none bg-transparent glass-morphism border-0 focus-visible:ring-white/20 placeholder:text-white/40"
       />
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
         <p className="text-sm text-white/60 text-center sm:text-left">

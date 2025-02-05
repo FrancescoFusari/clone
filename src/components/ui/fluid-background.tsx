@@ -1,22 +1,7 @@
 "use client";
 import { useEffect, useRef } from "react";
 
-function FluidBackground({
-  SIM_RESOLUTION = 128,
-  DYE_RESOLUTION = 2048,
-  CAPTURE_RESOLUTION = 512,
-  DENSITY_DISSIPATION = 1.5,
-  VELOCITY_DISSIPATION = 1.2,
-  PRESSURE = 0.1,
-  PRESSURE_ITERATIONS = 20,
-  CURL = 3,
-  SPLAT_RADIUS = 0.35,
-  SPLAT_FORCE = 8000,
-  SHADING = true,
-  COLOR_UPDATE_SPEED = 10,
-  BACK_COLOR = { r: 0.05, g: 0.05, b: 0.05 },
-  TRANSPARENT = true,
-}) {
+export function FluidBackground() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -29,11 +14,23 @@ function FluidBackground({
       return;
     }
 
+    // Set canvas size to match window size
+    const resizeCanvas = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      gl.viewport(0, 0, canvas.width, canvas.height);
+    };
+
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
     // Initialize WebGL context with dark background
     gl.clearColor(0.05, 0.05, 0.05, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT);
 
     let lastSplatTime = Date.now();
+    const COLOR_UPDATE_SPEED = 10;
+    const SPLAT_FORCE = 8000;
     
     function applyAutoForces() {
       const now = Date.now();
@@ -48,6 +45,7 @@ function FluidBackground({
           g: Math.random() * 0.3,
           b: Math.random() * 0.3 
         };
+        lastSplatTime = now;
         console.log('Splat:', { x, y, dx, dy, color });
       }
     }
@@ -60,25 +58,23 @@ function FluidBackground({
     updateFrame();
 
     return () => {
-      // Cleanup WebGL resources if needed
+      window.removeEventListener('resize', resizeCanvas);
     };
-  }, [COLOR_UPDATE_SPEED, SPLAT_FORCE]);
+  }, []);
 
   return (
-    <div className="fixed inset-0 -z-10 pointer-events-auto">
+    <div className="fixed inset-0 w-full h-full" style={{ zIndex: -1 }}>
       <canvas 
-        ref={canvasRef} 
-        className="w-full h-full"
-        style={{ 
+        ref={canvasRef}
+        style={{
           position: 'absolute',
           top: 0,
           left: 0,
           width: '100%',
-          height: '100%'
+          height: '100%',
+          pointerEvents: 'auto'
         }}
       />
     </div>
   );
 }
-
-export { FluidBackground };
