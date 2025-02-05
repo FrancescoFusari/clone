@@ -156,6 +156,18 @@ const EntryDetails = () => {
 
   return (
     <div className="container mx-auto px-4 py-8 mb-24">
+      {/* Header Card */}
+      <Card className="glass-morphism overflow-hidden mb-8">
+        <CardHeader className="space-y-2">
+          <div className="space-y-2">
+            <h1 className="text-4xl font-bold text-gradient">Entry Details</h1>
+            <p className="text-lg text-white/80 leading-relaxed">
+              View the complete details of your entry, including AI-generated insights, key concepts, and related topics. Use these insights to explore your thoughts more deeply.
+            </p>
+          </div>
+        </CardHeader>
+      </Card>
+
       <Button
         variant="outline"
         onClick={() => navigate(-1)}
@@ -164,6 +176,7 @@ const EntryDetails = () => {
         <ArrowLeft className="mr-2 h-4 w-4" /> Back to Entries
       </Button>
 
+      {/* Entry Content Card */}
       <Card className="mb-6 backdrop-blur-lg bg-white/5 border-white/10">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-white/90">

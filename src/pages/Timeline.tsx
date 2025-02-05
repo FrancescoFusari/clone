@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp, Clock, Filter } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -84,31 +84,51 @@ const Timeline = () => {
 
   return (
     <CenteredLayout>
-      <div className="w-full max-w-2xl mx-auto py-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-white/90">Timeline</h1>
-        </div>
-        
-        <div className="overflow-x-auto -mx-4 px-4 pb-2">
-          <ToggleGroup
-            type="multiple"
-            value={selectedCategories}
-            onValueChange={setSelectedCategories}
-            className="inline-flex flex-nowrap min-w-full"
-          >
-            {categories.map((category) => (
-              <ToggleGroupItem
-                key={category}
-                value={category}
-                aria-label={`Filter by ${category}`}
-                className="whitespace-nowrap capitalize text-sm bg-white/5 data-[state=on]:bg-white/10"
-              >
-                {category.replace(/_/g, " ")}
-              </ToggleGroupItem>
-            ))}
-          </ToggleGroup>
-        </div>
+      <div className="w-full max-w-2xl mx-auto py-6 space-y-8">
+        {/* Header Card */}
+        <Card className="glass-morphism overflow-hidden">
+          <CardHeader className="space-y-2">
+            <div className="space-y-2">
+              <h1 className="text-4xl font-bold text-gradient">Timeline View</h1>
+              <p className="text-lg text-white/80 leading-relaxed">
+                View your entries chronologically, with the ability to filter by category and expand entries for quick previews. Click on any entry to see its full details.
+              </p>
+            </div>
+          </CardHeader>
+        </Card>
 
+        {/* Content Card */}
+        <Card className="glass-morphism">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-white/90">
+              <Filter className="h-5 w-5" />
+              Filter by Category
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto -mx-4 px-4 pb-2">
+              <ToggleGroup
+                type="multiple"
+                value={selectedCategories}
+                onValueChange={setSelectedCategories}
+                className="inline-flex flex-nowrap min-w-full"
+              >
+                {categories.map((category) => (
+                  <ToggleGroupItem
+                    key={category}
+                    value={category}
+                    aria-label={`Filter by ${category}`}
+                    className="whitespace-nowrap capitalize text-sm bg-white/5 data-[state=on]:bg-white/10"
+                  >
+                    {category.replace(/_/g, " ")}
+                  </ToggleGroupItem>
+                ))}
+              </ToggleGroup>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Entries List */}
         <div className="space-y-3">
           {filteredEntries?.map((entry) => (
             <Card
@@ -124,7 +144,8 @@ const Timeline = () => {
                     <CardTitle className="text-base text-white/90 line-clamp-1">
                       {entry.title}
                     </CardTitle>
-                    <CardDescription className="text-sm text-white/60">
+                    <CardDescription className="text-sm text-white/60 flex items-center gap-1">
+                      <Clock className="h-3 w-3" />
                       {format(new Date(entry.created_at), "PPp")}
                     </CardDescription>
                   </div>
