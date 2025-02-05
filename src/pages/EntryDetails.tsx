@@ -84,11 +84,15 @@ const EntryDetails = () => {
         throw response.error;
       }
 
+      // Explicitly type cast the response data to ResearchData
       const researchData = response.data as ResearchData;
+      console.log("Research data before saving:", researchData);
 
       const { error: updateError } = await supabase
         .from('entries')
-        .update({ research_data: researchData as Json })
+        .update({ 
+          research_data: researchData as unknown as Json 
+        })
         .eq('id', id);
 
       if (updateError) {
