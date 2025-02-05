@@ -78,7 +78,7 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `You are a webpage content analyzer. Analyze the provided content and return a JSON object with the following structure EXACTLY:
+            content: `Analyze the provided webpage content and return a JSON object with the following structure:
 {
   "category": "personal" | "work" | "social" | "interests_and_hobbies" | "school",
   "subcategory": "string describing specific topic",
@@ -86,7 +86,7 @@ serve(async (req) => {
   "summary": "1-2 sentence summary",
   "title": "concise title under 50 chars"
 }
-Do not include any additional text or formatting in your response, only the JSON object.`
+Return ONLY the JSON object, no additional text or formatting.`
           },
           {
             role: 'user',
@@ -97,7 +97,8 @@ Do not include any additional text or formatting in your response, only the JSON
     });
 
     if (!aiResponse.ok) {
-      console.error('OpenAI API error:', aiResponse.status);
+      const errorData = await aiResponse.text();
+      console.error('OpenAI API error:', aiResponse.status, errorData);
       throw new Error(`OpenAI API error: ${aiResponse.status}`);
     }
 
