@@ -1,15 +1,18 @@
 import React from "react";
 import { format, parseISO, eachDayOfInterval, subDays, startOfWeek, addDays, getMonth } from "date-fns";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface EntryHeatmapProps {
   entries: Array<{ created_at: string }>;
   days?: number;
 }
 
-export const EntryHeatmap = ({ entries, days = 365 }: EntryHeatmapProps) => {
+export const EntryHeatmap = ({ entries, days = 90 }: EntryHeatmapProps) => {
+  const isMobile = useIsMobile();
+  const defaultDays = isMobile ? 60 : 90;
   const today = new Date();
-  const startDate = subDays(today, days);
+  const startDate = subDays(today, days || defaultDays);
   
   // Create array of all days in range
   const daysArray = eachDayOfInterval({ start: startDate, end: today });
@@ -64,19 +67,21 @@ export const EntryHeatmap = ({ entries, days = 365 }: EntryHeatmapProps) => {
     }
   });
 
+  const dayLabels = isMobile ? ['S', 'M', 'T', 'W', 'T', 'F', 'S'] : ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
   return (
-    <div className="w-full overflow-x-auto">
+    <div className="w-full overflow-x-auto scrollbar-none">
       <div className="flex flex-col gap-1">
         {/* Month labels */}
-        <div className="flex pl-8">
+        <div className="flex pl-6 md:pl-8">
           {monthLabels.map(({ month, index }, i) => (
             <div
               key={`${month}-${index}`}
-              className="text-xs text-white/60"
+              className="text-[10px] md:text-xs text-white/60"
               style={{
                 position: 'relative',
-                left: `${index * 16}px`, // Adjust based on square size + gap
-                marginRight: i < monthLabels.length - 1 ? '20px' : '0'
+                left: `${index * (isMobile ? 12 : 16)}px`,
+                marginRight: i < monthLabels.length - 1 ? (isMobile ? '12px' : '20px') : '0'
               }}
             >
               {month}
@@ -87,18 +92,18 @@ export const EntryHeatmap = ({ entries, days = 365 }: EntryHeatmapProps) => {
         {/* Day labels and contribution squares */}
         <div className="flex">
           {/* Day of week labels */}
-          <div className="flex flex-col gap-1 pr-2">
-            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
-              <div key={day} className="h-3 text-xs text-white/60 flex items-center">
+          <div className="flex flex-col gap-1 pr-1 md:pr-2">
+            {dayLabels.map((day) => (
+              <div key={day} className="h-2 md:h-3 text-[10px] md:text-xs text-white/60 flex items-center">
                 {day}
               </div>
             ))}
           </div>
 
           {/* Contribution squares */}
-          <div className="flex gap-1">
+          <div className="flex gap-[2px] md:gap-1">
             {weeks.map((week, weekIndex) => (
-              <div key={weekIndex} className="flex flex-col gap-1">
+              <div key={weekIndex} className="flex flex-col gap-[2px] md:gap-1">
                 {week.map((date) => {
                   const formattedDate = format(date, 'yyyy-MM-dd');
                   const count = entriesPerDay[formattedDate] || 0;
@@ -108,7 +113,7 @@ export const EntryHeatmap = ({ entries, days = 365 }: EntryHeatmapProps) => {
                       <Tooltip>
                         <TooltipTrigger>
                           <div
-                            className={`w-3 h-3 rounded-sm ${getColor(count)} transition-colors hover:opacity-80`}
+                            className={`w-2 h-2 md:w-3 md:h-3 rounded-sm ${getColor(count)} transition-colors hover:opacity-80`}
                           />
                         </TooltipTrigger>
                         <TooltipContent>
