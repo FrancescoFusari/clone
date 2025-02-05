@@ -125,6 +125,10 @@ serve(async (req) => {
     const { content } = await req.json();
     console.log('Processing entry:', content);
 
+    if (!content) {
+      throw new Error('Content is required');
+    }
+
     const formattedContent = formatText(content);
     console.log('Formatted content:', formattedContent);
 
@@ -169,7 +173,19 @@ serve(async (req) => {
       }),
     });
 
+    if (!categoryResponse.ok) {
+      const errorData = await categoryResponse.json();
+      console.error('OpenAI API error (category):', errorData);
+      throw new Error(`OpenAI API error: ${errorData.error?.message || 'Unknown error'}`);
+    }
+
     const categoryData = await categoryResponse.json();
+    console.log('Category API response:', categoryData);
+
+    if (!categoryData.choices?.[0]?.message?.content) {
+      throw new Error('Invalid response from OpenAI API (category)');
+    }
+
     const processedData = JSON.parse(categoryData.choices[0].message.content);
 
     // Generate a title with improved prompt
@@ -194,20 +210,26 @@ serve(async (req) => {
       }),
     });
 
+    if (!titleResponse.ok) {
+      const errorData = await titleResponse.json();
+      console.error('OpenAI API error (title):', errorData);
+      throw new Error(`OpenAI API error: ${errorData.error?.message || 'Unknown error'}`);
+    }
+
     const titleData = await titleResponse.json();
-    console.log('Title response:', titleData);
+    console.log('Title API response:', titleData);
     
     if (!titleData.choices?.[0]?.message?.content) {
-      throw new Error('Invalid title response from OpenAI');
+      throw new Error('Invalid response from OpenAI API (title)');
     }
 
     const generatedTitle = titleData.choices[0].message.content
-      .replace(/["']/g, '') // Remove quotes
-      .replace(/\.{3,}$/, '') // Remove trailing ellipsis
+      .replace(/["']/g, '')
+      .replace(/\.{3,}$/, '')
       .trim();
 
     // Normalize and find similar tags
-    processedData.tags = await getSimilarTags(supabase, processedData.tags);
+    processedData.tags = await getSimilarTags(supabase, processedData.tags || []);
     
     // Normalize and find similar subcategory
     if (processedData.subcategory) {
