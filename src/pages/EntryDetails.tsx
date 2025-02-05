@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Calendar, Tag, FileText, Sparkles, Search, Lightbulb, BookOpen, HelpCircle } from "lucide-react";
@@ -40,6 +40,7 @@ const EntryDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const { data: entry, isLoading } = useQuery({
     queryKey: ["entry", id],
@@ -71,26 +72,59 @@ const EntryDetails = () => {
     },
   });
 
-  const { data: research, isLoading: isResearchLoading } = useQuery({
-    queryKey: ["research", id],
-    queryFn: async () => {
+  const researchMutation = useMutation({
+    mutationFn: async () => {
       if (!entry) return null;
       
-      console.log("Fetching research for entry:", id);
+      console.log("Generating research for entry:", id);
       const response = await supabase.functions.invoke('research-content', {
         body: { content: entry.content, title: entry.title },
       });
 
       if (response.error) {
-        console.error("Error fetching research:", response.error);
+        console.error("Error generating research:", response.error);
         throw response.error;
       }
 
-      console.log("Research results:", response.data);
+      // Save research data to the database
+      const { error: updateError } = await supabase
+        .from('entries')
+        .update({ research_data: response.data })
+        .eq('id', id);
+
+      if (updateError) {
+        console.error("Error saving research data:", updateError);
+        throw updateError;
+      }
+
+      console.log("Research results saved:", response.data);
       return response.data;
     },
-    enabled: !!entry,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["entry", id] });
+      toast({
+        title: "Success",
+        description: "Research insights generated and saved",
+      });
+    },
+    onError: (error) => {
+      console.error("Error in research mutation:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to generate research insights",
+      });
+    },
   });
+
+  const research = entry?.research_data;
+  const isResearchLoading = researchMutation.isPending;
+
+  const handleGenerateResearch = () => {
+    if (!research) {
+      researchMutation.mutate();
+    }
+  };
 
   if (isLoading) {
     return (
@@ -180,9 +214,20 @@ const EntryDetails = () => {
           )}
 
           <div className="mt-8 space-y-6">
-            <div className="flex items-center gap-2">
-              <Search className="h-5 w-5 text-white/60" />
-              <h3 className="text-lg font-semibold text-white/90">AI Research Insights</h3>
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <Search className="h-5 w-5 text-white/60" />
+                <h3 className="text-lg font-semibold text-white/90">AI Research Insights</h3>
+              </div>
+              {!research && !isResearchLoading && (
+                <Button
+                  onClick={handleGenerateResearch}
+                  variant="outline"
+                  className="bg-white/5 border-white/10 text-white/90 hover:bg-white/10"
+                >
+                  Generate Insights
+                </Button>
+              )}
             </div>
 
             {isResearchLoading ? (
@@ -251,9 +296,9 @@ const EntryDetails = () => {
               </div>
             ) : (
               <Alert className="bg-white/5 border-white/10">
-                <AlertTitle>No research results available</AlertTitle>
+                <AlertTitle>No research insights available</AlertTitle>
                 <AlertDescription>
-                  We couldn't generate research insights for this entry. Please try again later.
+                  Click the "Generate Insights" button to analyze this entry and generate research insights.
                 </AlertDescription>
               </Alert>
             )}

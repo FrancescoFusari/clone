@@ -15,6 +15,7 @@ export type Database = {
           content: string
           created_at: string
           id: string
+          research_data: Json | null
           subcategory: string | null
           summary: string | null
           tags: string[] | null
@@ -26,6 +27,7 @@ export type Database = {
           content: string
           created_at?: string
           id?: string
+          research_data?: Json | null
           subcategory?: string | null
           summary?: string | null
           tags?: string[] | null
@@ -37,6 +39,7 @@ export type Database = {
           content?: string
           created_at?: string
           id?: string
+          research_data?: Json | null
           subcategory?: string | null
           summary?: string | null
           tags?: string[] | null
