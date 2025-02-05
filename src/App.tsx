@@ -1,30 +1,46 @@
+import { Suspense, lazy } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Navigation } from "./components/Navigation";
-import { NewEntry } from "./components/NewEntry";
-import { Auth } from "./pages/Auth";
 import { AuthProvider, useAuth } from "./components/AuthProvider";
-import NotFound from "./pages/NotFound";
-import Entries from "./pages/Entries";
-import EntryDetails from "./pages/EntryDetails";
+import { Skeleton } from "@/components/ui/skeleton";
 
+// Lazy load components
+const NewEntry = lazy(() => import("./components/NewEntry"));
+const Auth = lazy(() => import("./pages/Auth"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const Entries = lazy(() => import("./pages/Entries"));
+const EntryDetails = lazy(() => import("./pages/EntryDetails"));
+
+// Configure React Query for optimal performance
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 1000 * 60 * 5, // 5 minutes
       gcTime: 1000 * 60 * 30, // 30 minutes
+      retry: 2,
+      refetchOnWindowFocus: false,
     },
   },
 });
+
+// Loading component for suspense fallback
+const LoadingFallback = () => (
+  <div className="p-8">
+    <Skeleton className="h-8 w-3/4 mb-4" />
+    <Skeleton className="h-32 w-full mb-4" />
+    <Skeleton className="h-32 w-full" />
+  </div>
+);
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { session, loading } = useAuth();
 
   if (loading) {
-    return <div>Loading...</div>;
+    return <LoadingFallback />;
   }
 
   if (!session) {
@@ -38,37 +54,39 @@ const AppRoutes = () => {
   const { session } = useAuth();
 
   return (
-    <Routes>
-      <Route
-        path="/auth"
-        element={session ? <Navigate to="/" /> : <Auth />}
-      />
-      <Route
-        path="/"
-        element={
-          <ProtectedRoute>
-            <Entries />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/entries/:id"
-        element={
-          <ProtectedRoute>
-            <EntryDetails />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/new"
-        element={
-          <ProtectedRoute>
-            <NewEntry />
-          </ProtectedRoute>
-        }
-      />
-      <Route path="*" element={<NotFound />} />
-    </Routes>
+    <Suspense fallback={<LoadingFallback />}>
+      <Routes>
+        <Route
+          path="/auth"
+          element={session ? <Navigate to="/" /> : <Auth />}
+        />
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <Entries />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/entries/:id"
+          element={
+            <ProtectedRoute>
+              <EntryDetails />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/new"
+          element={
+            <ProtectedRoute>
+              <NewEntry />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </Suspense>
   );
 };
 
