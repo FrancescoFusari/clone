@@ -34,9 +34,9 @@ export const EntryForm = ({ onSubmit }: EntryFormProps) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-4">
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "text" | "url")} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 neo-blur">
+        <TabsList className="grid w-full grid-cols-2 bg-white/5 border border-white/10">
           <TabsTrigger 
             value="text" 
             className="flex items-center gap-2 data-[state=active]:bg-primary/20 data-[state=active]:text-primary"
@@ -52,23 +52,23 @@ export const EntryForm = ({ onSubmit }: EntryFormProps) => {
             URL Analysis
           </TabsTrigger>
         </TabsList>
-        <TabsContent value="text" className="mt-6">
-          <div className="space-y-3">
-            <p className="text-sm text-white/70 leading-relaxed">
+        <TabsContent value="text" className="mt-4">
+          <div className="space-y-2">
+            <p className="text-sm text-white/60">
               Write or paste your text below. Our AI will help categorize and analyze it.
             </p>
             <Textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
               placeholder="Write your entry here..."
-              className="min-h-[200px] text-base resize-none neo-blur text-white/90 placeholder:text-white/40 focus-visible:ring-primary/30"
+              className="min-h-[200px] text-base resize-none bg-white/5 border-white/10 text-white/90 placeholder:text-white/40 focus-visible:ring-primary/30"
               style={{ whiteSpace: 'pre-wrap' }}
             />
           </div>
         </TabsContent>
-        <TabsContent value="url" className="mt-6">
-          <div className="space-y-3">
-            <p className="text-sm text-white/70 leading-relaxed">
+        <TabsContent value="url" className="mt-4">
+          <div className="space-y-2">
+            <p className="text-sm text-white/60">
               Enter a URL to analyze its content and save key information.
             </p>
             <Input
@@ -76,19 +76,19 @@ export const EntryForm = ({ onSubmit }: EntryFormProps) => {
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               placeholder="https://..."
-              className="neo-blur text-white/90 placeholder:text-white/40 focus-visible:ring-primary/30"
+              className="bg-white/5 border-white/10 text-white/90 placeholder:text-white/40 focus-visible:ring-primary/30"
             />
           </div>
         </TabsContent>
       </Tabs>
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
         <p className="text-sm text-white/60 text-center sm:text-left">
           Your {activeTab === "text" ? "entry" : "URL"} will be processed with AI to extract insights
         </p>
         <Button 
           type="submit" 
           disabled={loading || !(activeTab === "text" ? content.trim() : url.trim())}
-          className="w-full sm:w-auto glass-morphism text-primary disabled:bg-white/5 disabled:text-white/40"
+          className="w-full sm:w-auto bg-primary/20 hover:bg-primary/30 text-primary disabled:bg-white/5 disabled:text-white/40"
         >
           {loading ? "Processing..." : "Save Entry"}
         </Button>
