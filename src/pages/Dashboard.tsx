@@ -1,11 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { ChartContainer, ChartTooltip } from "@/components/ui/chart";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer } from "recharts";
-import { Tag, Calendar, List, ChartBar, Info } from "lucide-react";
+import { Tag, Calendar, List, ChartBar } from "lucide-react";
 import { format } from "date-fns";
 import { CenteredLayout } from "@/components/layouts/CenteredLayout";
 import { useToast } from "@/components/ui/use-toast";
@@ -168,7 +168,10 @@ const Dashboard = () => {
               <div className="h-[300px]">
                 <ChartContainer config={{}}>
                   <ResponsiveContainer>
-                    <BarChart data={timelineData}>
+                    <BarChart 
+                      data={timelineData}
+                      margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                    >
                       <XAxis
                         dataKey="date"
                         stroke="#94a3b8"
@@ -188,8 +191,10 @@ const Dashboard = () => {
                         dataKey="count"
                         fill="rgba(255, 255, 255, 0.2)"
                         radius={[4, 4, 0, 0]}
+                        isAnimationActive={false}
                       />
                       <ChartTooltip
+                        cursor={{ fill: 'rgba(255, 255, 255, 0.05)' }}
                         content={({ active, payload }) => {
                           if (!active || !payload?.length) return null;
                           return (
@@ -288,8 +293,10 @@ const Dashboard = () => {
                         dataKey="count"
                         fill="rgba(255, 255, 255, 0.2)"
                         radius={4}
+                        isAnimationActive={false}
                       />
                       <ChartTooltip
+                        cursor={{ fill: 'rgba(255, 255, 255, 0.05)' }}
                         content={({ active, payload }) => {
                           if (!active || !payload?.length) return null;
                           return (
