@@ -46,6 +46,13 @@ const EntryDetails = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // Early return if no ID is provided
+  if (!id) {
+    console.log("No entry ID provided, redirecting to entries list");
+    navigate("/");
+    return null;
+  }
+
   const { data: entry, isLoading } = useQuery({
     queryKey: ["entry", id],
     queryFn: async () => {
@@ -74,6 +81,7 @@ const EntryDetails = () => {
       console.log("Fetched entry details:", data);
       return data;
     },
+    enabled: !!id, // Only run query if we have an ID
   });
 
   const researchMutation = useMutation({
