@@ -71,29 +71,22 @@ export const AIInsightsCard = () => {
 
       console.log(`Analyzing ${entries.length} entries with AI`);
       try {
-        const response = await fetch("/functions/v1/analyze-entries", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${process.env.SUPABASE_ANON_KEY}`,
-          },
-          body: JSON.stringify({ entries }),
+        const { data, error } = await supabase.functions.invoke('analyze-entries', {
+          body: { entries }
         });
 
-        if (!response.ok) {
-          const error = await response.text();
+        if (error) {
           console.error("AI analysis error:", error);
           toast({
             title: "Error",
             description: "Failed to analyze entries. Please try again later.",
             variant: "destructive",
           });
-          throw new Error(error);
+          throw error;
         }
 
-        const analysis: AIAnalysis = await response.json();
         console.log("AI analysis completed successfully");
-        return analysis;
+        return data as AIAnalysis;
       } catch (error) {
         console.error("Error during AI analysis:", error);
         toast({
