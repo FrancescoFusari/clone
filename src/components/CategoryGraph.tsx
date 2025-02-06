@@ -120,31 +120,34 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
     });
 
     // Initialize the 3D force graph
-    const Graph = ForceGraph3D();
+    const Graph = new ForceGraph3D({
+      extraRendererConfig: { alpha: true }
+    });
     
     // Configure the graph
-    Graph
+    Graph(graphRef.current)
       .graphData(graphData)
       .nodeLabel("name")
       .nodeColor(node => {
         switch ((node as Node).type) {
           case "category":
-            return "#8B5CF6"; // Vivid Purple
+            return "#000000"; // Black for categories
           case "subcategory":
-            return "#D946EF"; // Magenta Pink
+            return "#ea384c"; // Red for subcategories
           case "entry":
-            return "#F97316"; // Bright Orange
+            return "#FEF7CD"; // Soft yellow for entries
           case "tag":
-            return "#0EA5E9"; // Ocean Blue
+            return "#F1F1F1"; // Almost white for tags
           default:
-            return "#6B7280"; // Neutral Gray
+            return "#6B7280"; // Neutral Gray as fallback
         }
       })
       .nodeVal(node => (node as Node).val)
       .linkWidth(1)
       .linkColor(() => "rgba(255, 255, 255, 0.2)")
       .backgroundColor("#0f1729")
-      (graphRef.current);
+      .width(graphRef.current.clientWidth)
+      .height(graphRef.current.clientHeight);
 
     return () => {
       Graph.pauseAnimation();
