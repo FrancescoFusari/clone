@@ -3,7 +3,6 @@ import ForceGraph3D from "3d-force-graph";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "./ui/skeleton";
-import { Card, CardContent } from "./ui/card";
 import type { Database } from "@/integrations/supabase/types";
 
 type EntryCategory = Database["public"]["Enums"]["entry_category"];
@@ -121,7 +120,9 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
     });
 
     // Initialize the 3D force graph
-    const Graph = new ForceGraph3D()(graphRef.current)
+    const Graph = ForceGraph3D({
+      extraRendererConfig: { alpha: true }
+    })(graphRef.current)
       .graphData(graphData)
       .nodeLabel("name")
       .nodeColor(node => {
@@ -141,7 +142,9 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
       .nodeVal(node => (node as Node).val)
       .linkWidth(1)
       .linkColor(() => "rgba(255, 255, 255, 0.2)")
-      .backgroundColor("#0f1729");
+      .backgroundColor("#0f1729")
+      .width(graphRef.current.clientWidth)
+      .height(graphRef.current.clientHeight);
 
     return () => {
       Graph.pauseAnimation();
@@ -152,18 +155,8 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
   }, [entries, category]);
 
   if (isLoading) {
-    return (
-      <Card>
-        <CardContent className="p-6">
-          <Skeleton className="w-full h-[600px]" />
-        </CardContent>
-      </Card>
-    );
+    return <Skeleton className="w-full h-[600px]" />;
   }
 
-  return (
-    <Card>
-      <CardContent ref={graphRef} className="w-full h-[600px]" />
-    </Card>
-  );
+  return <div ref={graphRef} className="w-full h-[600px]" />;
 };
