@@ -61,7 +61,15 @@ export const AIInsightsCard = () => {
         }
 
         console.log("Successfully fetched entries count:", data?.length || 0);
-        return data as Entry[];
+        
+        // Transform the data to ensure type safety
+        const transformedData = data?.map(entry => ({
+          ...entry,
+          analysis_data: entry.analysis_data as AIAnalysis | null,
+          research_data: entry.research_data as ResearchData
+        })) as Entry[];
+
+        return transformedData;
       } catch (error) {
         console.error("Error in entries fetch:", error);
         throw error;
