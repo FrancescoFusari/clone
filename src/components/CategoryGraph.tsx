@@ -15,6 +15,12 @@ interface Node {
   name: string;
   type: "category" | "subcategory" | "entry" | "tag";
   val: number;
+  x?: number;
+  y?: number;
+  z?: number;
+  fx?: number | null;
+  fy?: number | null;
+  fz?: number | null;
 }
 
 interface Link {
@@ -142,7 +148,6 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
       });
     });
 
-    // Initialize the 3D force graph
     const Graph = ForceGraph3D()(graphRef.current)
       .graphData(graphData)
       .nodeLabel("name")
@@ -166,7 +171,22 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
       .backgroundColor("#0f1729")
       .width(graphRef.current.clientWidth)
       .height(graphRef.current.clientHeight)
-      .showNavInfo(false);
+      .showNavInfo(false)
+      .onNodeClick((node) => {
+        // Focus on the clicked node
+        const distance = 40;
+        const distRatio = 1 + distance/Math.hypot(node.x, node.y, node.z);
+
+        Graph.cameraPosition(
+          { 
+            x: node.x * distRatio, 
+            y: node.y * distRatio, 
+            z: node.z * distRatio 
+          }, // New position
+          node as { x: number, y: number, z: number }, // Look at
+          3000  // Transition duration in ms
+        );
+      });
 
     // Set camera position further back
     Graph.cameraPosition({ x: 400, y: 400, z: 600 });
