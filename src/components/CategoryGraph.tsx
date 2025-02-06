@@ -126,20 +126,20 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
       .nodeColor(node => {
         switch ((node as Node).type) {
           case "category":
-            return "#000000"; // Black for categories
+            return "#E8E6E3"; // Lightest beige for main category
           case "subcategory":
-            return "#ea384c"; // Red for subcategories
+            return "#D5CEC9"; // Medium warm gray for subcategories
           case "entry":
-            return "#FEF7CD"; // Soft yellow for entries
+            return "#C2BAB5"; // Darker warm gray for entries
           case "tag":
-            return "#F1F1F1"; // Almost white for tags
+            return "#ADA49E"; // Darkest warm gray for tags
           default:
-            return "#6B7280"; // Neutral Gray as fallback
+            return "#F5F3F2"; // Fallback to very light warm gray
         }
       })
       .nodeVal(node => (node as Node).val)
       .linkWidth(1)
-      .linkColor(() => "rgba(255, 255, 255, 0.2)")
+      .linkColor(() => "rgba(173, 164, 158, 0.2)") // Matching the tag color with low opacity
       .backgroundColor("#0f1729");
 
     return () => {
