@@ -7,6 +7,8 @@ import { Card, CardContent } from "./ui/card";
 import { Button } from "./ui/button";
 import { Maximize2, Minimize2 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
+// Import THREE from three.js package
+import * as THREE from 'three';
 
 type EntryCategory = Database["public"]["Enums"]["entry_category"];
 
@@ -15,6 +17,9 @@ interface Node {
   name: string;
   type: "category" | "subcategory" | "entry" | "tag";
   val: number;
+  x?: number;
+  y?: number;
+  z?: number;
 }
 
 interface Link {
