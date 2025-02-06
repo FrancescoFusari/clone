@@ -36,6 +36,7 @@ Content: ${entry.content}
 ${entry.research_data ? `Research Data: ${JSON.stringify(entry.research_data, null, 2)}` : ''}
 ---`).join('\n\n');
 
+    console.log('Sending request to OpenAI API...');
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -43,7 +44,7 @@ ${entry.research_data ? `Research Data: ${JSON.stringify(entry.research_data, nu
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o',
+        model: 'gpt-4',
         messages: [
           {
             role: 'system',
@@ -60,7 +61,8 @@ ${entry.research_data ? `Research Data: ${JSON.stringify(entry.research_data, nu
             - connections: Find meaningful relationships between different entries
             - insights: Extract key observations about patterns or trends
             - questions: Generate thought-provoking questions based on the content
-            Keep responses focused and concise.`
+            Keep responses focused and concise.
+            IMPORTANT: Your response must be valid JSON.`
           },
           {
             role: 'user',
@@ -88,7 +90,19 @@ ${entry.research_data ? `Research Data: ${JSON.stringify(entry.research_data, nu
 
     const data = await response.json();
     console.log('OpenAI response received successfully');
-    return data;
+    
+    // Validate the response format
+    try {
+      const parsedContent = JSON.parse(data.choices[0].message.content);
+      if (!parsedContent.commonThemes || !parsedContent.connections || 
+          !parsedContent.insights || !parsedContent.questions) {
+        throw new Error('Response missing required fields');
+      }
+      return data;
+    } catch (error) {
+      console.error('Invalid response format from OpenAI:', error);
+      throw new Error('Invalid response format from OpenAI');
+    }
   } catch (error) {
     if (retryCount < maxRetries) {
       const backoffDelay = retryDelay * Math.pow(2, retryCount);
