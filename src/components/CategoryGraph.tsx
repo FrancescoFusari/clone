@@ -1,8 +1,11 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import ForceGraph3D from "3d-force-graph";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "./ui/skeleton";
+import { Card, CardContent } from "./ui/card";
+import { Button } from "./ui/button";
+import { Maximize2, Minimize2 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 
 type EntryCategory = Database["public"]["Enums"]["entry_category"];
@@ -30,6 +33,7 @@ interface CategoryGraphProps {
 
 export const CategoryGraph = ({ category }: CategoryGraphProps) => {
   const graphRef = useRef<HTMLDivElement>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   
   const { data: entries, isLoading } = useQuery({
     queryKey: ["category-entries", category],
@@ -43,6 +47,25 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
       return data;
     },
   });
+
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      graphRef.current?.requestFullscreen();
+      setIsFullscreen(true);
+    } else {
+      document.exitFullscreen();
+      setIsFullscreen(false);
+    }
+  };
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
 
   useEffect(() => {
     if (!entries || !graphRef.current) return;
@@ -120,7 +143,7 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
     });
 
     // Initialize the 3D force graph
-    const Graph = ForceGraph3D()(graphRef.current)
+    const Graph = new ForceGraph3D()(graphRef.current)
       .graphData(graphData)
       .nodeLabel("name")
       .nodeColor(node => {
@@ -153,5 +176,19 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
     return <Skeleton className="w-full h-[600px]" />;
   }
 
-  return <div ref={graphRef} className="w-full h-[600px]" />;
+  return (
+    <Card className="relative overflow-hidden">
+      <CardContent className="p-0">
+        <div ref={graphRef} className="w-full h-[600px]" />
+        <Button
+          variant="outline"
+          size="icon"
+          className="absolute top-4 right-4 bg-background/50 backdrop-blur-sm"
+          onClick={toggleFullscreen}
+        >
+          {isFullscreen ? <Minimize2 /> : <Maximize2 />}
+        </Button>
+      </CardContent>
+    </Card>
+  );
 };
