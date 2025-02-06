@@ -104,7 +104,7 @@ const CategoryGraphPage = () => {
         transition={{ duration: 0.3 }}
         className="space-y-6"
       >
-        <Card className={`relative overflow-hidden card-hover`}>
+        <Card className={`relative overflow-hidden transition-all duration-300 hover:bg-secondary/10 hover:shadow-lg hover:shadow-primary/10`}>
           <div
             className={`absolute inset-0 bg-gradient-to-br ${getCategoryColor(category)} opacity-50`}
           />
