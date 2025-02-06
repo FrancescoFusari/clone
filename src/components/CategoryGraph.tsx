@@ -119,11 +119,8 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
       });
     });
 
-    // Initialize the 3D force graph with 'new' keyword
-    const Graph = new ForceGraph3D();
-    
-    // Configure the graph
-    Graph(graphRef.current)
+    // Initialize the 3D force graph
+    const Graph = ForceGraph3D()(graphRef.current)
       .graphData(graphData)
       .nodeLabel("name")
       .nodeColor(node => {

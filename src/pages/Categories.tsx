@@ -1,5 +1,5 @@
 import { CenteredLayout } from "@/components/layouts/CenteredLayout";
-import { Card } from "@/components/ui/card";
+import { Card, CardHeader } from "@/components/ui/card";
 import { Archive, Database, FolderTree, Grid, List } from "lucide-react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
