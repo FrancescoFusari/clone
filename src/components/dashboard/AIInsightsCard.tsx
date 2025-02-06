@@ -30,59 +30,100 @@ export const AIInsightsCard = () => {
   const { session } = useAuth();
   const { toast } = useToast();
 
-  const { data: entries } = useQuery({
+  const { data: entries, isError: entriesError } = useQuery({
     queryKey: ["entries", session?.user.id],
     queryFn: async () => {
-      console.log("Fetching entries for AI analysis");
+      if (!session?.user.id) {
+        console.log("No user ID found, skipping entries fetch");
+        return null;
+      }
+
+      console.log("Fetching entries for user:", session.user.id);
       const { data, error } = await supabase
         .from("entries")
         .select("content, title, created_at, research_data")
-        .eq("user_id", session?.user.id)
+        .eq("user_id", session.user.id)
         .order("created_at", { ascending: false });
 
       if (error) {
         console.error("Error fetching entries:", error);
+        toast({
+          title: "Error",
+          description: "Failed to fetch entries. Please try again later.",
+          variant: "destructive",
+        });
         throw error;
       }
 
+      console.log("Fetched entries count:", data?.length || 0);
       return data as Entry[];
     },
     enabled: !!session?.user.id,
   });
 
-  const { data: insights, isLoading } = useQuery({
+  const { data: insights, isLoading, isError: analysisError } = useQuery({
     queryKey: ["aiAnalysis", entries],
     queryFn: async () => {
       if (!entries?.length) {
+        console.log("No entries to analyze");
         return null;
       }
 
-      console.log("Analyzing entries with AI");
-      const response = await fetch("/functions/v1/analyze-entries", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${process.env.SUPABASE_ANON_KEY}`,
-        },
-        body: JSON.stringify({ entries }),
-      });
+      console.log(`Analyzing ${entries.length} entries with AI`);
+      try {
+        const response = await fetch("/functions/v1/analyze-entries", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${process.env.SUPABASE_ANON_KEY}`,
+          },
+          body: JSON.stringify({ entries }),
+        });
 
-      if (!response.ok) {
-        const error = await response.text();
-        console.error("AI analysis error:", error);
+        if (!response.ok) {
+          const error = await response.text();
+          console.error("AI analysis error:", error);
+          toast({
+            title: "Error",
+            description: "Failed to analyze entries. Please try again later.",
+            variant: "destructive",
+          });
+          throw new Error(error);
+        }
+
+        const analysis: AIAnalysis = await response.json();
+        console.log("AI analysis completed successfully");
+        return analysis;
+      } catch (error) {
+        console.error("Error during AI analysis:", error);
         toast({
           title: "Error",
           description: "Failed to analyze entries. Please try again later.",
           variant: "destructive",
         });
-        throw new Error(error);
+        throw error;
       }
-
-      const analysis: AIAnalysis = await response.json();
-      return analysis;
     },
     enabled: !!entries?.length,
   });
+
+  if (entriesError || analysisError) {
+    return (
+      <Card className="border-none bg-gradient-to-br from-primary/10 to-background backdrop-blur-xl">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Brain className="h-5 w-5" />
+            AI Insights
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-destructive">
+            An error occurred while fetching insights. Please try again later.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -104,7 +145,7 @@ export const AIInsightsCard = () => {
     );
   }
 
-  if (!insights) {
+  if (!entries?.length) {
     return (
       <Card className="border-none bg-gradient-to-br from-primary/10 to-background backdrop-blur-xl">
         <CardHeader>
