@@ -121,7 +121,9 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
     });
 
     // Initialize the 3D force graph
-    const Graph = new ForceGraph3D()(graphRef.current)
+    const Graph = ForceGraph3D({
+      controlType: 'orbit'
+    })(graphRef.current)
       .graphData(graphData)
       .nodeLabel("name")
       .nodeColor(node => {
@@ -163,9 +165,12 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
   }
 
   return (
-    <Card className="overflow-hidden border-none bg-transparent shadow-none">
-      <CardContent className="p-0">
-        <div ref={graphRef} className="w-full h-[600px] rounded-lg glass-morphism" />
+    <Card className="overflow-hidden border border-border/50 shadow-lg bg-transparent">
+      <CardContent className="p-4">
+        <div 
+          ref={graphRef} 
+          className="w-full h-[600px] rounded-lg glass-morphism p-2" 
+        />
       </CardContent>
     </Card>
   );
