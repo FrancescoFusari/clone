@@ -38,6 +38,7 @@ interface CategoryGraphProps {
 export const CategoryGraph = ({ category }: CategoryGraphProps) => {
   const graphRef = useRef<HTMLDivElement>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isInteracting, setIsInteracting] = useState(false);
   
   const { data: entries, isLoading } = useQuery({
     queryKey: ["category-entries", category],
@@ -170,7 +171,11 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
       .backgroundColor("#0f1729")
       .width(graphRef.current.clientWidth)
       .height(graphRef.current.clientHeight)
-      .showNavInfo(false);
+      .showNavInfo(false)
+      // Add interaction handlers
+      .onNodeDrag(() => setIsInteracting(true))
+      .onNodeDragEnd(() => setIsInteracting(false))
+      .onEngineStop(() => setIsInteracting(false));
 
     // Set initial camera position further back and at an angle
     Graph.cameraPosition({ x: 300, y: 150, z: 400 });
@@ -192,27 +197,41 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
     const orbitHeight = 150;
 
     const animate = () => {
-      angle += orbitSpeed;
-      const x = orbitRadius * Math.cos(angle);
-      const z = orbitRadius * Math.sin(angle);
-      Graph.cameraPosition({
-        x,
-        y: orbitHeight,
-        z,
-      });
+      if (!isInteracting) {
+        angle += orbitSpeed;
+        const x = orbitRadius * Math.cos(angle);
+        const z = orbitRadius * Math.sin(angle);
+        Graph.cameraPosition({
+          x,
+          y: orbitHeight,
+          z,
+        });
+      }
       requestAnimationFrame(animate);
     };
 
     // Start the animation
     const animationFrame = requestAnimationFrame(animate);
 
+    // Add mouse interaction handlers to the container
+    const handleMouseDown = () => setIsInteracting(true);
+    const handleMouseUp = () => setIsInteracting(false);
+    const handleMouseLeave = () => setIsInteracting(false);
+
+    graphRef.current.addEventListener('mousedown', handleMouseDown);
+    graphRef.current.addEventListener('mouseup', handleMouseUp);
+    graphRef.current.addEventListener('mouseleave', handleMouseLeave);
+
     return () => {
       cancelAnimationFrame(animationFrame);
       if (graphRef.current) {
         graphRef.current.innerHTML = "";
+        graphRef.current.removeEventListener('mousedown', handleMouseDown);
+        graphRef.current.removeEventListener('mouseup', handleMouseUp);
+        graphRef.current.removeEventListener('mouseleave', handleMouseLeave);
       }
     };
-  }, [entries, category]);
+  }, [entries, category, isInteracting]);
 
   if (isLoading) {
     return <Skeleton className="w-full h-[600px]" />;
