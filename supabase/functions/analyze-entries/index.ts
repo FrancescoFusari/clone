@@ -20,15 +20,13 @@ interface Entry {
   };
 }
 
-serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
+async function callOpenAI(entries: Entry[], retryCount = 0): Promise<any> {
+  const maxRetries = 3;
+  const retryDelay = 1000; // 1 second
 
   try {
-    const { entries } = await req.json();
-    console.log(`Analyzing ${entries.length} entries`);
-
+    console.log(`Attempting OpenAI API call (attempt ${retryCount + 1}/${maxRetries + 1})`);
+    
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -61,17 +59,53 @@ serve(async (req) => {
     });
 
     if (!response.ok) {
+      const errorData = await response.json();
+      console.error('OpenAI API error response:', errorData);
+      
+      // Handle rate limits specifically
+      if (response.status === 429 && retryCount < maxRetries) {
+        console.log(`Rate limited, waiting ${retryDelay}ms before retry...`);
+        await new Promise(resolve => setTimeout(resolve, retryDelay * (retryCount + 1)));
+        return callOpenAI(entries, retryCount + 1);
+      }
+      
       throw new Error(`OpenAI API error: ${response.status}`);
     }
 
     const data = await response.json();
-    console.log('OpenAI response received');
+    console.log('OpenAI response received successfully');
+    return data;
+  } catch (error) {
+    if (retryCount < maxRetries) {
+      console.log(`Error occurred, retrying in ${retryDelay}ms...`, error);
+      await new Promise(resolve => setTimeout(resolve, retryDelay * (retryCount + 1)));
+      return callOpenAI(entries, retryCount + 1);
+    }
+    throw error;
+  }
+}
 
-    // Parse the content as JSON - it's in the message content
+serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const { entries } = await req.json();
+    console.log(`Analyzing ${entries.length} entries`);
+
+    if (!entries?.length) {
+      console.log('No entries provided for analysis');
+      throw new Error('No entries provided for analysis');
+    }
+
+    const data = await callOpenAI(entries);
+    
+    // Parse the content as JSON
     let analysis;
     try {
       analysis = JSON.parse(data.choices[0].message.content);
-      console.log('Successfully parsed analysis:', analysis);
+      console.log('Successfully parsed analysis');
     } catch (error) {
       console.error('Error parsing OpenAI response:', error);
       console.log('Raw response content:', data.choices[0].message.content);
@@ -83,8 +117,17 @@ serve(async (req) => {
     });
   } catch (error) {
     console.error('Error in analyze-entries function:', error);
+    
+    // Provide more specific error messages
+    const errorMessage = error.message.includes('OpenAI API error: 429')
+      ? 'Service is temporarily busy. Please try again in a few moments.'
+      : error.message;
+
     return new Response(
-      JSON.stringify({ error: error.message }), 
+      JSON.stringify({ 
+        error: errorMessage,
+        details: error.message 
+      }), 
       { 
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
