@@ -22,17 +22,19 @@ interface Entry {
 
 async function callOpenAI(entries: Entry[], retryCount = 0): Promise<any> {
   const maxRetries = 3;
-  const retryDelay = 2000; // Increased to 2 seconds base delay
+  const retryDelay = 2000;
 
   try {
     console.log(`Attempting OpenAI API call (attempt ${retryCount + 1}/${maxRetries + 1})`);
     
-    // Prepare a more focused prompt for analysis
-    const entriesForAnalysis = entries.map(entry => ({
-      title: entry.title,
-      content: entry.content,
-      date: entry.created_at,
-    }));
+    // Format entries in a structured way for the model
+    const formattedEntries = entries.map((entry, index) => `
+Entry #${index + 1}:
+Title: ${entry.title}
+Date: ${entry.created_at}
+Content: ${entry.content}
+${entry.research_data ? `Research Data: ${JSON.stringify(entry.research_data, null, 2)}` : ''}
+---`).join('\n\n');
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -41,24 +43,28 @@ async function callOpenAI(entries: Entry[], retryCount = 0): Promise<any> {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4',
+        model: 'gpt-4o',
         messages: [
           {
             role: 'system',
-            content: `You are an AI analyst that finds patterns and insights in journal entries. 
-            Analyze the provided entries and return a JSON object with exactly this structure:
+            content: `You are an AI analyst specializing in finding patterns and insights across multiple journal entries.
+            Analyze the provided entries as a cohesive dataset and return a JSON object with exactly this structure:
             {
               "commonThemes": [{"theme": "string", "count": number}],
               "connections": ["string"],
               "insights": ["string"],
               "questions": ["string"]
             }
-            Keep responses concise and focused on the most important patterns.`
+            Guidelines:
+            - commonThemes: Identify recurring themes and their frequency across entries
+            - connections: Find meaningful relationships between different entries
+            - insights: Extract key observations about patterns or trends
+            - questions: Generate thought-provoking questions based on the content
+            Keep responses focused and concise.`
           },
           {
             role: 'user',
-            content: `Analyze these entries and find patterns, connections, and insights. Focus on recurring themes and meaningful connections between entries:
-            ${JSON.stringify(entriesForAnalysis)}`
+            content: `Analyze these entries as a complete dataset:\n\n${formattedEntries}`
           }
         ],
         temperature: 0.7,
@@ -70,7 +76,6 @@ async function callOpenAI(entries: Entry[], retryCount = 0): Promise<any> {
       const errorData = await response.json();
       console.error('OpenAI API error response:', errorData);
       
-      // Handle rate limits with exponential backoff
       if (response.status === 429 && retryCount < maxRetries) {
         const backoffDelay = retryDelay * Math.pow(2, retryCount);
         console.log(`Rate limited, waiting ${backoffDelay}ms before retry...`);
@@ -102,7 +107,7 @@ serve(async (req) => {
 
   try {
     const { entries } = await req.json();
-    console.log(`Analyzing ${entries.length} entries`);
+    console.log(`Analyzing ${entries.length} entries in a single batch`);
 
     if (!entries?.length) {
       console.log('No entries provided for analysis');
@@ -111,11 +116,10 @@ serve(async (req) => {
 
     const data = await callOpenAI(entries);
     
-    // Parse the content as JSON
     let analysis;
     try {
       analysis = JSON.parse(data.choices[0].message.content);
-      console.log('Successfully parsed analysis');
+      console.log('Successfully parsed analysis:', analysis);
     } catch (error) {
       console.error('Error parsing OpenAI response:', error);
       console.log('Raw response content:', data.choices[0].message.content);
@@ -128,7 +132,6 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in analyze-entries function:', error);
     
-    // Provide more specific error messages
     const errorMessage = error.message.includes('OpenAI API error: 429')
       ? 'Service is temporarily busy. Please try again in a few moments.'
       : error.message;
