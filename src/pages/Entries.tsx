@@ -1,158 +1,109 @@
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { FileText, Tag, Calendar, BookOpen, FolderTree } from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { format } from "date-fns";
-import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
+import { Archive, Search } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { CenteredLayout } from "@/components/layouts/CenteredLayout";
-import { useAuth } from "@/components/AuthProvider";
-
-type Entry = {
-  id: string;
-  title: string;
-  content: string;
-  created_at: string;
-  tags: string[];
-  category: "personal" | "work" | "social" | "interests_and_hobbies" | "school";
-  subcategory: string | null;
-  research_data?: {
-    insights?: string;
-    questions?: string[];
-    key_concepts?: string[];
-    related_topics?: string[];
-  } | null;
-};
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { useState } from "react";
+import { format } from "date-fns";
 
 const Entries = () => {
-  const { toast } = useToast();
   const navigate = useNavigate();
-  const { session } = useAuth();
-  
-  const { data: entries, isLoading } = useQuery({
-    queryKey: ["entries", session?.user?.id],
-    queryFn: async () => {
-      if (!session?.user) {
-        console.log("No authenticated user found");
-        return [];
-      }
+  const [searchQuery, setSearchQuery] = useState("");
 
-      console.log("Fetching entries for user:", session.user.id);
+  const { data: entries, isLoading } = useQuery({
+    queryKey: ["entries"],
+    queryFn: async () => {
       const { data, error } = await supabase
         .from("entries")
         .select("*")
-        .eq("user_id", session.user.id)
         .order("created_at", { ascending: false });
 
-      if (error) {
-        console.error("Error fetching entries:", error);
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Failed to load entries",
-        });
-        throw error;
-      }
-
-      console.log("Fetched entries:", data);
-      return data as Entry[];
+      if (error) throw error;
+      return data;
     },
-    enabled: !!session?.user,
   });
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
-
-  if (!session?.user) {
-    return (
-      <CenteredLayout>
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4 text-white/90">Please Sign In</h1>
-          <p className="text-white/60">You need to be signed in to view your entries.</p>
-        </div>
-      </CenteredLayout>
-    );
-  }
+  const filteredEntries = entries?.filter((entry) =>
+    entry.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    entry.content.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <CenteredLayout>
       <div className="max-w-6xl mx-auto space-y-8 py-4">
         {/* Header Card */}
-        <Card className="glass-morphism overflow-hidden">
-          <CardHeader className="space-y-2">
+        <Card className="glass-morphism overflow-hidden relative">
+          <div className="absolute inset-0 bg-gradient-to-br from-[#9F9EA1]/20 to-[#F6F6F7]/20 opacity-50" />
+          <CardHeader className="relative space-y-2">
             <div className="space-y-2">
-              <h1 className="text-4xl font-bold text-gradient">Your Entries</h1>
+              <div className="p-3 w-fit rounded-xl bg-background/50 backdrop-blur-sm">
+                <Archive className="w-6 h-6" />
+              </div>
+              <h1 className="text-3xl font-bold tracking-tighter">Your Entries</h1>
               <p className="text-lg text-white/80 leading-relaxed">
-                Browse through all your entries in a grid layout. Each card shows a preview of the entry's content and tags. Click on any entry to view its full details and AI-generated insights.
+                Browse and manage all your entries in one place. Use filters and search to find specific content.
               </p>
             </div>
           </CardHeader>
         </Card>
 
-        {/* Entries Grid */}
-        {entries && entries.length > 0 ? (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {entries.map((entry) => (
-              <Card 
-                key={entry.id} 
-                className="hover:shadow-lg transition-all duration-300 cursor-pointer backdrop-blur-lg bg-white/5 border border-white/10 rounded-2xl hover:scale-[1.02]"
-                onClick={() => navigate(`/entries/${entry.id}`)}
-              >
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-white/90">
-                    <FileText className="h-5 w-5" />
-                    {entry.title || "Untitled Entry"}
-                  </CardTitle>
-                  <CardDescription className="space-y-2">
-                    <div className="flex items-center gap-2 text-white/60">
-                      <Calendar className="h-4 w-4" />
-                      {format(new Date(entry.created_at), "PPp")}
-                    </div>
-                    {entry.subcategory && (
-                      <div className="flex items-center gap-2 text-white/60">
-                        <FolderTree className="h-4 w-4" />
-                        <span className="text-sm capitalize">{entry.subcategory}</span>
-                      </div>
-                    )}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-white/80 mb-4 line-clamp-3">{entry.content}</p>
-                  {entry.tags && entry.tags.length > 0 && (
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <Tag className="h-4 w-4 text-white/60" />
-                      {entry.tags.map((tag: string) => (
-                        <Badge 
-                          key={tag} 
-                          variant="secondary"
-                          className="bg-white/10 text-white/80 hover:bg-white/20 rounded-full"
-                        >
-                          {tag}
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
+        <Card className="glass-morphism">
+          <CardContent className="p-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search entries..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9 bg-background/50"
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {isLoading ? (
+            Array.from({ length: 6 }).map((_, i) => (
+              <Card key={i} className="glass-morphism animate-pulse">
+                <CardContent className="p-6">
+                  <div className="space-y-3">
+                    <div className="h-6 bg-white/10 rounded" />
+                    <div className="h-4 bg-white/5 rounded" />
+                    <div className="h-4 bg-white/5 rounded w-2/3" />
+                  </div>
                 </CardContent>
               </Card>
-            ))}
-          </div>
-        ) : (
+            ))
+          ) : (
+            filteredEntries?.map((entry) => (
+              <Card
+                key={entry.id}
+                className="glass-morphism card-hover cursor-pointer"
+                onClick={() => navigate(`/entries/${entry.id}`)}
+              >
+                <CardContent className="p-6">
+                  <div className="space-y-3">
+                    <h3 className="font-semibold line-clamp-1">{entry.title}</h3>
+                    <p className="text-sm text-muted-foreground line-clamp-2">
+                      {entry.content}
+                    </p>
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <span className="capitalize">{entry.category.replace(/_/g, " ")}</span>
+                      <span>{format(new Date(entry.created_at), "MMM d, yyyy")}</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          )}
+        </div>
+
+        {!isLoading && filteredEntries?.length === 0 && (
           <Card className="glass-morphism">
-            <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-              <BookOpen className="h-12 w-12 text-white/40 mb-4" />
-              <p className="text-white/60">No entries found. Create your first entry to get started!</p>
+            <CardContent className="p-6 text-center">
+              <p className="text-muted-foreground">No entries found</p>
             </CardContent>
           </Card>
         )}

@@ -86,12 +86,16 @@ const Timeline = () => {
     <CenteredLayout>
       <div className="w-full max-w-2xl mx-auto py-6 space-y-8">
         {/* Header Card */}
-        <Card className="glass-morphism overflow-hidden">
-          <CardHeader className="space-y-2">
+        <Card className="glass-morphism overflow-hidden relative">
+          <div className="absolute inset-0 bg-gradient-to-br from-[#8E9196]/20 to-[#F1F1F1]/20 opacity-50" />
+          <CardHeader className="relative space-y-2">
             <div className="space-y-2">
-              <h1 className="text-4xl font-bold text-gradient">Timeline View</h1>
+              <div className="p-3 w-fit rounded-xl bg-background/50 backdrop-blur-sm">
+                <Clock className="w-6 h-6" />
+              </div>
+              <h1 className="text-3xl font-bold tracking-tighter">Timeline View</h1>
               <p className="text-lg text-white/80 leading-relaxed">
-                View your entries chronologically, with the ability to filter by category and expand entries for quick previews. Click on any entry to see its full details.
+                View your entries chronologically, with the ability to filter by category and expand entries for quick previews.
               </p>
             </div>
           </CardHeader>
