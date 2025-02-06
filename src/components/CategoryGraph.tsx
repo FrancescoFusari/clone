@@ -7,7 +7,6 @@ import { Card, CardContent } from "./ui/card";
 import { Button } from "./ui/button";
 import { Maximize2, Minimize2 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
-// Import THREE from three.js package
 import * as THREE from 'three';
 
 type EntryCategory = Database["public"]["Enums"]["entry_category"];
@@ -80,12 +79,15 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
       links: []
     };
 
-    // Add category node
+    // Add category node at the center
     graphData.nodes.push({
       id: category,
       name: category,
       type: "category",
-      val: 20
+      val: 20,
+      x: 0,
+      y: 0,
+      z: 0
     });
 
     // Track unique subcategories and tags
@@ -148,7 +150,7 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
     });
 
     // Initialize the 3D force graph
-    const Graph = ForceGraph3D()(graphRef.current)
+    const Graph = new ForceGraph3D()(graphRef.current)
       .graphData(graphData)
       .nodeLabel("name")
       .nodeColor(node => {
@@ -168,24 +170,22 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
       .nodeVal(node => (node as Node).val)
       .linkWidth(1)
       .linkColor(() => "rgba(173, 164, 158, 0.2)") // Matching the tag color with low opacity
-      .backgroundColor("#0f1729");
+      .backgroundColor("#0f1729")
+      .d3Force('center', null) // Remove center force
+      .d3Force('charge', null) // Remove charge force temporarily
+      .d3Force('link', null); // Remove link force temporarily
 
-    // Position camera to show all nodes
-    const distance = 400;
-    Graph.cameraPosition({ z: distance });
+    // Set initial camera position
+    const distance = 200;
+    Graph.cameraPosition({ x: 0, y: 0, z: distance });
 
-    // Add a small delay to ensure the graph is properly initialized
+    // Re-enable forces after a short delay
     setTimeout(() => {
-      const box = new THREE.Box3().setFromPoints(
-        graphData.nodes.map(node => new THREE.Vector3(node.x || 0, node.y || 0, node.z || 0))
-      );
-      const center = box.getCenter(new THREE.Vector3());
-      Graph.cameraPosition(
-        { x: center.x, y: center.y, z: distance },
-        { x: center.x, y: center.y, z: 0 },
-        2000
-      );
-    }, 100);
+      Graph
+        .d3Force('charge', d3.forceManyBody().strength(-50))
+        .d3Force('link', d3.forceLink(graphData.links).distance(30))
+        .d3Force('center', d3.forceCenter());
+    }, 500);
 
     return () => {
       if (graphRef.current) {
