@@ -20,9 +20,7 @@ interface Entry {
   };
 }
 
-// Function to estimate token count (rough approximation)
 function estimateTokenCount(text: string): number {
-  // GPT models typically use ~4 characters per token
   return Math.ceil(text.length / 4);
 }
 
@@ -33,7 +31,6 @@ async function callOpenAI(entries: Entry[], retryCount = 0): Promise<any> {
   try {
     console.log(`Attempting OpenAI API call (attempt ${retryCount + 1}/${maxRetries + 1})`);
     
-    // Format entries in a structured way for the model
     const formattedEntries = entries.map((entry, index) => `
 Entry #${index + 1}:
 Title: ${entry.title}
@@ -42,7 +39,6 @@ Content: ${entry.content}
 ${entry.research_data ? `Research Data: ${JSON.stringify(entry.research_data, null, 2)}` : ''}
 ---`).join('\n\n');
 
-    // Estimate token count for the request
     const systemPrompt = `You are an AI analyst specializing in finding patterns and insights across multiple journal entries.
     Analyze the provided entries as a cohesive dataset and return a JSON object with exactly this structure:
     {
@@ -69,10 +65,12 @@ ${entry.research_data ? `Research Data: ${JSON.stringify(entry.research_data, nu
       total: totalEstimatedTokens
     });
 
-    // If token count is too high, analyze a subset of entries
-    const MAX_TOKENS = 8000; // Conservative limit for gpt-4o-mini
+    const MAX_TOKENS = 8000;
     if (totalEstimatedTokens > MAX_TOKENS) {
-      console.warn(`Token count (${totalEstimatedTokens}) exceeds limit (${MAX_TOKENS}). Consider implementing pagination or reducing entry content.`);
+      console.warn(`Token count (${totalEstimatedTokens}) exceeds limit (${MAX_TOKENS}). Processing subset of entries.`);
+      // Process only the most recent entries that fit within token limit
+      const ratio = MAX_TOKENS / totalEstimatedTokens;
+      entries = entries.slice(0, Math.floor(entries.length * ratio));
     }
 
     console.log('Sending request to OpenAI API...');
@@ -83,7 +81,7 @@ ${entry.research_data ? `Research Data: ${JSON.stringify(entry.research_data, nu
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4',
         messages: [
           {
             role: 'system',
@@ -103,18 +101,11 @@ ${entry.research_data ? `Research Data: ${JSON.stringify(entry.research_data, nu
       const errorData = await response.json();
       console.error('OpenAI API error response:', errorData);
       
-      if (response.status === 429) {
-        console.error('Rate limit exceeded. Token usage details:', {
-          estimatedTokens: totalEstimatedTokens,
-          errorDetails: errorData
-        });
-        
-        if (retryCount < maxRetries) {
-          const backoffDelay = retryDelay * Math.pow(2, retryCount);
-          console.log(`Rate limited, waiting ${backoffDelay}ms before retry...`);
-          await new Promise(resolve => setTimeout(resolve, backoffDelay));
-          return callOpenAI(entries, retryCount + 1);
-        }
+      if (response.status === 429 && retryCount < maxRetries) {
+        const backoffDelay = retryDelay * Math.pow(2, retryCount);
+        console.log(`Rate limited, waiting ${backoffDelay}ms before retry...`);
+        await new Promise(resolve => setTimeout(resolve, backoffDelay));
+        return callOpenAI(entries, retryCount + 1);
       }
       
       throw new Error(`OpenAI API error: ${response.status}`);
@@ -123,7 +114,6 @@ ${entry.research_data ? `Research Data: ${JSON.stringify(entry.research_data, nu
     const data = await response.json();
     console.log('OpenAI response received successfully');
     
-    // Validate the response format
     try {
       const parsedContent = JSON.parse(data.choices[0].message.content);
       if (!parsedContent.commonThemes || !parsedContent.connections || 
@@ -147,13 +137,24 @@ ${entry.research_data ? `Research Data: ${JSON.stringify(entry.research_data, nu
 }
 
 serve(async (req) => {
+  // Always return proper CORS headers for OPTIONS requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { 
+      headers: corsHeaders,
+      status: 204
+    });
   }
 
   try {
+    console.log('Received request:', req.method);
+    
+    if (!openAIApiKey) {
+      console.error('OpenAI API key not configured');
+      throw new Error('OpenAI API key not configured');
+    }
+
     const { entries } = await req.json();
-    console.log(`Analyzing ${entries.length} entries in a single batch`);
+    console.log(`Processing ${entries?.length || 0} entries`);
 
     if (!entries?.length) {
       console.log('No entries provided for analysis');
@@ -161,22 +162,19 @@ serve(async (req) => {
     }
 
     const analysis = await callOpenAI(entries);
-    console.log('Successfully parsed analysis:', analysis);
+    console.log('Successfully generated analysis');
 
     return new Response(JSON.stringify(analysis), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 200
     });
   } catch (error) {
     console.error('Error in analyze-entries function:', error);
     
-    const errorMessage = error.message.includes('OpenAI API error: 429')
-      ? 'Service is temporarily busy. Please try again in a few moments.'
-      : error.message;
-
     return new Response(
       JSON.stringify({ 
-        error: errorMessage,
-        details: error.message 
+        error: error.message || 'Internal server error',
+        details: error.toString()
       }), 
       { 
         status: 500,
