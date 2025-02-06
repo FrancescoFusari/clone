@@ -120,9 +120,10 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
     });
 
     // Initialize the 3D force graph
-    const Graph = new ForceGraph3D({
-      extraRendererConfig: { alpha: true }
-    })(graphRef.current)
+    const Graph = ForceGraph3D();
+    
+    // Configure the graph
+    Graph(graphRef.current)
       .graphData(graphData)
       .nodeLabel("name")
       .nodeColor(node => {
