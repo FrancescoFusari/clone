@@ -168,8 +168,8 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
       .height(graphRef.current.clientHeight)
       .showNavInfo(false);
 
-    // Center the graph
-    Graph.cameraPosition({ x: 0, y: 0, z: 200 });
+    // Set camera position further back
+    Graph.cameraPosition({ x: 400, y: 400, z: 600 });
 
     // Center the category node
     const categoryNode = graphData.nodes.find(node => node.type === "category");
