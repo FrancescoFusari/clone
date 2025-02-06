@@ -27,49 +27,54 @@ interface AIAnalysis {
 }
 
 export const AIInsightsCard = () => {
-  const { session } = useAuth();
+  const { session, loading: authLoading } = useAuth();
   const { toast } = useToast();
 
   const { data: entries, isError: entriesError } = useQuery({
     queryKey: ["entries", session?.user.id],
     queryFn: async () => {
       if (!session?.user.id) {
-        console.log("No user ID found, skipping entries fetch");
+        console.log("No user ID found in session, skipping entries fetch");
         return null;
       }
 
       console.log("Fetching entries for user:", session.user.id);
-      const { data, error } = await supabase
-        .from("entries")
-        .select("content, title, created_at, research_data")
-        .eq("user_id", session.user.id)
-        .order("created_at", { ascending: false });
+      try {
+        const { data, error } = await supabase
+          .from("entries")
+          .select("content, title, created_at, research_data")
+          .eq("user_id", session.user.id)
+          .order("created_at", { ascending: false });
 
-      if (error) {
-        console.error("Error fetching entries:", error);
-        toast({
-          title: "Error",
-          description: "Failed to fetch entries. Please try again later.",
-          variant: "destructive",
-        });
+        if (error) {
+          console.error("Supabase error fetching entries:", error);
+          toast({
+            title: "Error",
+            description: "Failed to fetch entries. Please try again later.",
+            variant: "destructive",
+          });
+          throw error;
+        }
+
+        console.log("Successfully fetched entries count:", data?.length || 0);
+        return data as Entry[];
+      } catch (error) {
+        console.error("Error in entries fetch:", error);
         throw error;
       }
-
-      console.log("Fetched entries count:", data?.length || 0);
-      return data as Entry[];
     },
-    enabled: !!session?.user.id,
+    enabled: !!session?.user.id && !authLoading,
   });
 
   const { data: insights, isLoading, isError: analysisError } = useQuery({
     queryKey: ["aiAnalysis", entries],
     queryFn: async () => {
       if (!entries?.length) {
-        console.log("No entries to analyze");
+        console.log("No entries available for AI analysis");
         return null;
       }
 
-      console.log(`Analyzing ${entries.length} entries with AI`);
+      console.log(`Starting AI analysis for ${entries.length} entries`);
       try {
         const { data, error } = await supabase.functions.invoke('analyze-entries', {
           body: { entries }
@@ -85,20 +90,34 @@ export const AIInsightsCard = () => {
           throw error;
         }
 
-        console.log("AI analysis completed successfully:", data);
+        console.log("AI analysis completed successfully");
         return data as AIAnalysis;
       } catch (error) {
         console.error("Error during AI analysis:", error);
-        toast({
-          title: "Error",
-          description: "Failed to analyze entries. Please try again later.",
-          variant: "destructive",
-        });
         throw error;
       }
     },
     enabled: !!entries?.length,
   });
+
+  if (authLoading) {
+    return (
+      <Card className="border-none bg-gradient-to-br from-primary/10 to-background backdrop-blur-xl">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Brain className="h-5 w-5" />
+            AI Insights
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="h-24 animate-pulse bg-primary/5 rounded-lg" />
+            <div className="h-24 animate-pulse bg-primary/5 rounded-lg" />
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   if (entriesError || analysisError) {
     return (
