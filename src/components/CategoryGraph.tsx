@@ -3,6 +3,7 @@ import ForceGraph3D from "3d-force-graph";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "./ui/skeleton";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "./ui/card";
 import type { Database } from "@/integrations/supabase/types";
 
 type EntryCategory = Database["public"]["Enums"]["entry_category"];
@@ -11,7 +12,7 @@ interface Node {
   id: string;
   name: string;
   type: "category" | "subcategory" | "entry" | "tag";
-  val: number; // Size of node
+  val: number;
 }
 
 interface Link {
@@ -31,7 +32,6 @@ interface CategoryGraphProps {
 export const CategoryGraph = ({ category }: CategoryGraphProps) => {
   const graphRef = useRef<HTMLDivElement>(null);
   
-  // Fetch entries for this category
   const { data: entries, isLoading } = useQuery({
     queryKey: ["category-entries", category],
     queryFn: async () => {
@@ -48,7 +48,6 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
   useEffect(() => {
     if (!entries || !graphRef.current) return;
 
-    // Process data into graph format
     const graphData: GraphData = {
       nodes: [],
       links: []
@@ -68,7 +67,6 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
 
     // Process entries
     entries.forEach(entry => {
-      // Add entry node
       graphData.nodes.push({
         id: entry.id,
         name: entry.title,
@@ -76,26 +74,21 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
         val: 5
       });
 
-      // Link entry to category
       graphData.links.push({
         source: category,
         target: entry.id
       });
 
-      // Process subcategory
       if (entry.subcategory) {
         subcategories.add(entry.subcategory);
-        // Link entry to subcategory
         graphData.links.push({
           source: entry.id,
           target: entry.subcategory
         });
       }
 
-      // Process tags
       entry.tags?.forEach(tag => {
         tags.add(tag);
-        // Link entry to tag
         graphData.links.push({
           source: entry.id,
           target: tag
@@ -111,7 +104,6 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
         type: "subcategory",
         val: 10
       });
-      // Link subcategory to category
       graphData.links.push({
         source: category,
         target: sub
@@ -128,30 +120,30 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
       });
     });
 
-    // Initialize the graph
     const Graph = ForceGraph3D({
-      controlType: 'orbit'
+      controlType: 'orbit',
+      backgroundColor: '#000000',
     })(graphRef.current)
       .graphData(graphData)
       .nodeLabel("name")
       .nodeColor(node => {
         switch ((node as Node).type) {
           case "category":
-            return "#ff6b6b";
+            return "hsl(var(--primary))";
           case "subcategory":
-            return "#4ecdc4";
+            return "hsl(var(--secondary))";
           case "entry":
-            return "#45b7d1";
+            return "hsl(var(--accent))";
           case "tag":
-            return "#96ceb4";
+            return "hsl(var(--muted))";
           default:
             return "#666666";
         }
       })
       .nodeVal(node => (node as Node).val)
       .linkWidth(1)
-      .linkColor(() => "#999999")
-      .backgroundColor("#ffffff");
+      .linkColor(() => "hsl(var(--muted-foreground))")
+      .backgroundColor("hsl(var(--background))");
 
     // Cleanup
     return () => {
@@ -164,11 +156,19 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
 
   if (isLoading) {
     return (
-      <div className="w-full h-[600px] flex items-center justify-center">
-        <Skeleton className="w-full h-full" />
-      </div>
+      <Card>
+        <CardContent className="p-6">
+          <Skeleton className="w-full h-[600px]" />
+        </CardContent>
+      </Card>
     );
   }
 
-  return <div ref={graphRef} className="w-full h-[600px]" />;
+  return (
+    <Card className="overflow-hidden border-none bg-transparent shadow-none">
+      <CardContent className="p-0">
+        <div ref={graphRef} className="w-full h-[600px] rounded-lg glass-morphism" />
+      </CardContent>
+    </Card>
+  );
 };
