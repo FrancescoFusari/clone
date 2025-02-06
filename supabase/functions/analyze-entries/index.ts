@@ -22,11 +22,18 @@ interface Entry {
 
 async function callOpenAI(entries: Entry[], retryCount = 0): Promise<any> {
   const maxRetries = 3;
-  const retryDelay = 1000; // 1 second
+  const retryDelay = 2000; // Increased to 2 seconds base delay
 
   try {
     console.log(`Attempting OpenAI API call (attempt ${retryCount + 1}/${maxRetries + 1})`);
     
+    // Prepare a more focused prompt for analysis
+    const entriesForAnalysis = entries.map(entry => ({
+      title: entry.title,
+      content: entry.content,
+      date: entry.created_at,
+    }));
+
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -45,12 +52,13 @@ async function callOpenAI(entries: Entry[], retryCount = 0): Promise<any> {
               "connections": ["string"],
               "insights": ["string"],
               "questions": ["string"]
-            }`
+            }
+            Keep responses concise and focused on the most important patterns.`
           },
           {
             role: 'user',
             content: `Analyze these entries and find patterns, connections, and insights. Focus on recurring themes and meaningful connections between entries:
-            ${JSON.stringify(entries)}`
+            ${JSON.stringify(entriesForAnalysis)}`
           }
         ],
         temperature: 0.7,
@@ -62,10 +70,11 @@ async function callOpenAI(entries: Entry[], retryCount = 0): Promise<any> {
       const errorData = await response.json();
       console.error('OpenAI API error response:', errorData);
       
-      // Handle rate limits specifically
+      // Handle rate limits with exponential backoff
       if (response.status === 429 && retryCount < maxRetries) {
-        console.log(`Rate limited, waiting ${retryDelay}ms before retry...`);
-        await new Promise(resolve => setTimeout(resolve, retryDelay * (retryCount + 1)));
+        const backoffDelay = retryDelay * Math.pow(2, retryCount);
+        console.log(`Rate limited, waiting ${backoffDelay}ms before retry...`);
+        await new Promise(resolve => setTimeout(resolve, backoffDelay));
         return callOpenAI(entries, retryCount + 1);
       }
       
@@ -77,8 +86,9 @@ async function callOpenAI(entries: Entry[], retryCount = 0): Promise<any> {
     return data;
   } catch (error) {
     if (retryCount < maxRetries) {
-      console.log(`Error occurred, retrying in ${retryDelay}ms...`, error);
-      await new Promise(resolve => setTimeout(resolve, retryDelay * (retryCount + 1)));
+      const backoffDelay = retryDelay * Math.pow(2, retryCount);
+      console.log(`Error occurred, retrying in ${backoffDelay}ms...`, error);
+      await new Promise(resolve => setTimeout(resolve, backoffDelay));
       return callOpenAI(entries, retryCount + 1);
     }
     throw error;
