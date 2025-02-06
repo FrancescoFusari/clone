@@ -53,7 +53,7 @@ const EntryDetails = () => {
     return null;
   }
 
-  const { data: entry, isLoading } = useQuery({
+  const { data: entry, isLoading, isError } = useQuery({
     queryKey: ["entry", id],
     queryFn: async () => {
       console.log("Fetching entry details for:", id);
@@ -75,6 +75,12 @@ const EntryDetails = () => {
 
       if (!data) {
         console.log("No entry found with id:", id);
+        toast({
+          variant: "destructive",
+          title: "Entry not found",
+          description: "The requested entry could not be found.",
+        });
+        navigate("/");
         return null;
       }
 
@@ -82,6 +88,7 @@ const EntryDetails = () => {
       return data;
     },
     enabled: !!id, // Only run query if we have an ID
+    retry: false, // Don't retry on failure
   });
 
   const researchMutation = useMutation({
@@ -141,23 +148,38 @@ const EntryDetails = () => {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex items-center space-x-4 mb-6">
+          <Button
+            variant="outline"
+            onClick={() => navigate(-1)}
+            className="bg-white/5 border-white/10 text-white/90 hover:bg-white/10"
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" /> Back
+          </Button>
+          <Skeleton className="h-8 w-48" />
+        </div>
+        <Skeleton className="h-64 w-full" />
       </div>
     );
   }
 
-  if (!entry) {
+  if (isError || !entry) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold mb-4 text-white/90">Entry not found</h1>
         <Button 
           onClick={() => navigate(-1)}
           variant="outline"
-          className="bg-white/5 border-white/10 text-white/90 hover:bg-white/10"
+          className="bg-white/5 border-white/10 text-white/90 hover:bg-white/10 mb-6"
         >
           <ArrowLeft className="mr-2 h-4 w-4" /> Go Back
         </Button>
+        <Alert variant="destructive">
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>
+            Failed to load entry details. The entry might have been deleted or you may not have permission to view it.
+          </AlertDescription>
+        </Alert>
       </div>
     );
   }
