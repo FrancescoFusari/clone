@@ -85,7 +85,7 @@ export const AIInsightsCard = () => {
           throw error;
         }
 
-        console.log("AI analysis completed successfully");
+        console.log("AI analysis completed successfully:", data);
         return data as AIAnalysis;
       } catch (error) {
         console.error("Error during AI analysis:", error);
@@ -118,7 +118,7 @@ export const AIInsightsCard = () => {
     );
   }
 
-  if (isLoading) {
+  if (isLoading || !insights) {
     return (
       <Card className="border-none bg-gradient-to-br from-primary/10 to-background backdrop-blur-xl">
         <CardHeader>
@@ -177,62 +177,70 @@ export const AIInsightsCard = () => {
         </div>
 
         {/* Common Themes */}
-        <div className="space-y-2">
-          <h3 className="font-medium text-sm text-muted-foreground flex items-center gap-2">
-            <Lightbulb className="h-4 w-4" />
-            Common Themes
-          </h3>
-          <div className="flex flex-wrap gap-2">
-            {insights.commonThemes.map((item) => (
-              <span
-                key={item.theme}
-                className="px-2 py-1 bg-primary/10 rounded-full text-xs flex items-center gap-1"
-              >
-                {item.theme}
-                <span className="text-muted-foreground">({item.count})</span>
-              </span>
-            ))}
+        {insights?.commonThemes && insights.commonThemes.length > 0 && (
+          <div className="space-y-2">
+            <h3 className="font-medium text-sm text-muted-foreground flex items-center gap-2">
+              <Lightbulb className="h-4 w-4" />
+              Common Themes
+            </h3>
+            <div className="flex flex-wrap gap-2">
+              {insights.commonThemes.map((item) => (
+                <span
+                  key={item.theme}
+                  className="px-2 py-1 bg-primary/10 rounded-full text-xs flex items-center gap-1"
+                >
+                  {item.theme}
+                  <span className="text-muted-foreground">({item.count})</span>
+                </span>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Entry Connections */}
-        <div className="space-y-2">
-          <h3 className="font-medium text-sm text-muted-foreground flex items-center gap-2">
-            <ArrowRight className="h-4 w-4" />
-            Entry Connections
-          </h3>
-          <ul className="space-y-2">
-            {insights.connections.map((connection, index) => (
-              <li key={index} className="text-sm">
-                {connection}
-              </li>
-            ))}
-          </ul>
-        </div>
+        {insights?.connections && insights.connections.length > 0 && (
+          <div className="space-y-2">
+            <h3 className="font-medium text-sm text-muted-foreground flex items-center gap-2">
+              <ArrowRight className="h-4 w-4" />
+              Entry Connections
+            </h3>
+            <ul className="space-y-2">
+              {insights.connections.map((connection, index) => (
+                <li key={index} className="text-sm">
+                  {connection}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         {/* Key Insights */}
-        <div className="space-y-2">
-          <h3 className="font-medium text-sm text-muted-foreground">Key Insights</h3>
-          <ul className="space-y-2">
-            {insights.insights.map((insight, index) => (
-              <li key={index} className="text-sm">
-                {insight}
-              </li>
-            ))}
-          </ul>
-        </div>
+        {insights?.insights && insights.insights.length > 0 && (
+          <div className="space-y-2">
+            <h3 className="font-medium text-sm text-muted-foreground">Key Insights</h3>
+            <ul className="space-y-2">
+              {insights.insights.map((insight, index) => (
+                <li key={index} className="text-sm">
+                  {insight}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         {/* Reflective Questions */}
-        <div className="space-y-2">
-          <h3 className="font-medium text-sm text-muted-foreground">Questions to Consider</h3>
-          <ul className="space-y-2">
-            {insights.questions.map((question, index) => (
-              <li key={index} className="text-sm">
-                {question}
-              </li>
-            ))}
-          </ul>
-        </div>
+        {insights?.questions && insights.questions.length > 0 && (
+          <div className="space-y-2">
+            <h3 className="font-medium text-sm text-muted-foreground">Questions to Consider</h3>
+            <ul className="space-y-2">
+              {insights.questions.map((question, index) => (
+                <li key={index} className="text-sm">
+                  {question}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
