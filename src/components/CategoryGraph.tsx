@@ -7,8 +7,6 @@ import { Card, CardContent } from "./ui/card";
 import { Button } from "./ui/button";
 import { Maximize2, Minimize2 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
-import * as THREE from 'three';
-import { forceCenter, forceManyBody, forceLink } from 'd3-force';
 
 type EntryCategory = Database["public"]["Enums"]["entry_category"];
 
@@ -17,9 +15,6 @@ interface Node {
   name: string;
   type: "category" | "subcategory" | "entry" | "tag";
   val: number;
-  x?: number;
-  y?: number;
-  z?: number;
 }
 
 interface Link {
@@ -80,15 +75,12 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
       links: []
     };
 
-    // Add category node at the center
+    // Add category node
     graphData.nodes.push({
       id: category,
       name: category,
       type: "category",
-      val: 20,
-      x: 0,
-      y: 0,
-      z: 0
+      val: 20
     });
 
     // Track unique subcategories and tags
@@ -151,7 +143,7 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
     });
 
     // Initialize the 3D force graph
-    const Graph = ForceGraph3D()(graphRef.current)
+    const Graph = new ForceGraph3D()(graphRef.current)
       .graphData(graphData)
       .nodeLabel("name")
       .nodeColor(node => {
@@ -171,22 +163,7 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
       .nodeVal(node => (node as Node).val)
       .linkWidth(1)
       .linkColor(() => "rgba(173, 164, 158, 0.2)") // Matching the tag color with low opacity
-      .backgroundColor("#0f1729")
-      .d3Force('center', null) // Remove center force
-      .d3Force('charge', null) // Remove charge force temporarily
-      .d3Force('link', null); // Remove link force temporarily
-
-    // Set initial camera position
-    const distance = 200;
-    Graph.cameraPosition({ x: 0, y: 0, z: distance });
-
-    // Re-enable forces after a short delay
-    setTimeout(() => {
-      Graph
-        .d3Force('charge', forceManyBody().strength(-50))
-        .d3Force('link', forceLink(graphData.links).distance(30))
-        .d3Force('center', forceCenter());
-    }, 500);
+      .backgroundColor("#0f1729");
 
     return () => {
       if (graphRef.current) {
@@ -201,7 +178,7 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
 
   return (
     <Card className="relative overflow-hidden">
-      <CardContent className="p-0 flex items-center justify-center">
+      <CardContent className="p-0">
         <div ref={graphRef} className="w-full h-[600px]" />
         <Button
           variant="outline"
