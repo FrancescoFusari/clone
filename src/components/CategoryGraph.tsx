@@ -143,7 +143,7 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
     });
 
     // Initialize the 3D force graph
-    const Graph = new ForceGraph3D()(graphRef.current)
+    const Graph = ForceGraph3D()(graphRef.current)
       .graphData(graphData)
       .nodeLabel("name")
       .nodeColor(node => {
@@ -165,6 +165,10 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
       .linkColor(() => "rgba(173, 164, 158, 0.2)") // Matching the tag color with low opacity
       .backgroundColor("#0f1729");
 
+    // Center the graph
+    Graph.centerAt(0, 0, 0);
+    Graph.zoomToFit(400);
+
     return () => {
       if (graphRef.current) {
         graphRef.current.innerHTML = "";
@@ -178,7 +182,7 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
 
   return (
     <Card className="relative overflow-hidden">
-      <CardContent className="p-0">
+      <CardContent className="p-0 flex items-center justify-center">
         <div ref={graphRef} className="w-full h-[600px]" />
         <Button
           variant="outline"
