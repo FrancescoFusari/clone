@@ -20,6 +20,12 @@ interface Entry {
   };
 }
 
+// Function to estimate token count (rough approximation)
+function estimateTokenCount(text: string): number {
+  // GPT models typically use ~4 characters per token
+  return Math.ceil(text.length / 4);
+}
+
 async function callOpenAI(entries: Entry[], retryCount = 0): Promise<any> {
   const maxRetries = 3;
   const retryDelay = 2000;
@@ -36,6 +42,39 @@ Content: ${entry.content}
 ${entry.research_data ? `Research Data: ${JSON.stringify(entry.research_data, null, 2)}` : ''}
 ---`).join('\n\n');
 
+    // Estimate token count for the request
+    const systemPrompt = `You are an AI analyst specializing in finding patterns and insights across multiple journal entries.
+    Analyze the provided entries as a cohesive dataset and return a JSON object with exactly this structure:
+    {
+      "commonThemes": [{"theme": "string", "count": number}],
+      "connections": ["string"],
+      "insights": ["string"],
+      "questions": ["string"]
+    }
+    Guidelines:
+    - commonThemes: Identify recurring themes and their frequency across entries
+    - connections: Find meaningful relationships between different entries
+    - insights: Extract key observations about patterns or trends
+    - questions: Generate thought-provoking questions based on the content
+    Keep responses focused and concise.
+    IMPORTANT: Your response must be valid JSON.`;
+
+    const estimatedSystemTokens = estimateTokenCount(systemPrompt);
+    const estimatedEntriesTokens = estimateTokenCount(formattedEntries);
+    const totalEstimatedTokens = estimatedSystemTokens + estimatedEntriesTokens;
+
+    console.log('Estimated token counts:', {
+      systemPrompt: estimatedSystemTokens,
+      entries: estimatedEntriesTokens,
+      total: totalEstimatedTokens
+    });
+
+    // If token count is too high, analyze a subset of entries
+    const MAX_TOKENS = 8000; // Conservative limit for gpt-4o-mini
+    if (totalEstimatedTokens > MAX_TOKENS) {
+      console.warn(`Token count (${totalEstimatedTokens}) exceeds limit (${MAX_TOKENS}). Consider implementing pagination or reducing entry content.`);
+    }
+
     console.log('Sending request to OpenAI API...');
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -44,25 +83,11 @@ ${entry.research_data ? `Research Data: ${JSON.stringify(entry.research_data, nu
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4',
+        model: 'gpt-4o-mini',
         messages: [
           {
             role: 'system',
-            content: `You are an AI analyst specializing in finding patterns and insights across multiple journal entries.
-            Analyze the provided entries as a cohesive dataset and return a JSON object with exactly this structure:
-            {
-              "commonThemes": [{"theme": "string", "count": number}],
-              "connections": ["string"],
-              "insights": ["string"],
-              "questions": ["string"]
-            }
-            Guidelines:
-            - commonThemes: Identify recurring themes and their frequency across entries
-            - connections: Find meaningful relationships between different entries
-            - insights: Extract key observations about patterns or trends
-            - questions: Generate thought-provoking questions based on the content
-            Keep responses focused and concise.
-            IMPORTANT: Your response must be valid JSON.`
+            content: systemPrompt
           },
           {
             role: 'user',
@@ -78,11 +103,18 @@ ${entry.research_data ? `Research Data: ${JSON.stringify(entry.research_data, nu
       const errorData = await response.json();
       console.error('OpenAI API error response:', errorData);
       
-      if (response.status === 429 && retryCount < maxRetries) {
-        const backoffDelay = retryDelay * Math.pow(2, retryCount);
-        console.log(`Rate limited, waiting ${backoffDelay}ms before retry...`);
-        await new Promise(resolve => setTimeout(resolve, backoffDelay));
-        return callOpenAI(entries, retryCount + 1);
+      if (response.status === 429) {
+        console.error('Rate limit exceeded. Token usage details:', {
+          estimatedTokens: totalEstimatedTokens,
+          errorDetails: errorData
+        });
+        
+        if (retryCount < maxRetries) {
+          const backoffDelay = retryDelay * Math.pow(2, retryCount);
+          console.log(`Rate limited, waiting ${backoffDelay}ms before retry...`);
+          await new Promise(resolve => setTimeout(resolve, backoffDelay));
+          return callOpenAI(entries, retryCount + 1);
+        }
       }
       
       throw new Error(`OpenAI API error: ${response.status}`);
@@ -98,7 +130,7 @@ ${entry.research_data ? `Research Data: ${JSON.stringify(entry.research_data, nu
           !parsedContent.insights || !parsedContent.questions) {
         throw new Error('Response missing required fields');
       }
-      return data;
+      return parsedContent;
     } catch (error) {
       console.error('Invalid response format from OpenAI:', error);
       throw new Error('Invalid response format from OpenAI');
@@ -128,17 +160,8 @@ serve(async (req) => {
       throw new Error('No entries provided for analysis');
     }
 
-    const data = await callOpenAI(entries);
-    
-    let analysis;
-    try {
-      analysis = JSON.parse(data.choices[0].message.content);
-      console.log('Successfully parsed analysis:', analysis);
-    } catch (error) {
-      console.error('Error parsing OpenAI response:', error);
-      console.log('Raw response content:', data.choices[0].message.content);
-      throw new Error('Failed to parse AI analysis response');
-    }
+    const analysis = await callOpenAI(entries);
+    console.log('Successfully parsed analysis:', analysis);
 
     return new Response(JSON.stringify(analysis), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
