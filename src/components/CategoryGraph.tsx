@@ -120,10 +120,8 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
       });
     });
 
-    const Graph = ForceGraph3D({
-      controlType: 'orbit',
-      backgroundColor: '#0f1729', // Dark background matching our theme
-    })(graphRef.current)
+    // Initialize the 3D force graph with 'new'
+    const Graph = new ForceGraph3D()(graphRef.current)
       .graphData(graphData)
       .nodeLabel("name")
       .nodeColor(node => {
