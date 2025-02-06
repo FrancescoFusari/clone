@@ -120,8 +120,10 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
       });
     });
 
-    // Initialize the 3D force graph with 'new'
-    const Graph = new ForceGraph3D()(graphRef.current)
+    // Initialize the 3D force graph
+    const Graph = ForceGraph3D({
+      controlType: 'orbit'
+    })(graphRef.current)
       .graphData(graphData)
       .nodeLabel("name")
       .nodeColor(node => {
