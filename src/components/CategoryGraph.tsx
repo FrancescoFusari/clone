@@ -120,12 +120,10 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
     });
 
     // Initialize the 3D force graph
-    const Graph = new ForceGraph3D({
-      extraRendererConfig: { alpha: true }
-    });
+    const Graph = ForceGraph3D();
     
     // Configure the graph
-    Graph(graphRef.current)
+    Graph
       .graphData(graphData)
       .nodeLabel("name")
       .nodeColor(node => {
@@ -145,9 +143,12 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
       .nodeVal(node => (node as Node).val)
       .linkWidth(1)
       .linkColor(() => "rgba(255, 255, 255, 0.2)")
-      .backgroundColor("#0f1729")
-      .width(graphRef.current.clientWidth)
-      .height(graphRef.current.clientHeight);
+      .backgroundColor("#0f1729");
+
+    // Mount the graph
+    if (graphRef.current) {
+      Graph(graphRef.current);
+    }
 
     return () => {
       Graph.pauseAnimation();
