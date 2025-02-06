@@ -70,7 +70,7 @@ ${entry.research_data ? `Research Data: ${JSON.stringify(entry.research_data, nu
     "questions": ["string"]
   }
   Guidelines:
-  - commonThemes: Identify recurring themes and their frequency across entries
+  - commonThemes: Only include themes that appear at least twice across entries. Sort by frequency (highest first).
   - connections: Find meaningful relationships between different entries
   - insights: Extract key observations about patterns or trends
   - questions: Generate thought-provoking questions based on the content
@@ -107,9 +107,7 @@ ${entry.research_data ? `Research Data: ${JSON.stringify(entry.research_data, nu
     const data = await response.json();
     const content = data.choices[0].message.content;
     
-    // Ensure we're parsing valid JSON
     try {
-      // Remove any markdown formatting if present
       const jsonString = content.replace(/```json\n|\n```/g, '').trim();
       return JSON.parse(jsonString);
     } catch (parseError) {
@@ -142,7 +140,11 @@ function mergeBatchResults(results: any[]): any {
       }
     });
   });
-  merged.commonThemes = Array.from(themeMap.values());
+  
+  // Filter out themes with count < 2 and sort by count
+  merged.commonThemes = Array.from(themeMap.values())
+    .filter(theme => theme.count >= 2)
+    .sort((a, b) => b.count - a.count);
 
   // Merge other arrays, removing duplicates
   results.forEach(result => {
@@ -179,7 +181,7 @@ serve(async (req) => {
     }
 
     // Process entries in batches
-    const batchSize = 5; // Adjust based on your needs
+    const batchSize = 5;
     const analysis = await processBatch(entries, batchSize);
     console.log('Successfully generated analysis');
 
