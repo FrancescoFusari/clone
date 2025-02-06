@@ -63,11 +63,24 @@ export const AIInsightsCard = () => {
         console.log("Successfully fetched entries count:", data?.length || 0);
         
         // Transform the data to ensure type safety
-        const transformedData = data?.map(entry => ({
-          ...entry,
-          analysis_data: entry.analysis_data as AIAnalysis | null,
-          research_data: entry.research_data as ResearchData
-        })) as Entry[];
+        const transformedData = data?.map(entry => {
+          // First cast to unknown, then to AIAnalysis to ensure type safety
+          const analysisData = entry.analysis_data as unknown;
+          const isValidAnalysis = (data: unknown): data is AIAnalysis => {
+            if (typeof data !== 'object' || data === null) return false;
+            const d = data as any;
+            return Array.isArray(d.commonThemes) &&
+                   Array.isArray(d.connections) &&
+                   Array.isArray(d.insights) &&
+                   Array.isArray(d.questions);
+          };
+
+          return {
+            ...entry,
+            analysis_data: isValidAnalysis(analysisData) ? analysisData : null,
+            research_data: entry.research_data as ResearchData
+          };
+        }) as Entry[];
 
         return transformedData;
       } catch (error) {
@@ -308,4 +321,4 @@ export const AIInsightsCard = () => {
       </CardContent>
     </Card>
   );
-};
+});
