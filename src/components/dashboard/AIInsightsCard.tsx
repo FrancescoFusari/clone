@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Brain, Connection, History, Lightbulb } from "lucide-react";
+import { Brain, ArrowRight, History, Lightbulb } from "lucide-react";
 import { useAuth } from "@/components/AuthProvider";
 
 interface ResearchData {
@@ -149,7 +149,7 @@ export const AIInsightsCard = () => {
         {/* Entry Connections */}
         <div className="space-y-2">
           <h3 className="font-medium text-sm text-muted-foreground flex items-center gap-2">
-            <Connection className="h-4 w-4" />
+            <ArrowRight className="h-4 w-4" />
             Entry Connections
           </h3>
           <ul className="space-y-2">
