@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { User, Image, Tag, PieChartIcon } from "lucide-react";
 import { useAuth } from "@/components/AuthProvider";
 import { useToast } from "@/components/ui/use-toast";
+import { EntryStatisticsCard } from "@/components/dashboard/EntryStatisticsCard";
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 
@@ -155,74 +156,79 @@ const Dashboard = () => {
           </CardContent>
         </Card>
 
-        {/* Category Distribution */}
-        <Card className="border-none bg-gradient-to-br from-primary/10 to-background backdrop-blur-xl">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <PieChartIcon className="h-5 w-5" />
-              Category Distribution
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[200px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={categoryStats}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={80}
-                    paddingAngle={5}
-                    dataKey="value"
-                  >
-                    {categoryStats?.map((entry: any, index: number) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={COLORS[index % COLORS.length]}
-                      />
-                    ))}
-                  </Pie>
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-            <div className="mt-4 space-y-2">
-              {categoryStats?.map((entry: any, index: number) => (
-                <div key={entry.name} className="flex items-center gap-2">
-                  <div
-                    className="h-3 w-3 rounded-full"
-                    style={{ backgroundColor: COLORS[index % COLORS.length] }}
-                  />
-                  <span className="text-sm">
-                    {entry.name}: {entry.value} entries
-                  </span>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+        <div className="grid gap-6 md:grid-cols-2">
+          {/* Category Distribution */}
+          <Card className="border-none bg-gradient-to-br from-primary/10 to-background backdrop-blur-xl">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <PieChartIcon className="h-5 w-5" />
+                Category Distribution
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[200px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={categoryStats}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={80}
+                      paddingAngle={5}
+                      dataKey="value"
+                    >
+                      {categoryStats?.map((entry: any, index: number) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={COLORS[index % COLORS.length]}
+                        />
+                      ))}
+                    </Pie>
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="mt-4 space-y-2">
+                {categoryStats?.map((entry: any, index: number) => (
+                  <div key={entry.name} className="flex items-center gap-2">
+                    <div
+                      className="h-3 w-3 rounded-full"
+                      style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                    />
+                    <span className="text-sm">
+                      {entry.name}: {entry.value} entries
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
 
-        {/* Popular Tags */}
-        <Card className="border-none bg-gradient-to-br from-primary/10 to-background backdrop-blur-xl">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Tag className="h-5 w-5" />
-              Popular Tags
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-2">
-              {tagStats?.map((tag) => (
-                <div
-                  key={tag.id}
-                  className="rounded-full bg-primary/20 px-3 py-1 text-sm"
-                >
-                  {tag.tag} ({tag.usage_count})
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+          {/* Entry Statistics */}
+          <EntryStatisticsCard />
+
+          {/* Popular Tags */}
+          <Card className="border-none bg-gradient-to-br from-primary/10 to-background backdrop-blur-xl">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Tag className="h-5 w-5" />
+                Popular Tags
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap gap-2">
+                {tagStats?.map((tag) => (
+                  <div
+                    key={tag.id}
+                    className="rounded-full bg-primary/20 px-3 py-1 text-sm"
+                  >
+                    {tag.tag} ({tag.usage_count})
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </CenteredLayout>
   );
