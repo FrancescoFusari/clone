@@ -8,6 +8,7 @@ import { Button } from "./ui/button";
 import { Maximize2, Minimize2 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 import * as THREE from 'three';
+import { forceCenter, forceManyBody, forceLink } from 'd3-force';
 
 type EntryCategory = Database["public"]["Enums"]["entry_category"];
 
@@ -150,7 +151,7 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
     });
 
     // Initialize the 3D force graph
-    const Graph = new ForceGraph3D()(graphRef.current)
+    const Graph = ForceGraph3D()(graphRef.current)
       .graphData(graphData)
       .nodeLabel("name")
       .nodeColor(node => {
@@ -182,9 +183,9 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
     // Re-enable forces after a short delay
     setTimeout(() => {
       Graph
-        .d3Force('charge', d3.forceManyBody().strength(-50))
-        .d3Force('link', d3.forceLink(graphData.links).distance(30))
-        .d3Force('center', d3.forceCenter());
+        .d3Force('charge', forceManyBody().strength(-50))
+        .d3Force('link', forceLink(graphData.links).distance(30))
+        .d3Force('center', forceCenter());
     }, 500);
 
     return () => {
