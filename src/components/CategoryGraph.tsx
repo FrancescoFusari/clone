@@ -122,28 +122,28 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
 
     const Graph = ForceGraph3D({
       controlType: 'orbit',
-      backgroundColor: '#000000',
+      backgroundColor: '#0f1729', // Dark background matching our theme
     })(graphRef.current)
       .graphData(graphData)
       .nodeLabel("name")
       .nodeColor(node => {
         switch ((node as Node).type) {
           case "category":
-            return "hsl(var(--primary))";
+            return "#4ade80"; // Primary color in hex
           case "subcategory":
-            return "hsl(var(--secondary))";
+            return "#2d374d"; // Secondary color in hex
           case "entry":
-            return "hsl(var(--accent))";
+            return "#2d374d"; // Accent color in hex
           case "tag":
-            return "hsl(var(--muted))";
+            return "#2d374d"; // Muted color in hex
           default:
             return "#666666";
         }
       })
       .nodeVal(node => (node as Node).val)
       .linkWidth(1)
-      .linkColor(() => "hsl(var(--muted-foreground))")
-      .backgroundColor("hsl(var(--background))");
+      .linkColor(() => "rgba(255, 255, 255, 0.2)") // Subtle white links
+      .backgroundColor("#0f1729"); // Dark background matching our theme
 
     // Cleanup
     return () => {
