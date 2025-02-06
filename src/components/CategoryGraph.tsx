@@ -121,29 +121,28 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
     });
 
     // Initialize the 3D force graph
-    const Graph = ForceGraph3D()(graphRef.current)
+    const Graph = new ForceGraph3D()(graphRef.current)
       .graphData(graphData)
       .nodeLabel("name")
       .nodeColor(node => {
         switch ((node as Node).type) {
           case "category":
-            return "#4ade80"; // Primary color in hex
+            return "#4ade80";
           case "subcategory":
-            return "#2d374d"; // Secondary color in hex
+            return "#2d374d";
           case "entry":
-            return "#2d374d"; // Accent color in hex
+            return "#2d374d";
           case "tag":
-            return "#2d374d"; // Muted color in hex
+            return "#2d374d";
           default:
             return "#666666";
         }
       })
       .nodeVal(node => (node as Node).val)
       .linkWidth(1)
-      .linkColor(() => "rgba(255, 255, 255, 0.2)") // Subtle white links
-      .backgroundColor("#0f1729"); // Dark background matching our theme
+      .linkColor(() => "rgba(255, 255, 255, 0.2)")
+      .backgroundColor("#0f1729");
 
-    // Cleanup
     return () => {
       Graph.pauseAnimation();
       if (graphRef.current) {
