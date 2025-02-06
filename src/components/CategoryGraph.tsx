@@ -165,9 +165,22 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
       .linkColor(() => "rgba(173, 164, 158, 0.2)") // Matching the tag color with low opacity
       .backgroundColor("#0f1729");
 
-    // Center the graph
-    Graph.centerAt(0, 0, 0);
-    Graph.zoomToFit(400);
+    // Position camera to show all nodes
+    const distance = 400;
+    Graph.cameraPosition({ z: distance });
+
+    // Add a small delay to ensure the graph is properly initialized
+    setTimeout(() => {
+      const box = new THREE.Box3().setFromPoints(
+        graphData.nodes.map(node => new THREE.Vector3(node.x || 0, node.y || 0, node.z || 0))
+      );
+      const center = box.getCenter(new THREE.Vector3());
+      Graph.cameraPosition(
+        { x: center.x, y: center.y, z: distance },
+        { x: center.x, y: center.y, z: 0 },
+        2000
+      );
+    }, 100);
 
     return () => {
       if (graphRef.current) {
