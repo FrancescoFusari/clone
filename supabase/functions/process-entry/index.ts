@@ -40,27 +40,48 @@ async function getSimilarTags(supabase: any, tags: string[]): Promise<string[]> 
 async function getSimilarSubcategory(supabase: any, category: string, subcategory: string): Promise<string> {
   const normalizedSubcategory = subcategory.toLowerCase().trim();
   
+  console.log('Finding similar subcategory for:', { category, subcategory: normalizedSubcategory });
+  
   // Get existing subcategories for this category
-  const { data: entries } = await supabase
+  const { data: entries, error } = await supabase
     .from('entries')
     .select('subcategory')
     .eq('category', category)
     .not('subcategory', 'is', null);
 
-  if (!entries) return normalizedSubcategory;
+  if (error) {
+    console.error('Error fetching existing subcategories:', error);
+    return normalizedSubcategory;
+  }
 
-  // Find similar subcategory
-  const existingSubcategories = entries
-    .map(entry => entry.subcategory?.toLowerCase().trim())
-    .filter(Boolean);
+  if (!entries || entries.length === 0) {
+    console.log('No existing subcategories found for category:', category);
+    return normalizedSubcategory;
+  }
 
+  // Get unique subcategories
+  const existingSubcategories = [...new Set(
+    entries
+      .map(entry => entry.subcategory?.toLowerCase().trim())
+      .filter(Boolean)
+  )];
+
+  console.log('Existing subcategories:', existingSubcategories);
+
+  // Find similar subcategory using Levenshtein distance
   const similarSubcategory = existingSubcategories.find(existing => 
     existing.includes(normalizedSubcategory) || 
     normalizedSubcategory.includes(existing) ||
     levenshteinDistance(existing, normalizedSubcategory) <= 2
   );
 
-  return similarSubcategory || normalizedSubcategory;
+  if (similarSubcategory) {
+    console.log('Found similar subcategory:', similarSubcategory);
+    return similarSubcategory;
+  }
+
+  console.log('No similar subcategory found, using new one:', normalizedSubcategory);
+  return normalizedSubcategory;
 }
 
 function levenshteinDistance(str1: string, str2: string): number {
@@ -129,7 +150,6 @@ serve(async (req) => {
       throw new Error('Content is required');
     }
 
-    // Don't format the content, preserve its original formatting
     const formattedContent = content;
     console.log('Formatted content:', formattedContent.substring(0, 100) + '...');
 
@@ -211,6 +231,19 @@ serve(async (req) => {
         console.error('Invalid data structure in parsed response:', processedData);
         throw new Error('Invalid data structure in OpenAI response');
       }
+
+      // Normalize and find similar subcategory
+      if (processedData.subcategory) {
+        processedData.subcategory = await getSimilarSubcategory(
+          supabase, 
+          processedData.category, 
+          processedData.subcategory
+        );
+      }
+
+      // Normalize and find similar tags
+      processedData.tags = await getSimilarTags(supabase, processedData.tags || []);
+      
     } catch (error) {
       console.error('Error parsing category response:', error);
       throw new Error('Failed to parse OpenAI response');
@@ -271,18 +304,6 @@ serve(async (req) => {
       .replace(/["']/g, '')
       .replace(/\.{3,}$/, '')
       .trim();
-
-    // Normalize and find similar tags
-    processedData.tags = await getSimilarTags(supabase, processedData.tags || []);
-    
-    // Normalize and find similar subcategory
-    if (processedData.subcategory) {
-      processedData.subcategory = await getSimilarSubcategory(
-        supabase, 
-        processedData.category, 
-        processedData.subcategory
-      );
-    }
 
     // Add the formatted content and title to the response
     processedData.content = formattedContent;
