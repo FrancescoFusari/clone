@@ -3,6 +3,9 @@ import ForceGraph3D from "3d-force-graph";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "./ui/skeleton";
+import type { Database } from "@/integrations/supabase/types";
+
+type EntryCategory = Database["public"]["Enums"]["entry_category"];
 
 interface Node {
   id: string;
@@ -22,7 +25,7 @@ interface GraphData {
 }
 
 interface CategoryGraphProps {
-  category: string;
+  category: EntryCategory;
 }
 
 export const CategoryGraph = ({ category }: CategoryGraphProps) => {
@@ -126,7 +129,8 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
     });
 
     // Initialize the graph
-    const Graph = ForceGraph3D()(graphRef.current)
+    // Create a new instance of ForceGraph3D
+    const Graph = new ForceGraph3D()(graphRef.current)
       .graphData(graphData)
       .nodeLabel("name")
       .nodeColor(node => {
