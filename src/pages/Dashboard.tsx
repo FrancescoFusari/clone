@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,10 +5,11 @@ import { CenteredLayout } from "@/components/layouts/CenteredLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
-import { User, Image, Tag, PieChartIcon } from "lucide-react";
+import { User, Tag, PieChartIcon } from "lucide-react";
 import { useAuth } from "@/components/AuthProvider";
 import { useToast } from "@/components/ui/use-toast";
 import { EntryStatisticsCard } from "@/components/dashboard/EntryStatisticsCard";
+import { AIInsightsCard } from "@/components/dashboard/AIInsightsCard";
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 
@@ -60,7 +60,6 @@ const Dashboard = () => {
 
       if (error) throw error;
       
-      // If no preferences exist, create default ones
       if (!data && session?.user.id) {
         console.log('No preferences found, creating defaults');
         createDefaultPreferences.mutate();
@@ -206,6 +205,9 @@ const Dashboard = () => {
 
           {/* Entry Statistics */}
           <EntryStatisticsCard />
+
+          {/* AI Insights */}
+          <AIInsightsCard />
 
           {/* Popular Tags */}
           <Card className="border-none bg-gradient-to-br from-primary/10 to-background backdrop-blur-xl">
