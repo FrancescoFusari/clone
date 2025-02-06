@@ -143,7 +143,7 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
     });
 
     // Initialize the 3D force graph
-    const Graph = new ForceGraph3D()(graphRef.current)
+    const Graph = ForceGraph3D()(graphRef.current)
       .graphData(graphData)
       .nodeLabel("name")
       .nodeColor(node => {
@@ -163,7 +163,23 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
       .nodeVal(node => (node as Node).val)
       .linkWidth(1)
       .linkColor(() => "rgba(173, 164, 158, 0.2)") // Matching the tag color with low opacity
-      .backgroundColor("#0f1729");
+      .backgroundColor("#0f1729")
+      .width(graphRef.current.clientWidth)
+      .height(graphRef.current.clientHeight)
+      .showNavInfo(false);
+
+    // Center the graph
+    Graph.cameraPosition({ x: 0, y: 0, z: 200 });
+
+    // Center the category node
+    const categoryNode = graphData.nodes.find(node => node.type === "category");
+    if (categoryNode) {
+      Graph.d3Force('center', null);
+      Graph.d3Force('charge')?.strength(-100);
+      categoryNode.fx = 0;
+      categoryNode.fy = 0;
+      categoryNode.fz = 0;
+    }
 
     return () => {
       if (graphRef.current) {
