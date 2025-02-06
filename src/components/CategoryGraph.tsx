@@ -120,7 +120,9 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
     });
 
     // Initialize the 3D force graph
-    const Graph = ForceGraph3D();
+    const Graph = new ForceGraph3D({
+      extraRendererConfig: { alpha: true }
+    });
     
     // Configure the graph
     Graph(graphRef.current)
@@ -129,15 +131,15 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
       .nodeColor(node => {
         switch ((node as Node).type) {
           case "category":
-            return "#F2FCE2"; // Soft Green
+            return "#8B5CF6"; // Vivid Purple
           case "subcategory":
-            return "#FEF7CD"; // Soft Yellow
+            return "#D946EF"; // Magenta Pink
           case "entry":
-            return "#E5DEFF"; // Soft Purple
+            return "#F97316"; // Bright Orange
           case "tag":
-            return "#FDE1D3"; // Soft Peach
+            return "#0EA5E9"; // Ocean Blue
           default:
-            return "#F1F0FB"; // Soft Gray
+            return "#6B7280"; // Neutral Gray
         }
       })
       .nodeVal(node => (node as Node).val)
