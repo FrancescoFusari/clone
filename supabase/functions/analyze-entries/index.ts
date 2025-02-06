@@ -75,36 +75,51 @@ ${entry.research_data ? `Research Data: ${JSON.stringify(entry.research_data, nu
   - insights: Extract key observations about patterns or trends
   - questions: Generate thought-provoking questions based on the content
   Keep responses focused and concise.
-  IMPORTANT: Your response must be valid JSON.`;
+  IMPORTANT: Return ONLY the JSON object, with no markdown formatting or additional text.`;
 
   const estimatedTokens = estimateTokenCount(systemPrompt) + estimateTokenCount(formattedEntries);
   console.log(`Estimated tokens for batch: ${estimatedTokens}`);
 
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${openAIApiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'gpt-4o-mini',
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: `Analyze these entries as a complete dataset:\n\n${formattedEntries}` }
-      ],
-      temperature: 0.7,
-      max_tokens: 1000,
-    }),
-  });
+  try {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openAIApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: `Analyze these entries as a complete dataset:\n\n${formattedEntries}` }
+        ],
+        temperature: 0.7,
+        max_tokens: 1000,
+      }),
+    });
 
-  if (!response.ok) {
-    const error = await response.json();
-    console.error('OpenAI API error:', error);
-    throw new Error(`OpenAI API error: ${error.error?.message || 'Unknown error'}`);
+    if (!response.ok) {
+      const error = await response.json();
+      console.error('OpenAI API error:', error);
+      throw new Error(`OpenAI API error: ${error.error?.message || 'Unknown error'}`);
+    }
+
+    const data = await response.json();
+    const content = data.choices[0].message.content;
+    
+    // Ensure we're parsing valid JSON
+    try {
+      // Remove any markdown formatting if present
+      const jsonString = content.replace(/```json\n|\n```/g, '').trim();
+      return JSON.parse(jsonString);
+    } catch (parseError) {
+      console.error('Error parsing OpenAI response:', content);
+      throw new Error(`Failed to parse OpenAI response: ${parseError.message}`);
+    }
+  } catch (error) {
+    console.error('Error in analyzeBatch:', error);
+    throw error;
   }
-
-  const data = await response.json();
-  return JSON.parse(data.choices[0].message.content);
 }
 
 function mergeBatchResults(results: any[]): any {
