@@ -15,6 +15,10 @@ interface Node {
   name: string;
   type: "category" | "subcategory" | "entry" | "tag";
   val: number;
+  // Add fixed position properties for TypeScript
+  fx?: number;
+  fy?: number;
+  fz?: number;
 }
 
 interface Link {
@@ -168,8 +172,8 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
       .height(graphRef.current.clientHeight)
       .showNavInfo(false);
 
-    // Center the graph
-    Graph.cameraPosition({ x: 0, y: 0, z: 200 });
+    // Set initial camera position further back and at an angle
+    Graph.cameraPosition({ x: 300, y: 150, z: 400 });
 
     // Center the category node
     const categoryNode = graphData.nodes.find(node => node.type === "category");
@@ -181,7 +185,29 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
       categoryNode.fz = 0;
     }
 
+    // Add smooth camera orbit animation
+    let angle = 0;
+    const orbitRadius = 400;
+    const orbitSpeed = 0.0005;
+    const orbitHeight = 150;
+
+    const animate = () => {
+      angle += orbitSpeed;
+      const x = orbitRadius * Math.cos(angle);
+      const z = orbitRadius * Math.sin(angle);
+      Graph.cameraPosition({
+        x,
+        y: orbitHeight,
+        z,
+      });
+      requestAnimationFrame(animate);
+    };
+
+    // Start the animation
+    const animationFrame = requestAnimationFrame(animate);
+
     return () => {
+      cancelAnimationFrame(animationFrame);
       if (graphRef.current) {
         graphRef.current.innerHTML = "";
       }
