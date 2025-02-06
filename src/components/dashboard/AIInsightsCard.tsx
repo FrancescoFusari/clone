@@ -18,8 +18,8 @@ interface Entry {
   content: string;
   title: string;
   created_at: string;
-  analysis_data?: AIAnalysis;
-  analysis_generated_at?: string;
+  analysis_data?: AIAnalysis | null;
+  analysis_generated_at?: string | null;
 }
 
 interface AIAnalysis {

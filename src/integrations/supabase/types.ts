@@ -35,6 +35,8 @@ export type Database = {
       }
       entries: {
         Row: {
+          analysis_data: Json | null
+          analysis_generated_at: string | null
           category: Database["public"]["Enums"]["entry_category"]
           content: string
           created_at: string
@@ -47,6 +49,8 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          analysis_data?: Json | null
+          analysis_generated_at?: string | null
           category: Database["public"]["Enums"]["entry_category"]
           content: string
           created_at?: string
@@ -59,6 +63,8 @@ export type Database = {
           user_id: string
         }
         Update: {
+          analysis_data?: Json | null
+          analysis_generated_at?: string | null
           category?: Database["public"]["Enums"]["entry_category"]
           content?: string
           created_at?: string
