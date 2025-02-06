@@ -36,23 +36,23 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4',
         messages: [
           {
             role: 'system',
             content: `You are an AI analyst that finds patterns and insights in journal entries. 
-            You MUST return a JSON object with this exact structure:
+            Analyze the provided entries and return a JSON object with exactly this structure:
             {
-              "commonThemes": [{"theme": string, "count": number}],
-              "connections": string[],
-              "insights": string[],
-              "questions": string[]
+              "commonThemes": [{"theme": "string", "count": number}],
+              "connections": ["string"],
+              "insights": ["string"],
+              "questions": ["string"]
             }`
           },
           {
             role: 'user',
             content: `Analyze these entries and find patterns, connections, and insights. Focus on recurring themes and meaningful connections between entries:
-            ${JSON.stringify(entries, null, 2)}`
+            ${JSON.stringify(entries)}`
           }
         ],
         temperature: 0.7,
@@ -65,16 +65,30 @@ serve(async (req) => {
     }
 
     const data = await response.json();
-    const analysis = JSON.parse(data.choices[0].message.content);
+    console.log('OpenAI response received');
+
+    // Parse the content as JSON - it's in the message content
+    let analysis;
+    try {
+      analysis = JSON.parse(data.choices[0].message.content);
+      console.log('Successfully parsed analysis:', analysis);
+    } catch (error) {
+      console.error('Error parsing OpenAI response:', error);
+      console.log('Raw response content:', data.choices[0].message.content);
+      throw new Error('Failed to parse AI analysis response');
+    }
 
     return new Response(JSON.stringify(analysis), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
     console.error('Error in analyze-entries function:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return new Response(
+      JSON.stringify({ error: error.message }), 
+      { 
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    );
   }
 });
