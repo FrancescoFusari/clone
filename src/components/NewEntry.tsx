@@ -86,7 +86,7 @@ const NewEntry = () => {
 
   return (
     <CenteredLayout>
-      <div className="max-w-2xl mx-auto space-y-8 p-4">
+      <div className="max-w-2xl mx-auto space-y-8 py-4">
         {/* Header Card */}
         <Card className="glass-morphism overflow-hidden">
           <CardHeader className="space-y-2">
