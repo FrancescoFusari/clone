@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { FileText, Tag, Calendar, BookOpen } from "lucide-react";
+import { FileText, Tag, Calendar, BookOpen, FolderTree } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -21,6 +21,8 @@ type Entry = {
   content: string;
   created_at: string;
   tags: string[];
+  category: "personal" | "work" | "social" | "interests_and_hobbies" | "school";
+  subcategory: string | null;
   research_data?: {
     insights?: string;
     questions?: string[];
@@ -113,9 +115,17 @@ const Entries = () => {
                     <FileText className="h-5 w-5" />
                     {entry.title || "Untitled Entry"}
                   </CardTitle>
-                  <CardDescription className="flex items-center gap-2 text-white/60">
-                    <Calendar className="h-4 w-4" />
-                    {format(new Date(entry.created_at), "PPp")}
+                  <CardDescription className="space-y-2">
+                    <div className="flex items-center gap-2 text-white/60">
+                      <Calendar className="h-4 w-4" />
+                      {format(new Date(entry.created_at), "PPp")}
+                    </div>
+                    {entry.subcategory && (
+                      <div className="flex items-center gap-2 text-white/60">
+                        <FolderTree className="h-4 w-4" />
+                        <span className="text-sm capitalize">{entry.subcategory}</span>
+                      </div>
+                    )}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>

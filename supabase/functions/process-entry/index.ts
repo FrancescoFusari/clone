@@ -145,7 +145,7 @@ serve(async (req) => {
     }
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // First, get the category, tags, and summary
+    // First, get the category, subcategory, tags, and summary
     console.log('Requesting category analysis from OpenAI...');
     const categoryResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -161,10 +161,19 @@ serve(async (req) => {
             content: `You are an AI that analyzes journal entries. You must respond with a valid JSON object containing exactly these fields:
             {
               "category": "personal" | "work" | "social" | "interests_and_hobbies" | "school",
-              "subcategory": "string describing specific topic",
+              "subcategory": "string describing specific topic within the category",
               "tags": ["array of 1-5 relevant keywords"],
               "summary": "1-2 sentence summary"
-            }`
+            }
+            
+            For subcategories, use common themes within each category. Examples:
+            - personal: "health", "reflection", "goals", "relationships"
+            - work: "projects", "meetings", "career growth", "challenges"
+            - social: "friendships", "family", "events", "networking"
+            - interests_and_hobbies: "reading", "sports", "music", "art", "travel"
+            - school: "assignments", "exams", "research", "study groups"
+            
+            Try to reuse existing subcategories when possible to maintain consistency.`
           },
           {
             role: 'user',
