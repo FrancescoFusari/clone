@@ -1,12 +1,20 @@
 import { useParams } from "react-router-dom";
 import { CenteredLayout } from "@/components/layouts/CenteredLayout";
 import { CategoryGraph } from "@/components/CategoryGraph";
+import type { Database } from "@/integrations/supabase/types";
+
+type EntryCategory = Database["public"]["Enums"]["entry_category"];
 
 const CategoryGraphPage = () => {
   const { category } = useParams<{ category: string }>();
 
-  if (!category) {
-    return <div>Category not found</div>;
+  // Validate that the category is one of the allowed values
+  const isValidCategory = (cat: string): cat is EntryCategory => {
+    return ["personal", "work", "social", "interests_and_hobbies", "school"].includes(cat);
+  };
+
+  if (!category || !isValidCategory(category)) {
+    return <div>Invalid category</div>;
   }
 
   return (

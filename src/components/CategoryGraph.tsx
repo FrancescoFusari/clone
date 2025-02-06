@@ -129,8 +129,9 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
     });
 
     // Initialize the graph
-    // Create a new instance of ForceGraph3D
-    const Graph = new ForceGraph3D()(graphRef.current)
+    const Graph = ForceGraph3D({
+      controlType: 'orbit'
+    })(graphRef.current)
       .graphData(graphData)
       .nodeLabel("name")
       .nodeColor(node => {
