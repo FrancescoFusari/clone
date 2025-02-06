@@ -321,4 +321,4 @@ export const AIInsightsCard = () => {
       </CardContent>
     </Card>
   );
-});
+}; // Add semicolon here
