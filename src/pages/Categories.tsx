@@ -2,41 +2,48 @@ import { CenteredLayout } from "@/components/layouts/CenteredLayout";
 import { Card } from "@/components/ui/card";
 import { Archive, Database, Folder, Grid, List } from "lucide-react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 
 interface CategoryCard {
   name: string;
   description: string;
   icon: JSX.Element;
   color: string;
+  value: string;
 }
 
 const categories: CategoryCard[] = [
   {
     name: "Personal",
+    value: "personal",
     description: "Private thoughts, reflections, and personal experiences",
     icon: <Archive className="w-6 h-6" />,
     color: "from-purple-500/20 to-purple-600/20",
   },
   {
     name: "Work",
+    value: "work",
     description: "Professional goals, projects, and career development",
     icon: <Database className="w-6 h-6" />,
     color: "from-blue-500/20 to-blue-600/20",
   },
   {
     name: "Social",
+    value: "social",
     description: "Interactions, relationships, and social activities",
     icon: <Grid className="w-6 h-6" />,
     color: "from-pink-500/20 to-pink-600/20",
   },
   {
     name: "Interests & Hobbies",
+    value: "interests_and_hobbies",
     description: "Passions, hobbies, and recreational activities",
     icon: <List className="w-6 h-6" />,
     color: "from-green-500/20 to-green-600/20",
   },
   {
     name: "School",
+    value: "school",
     description: "Academic progress, studies, and learning experiences",
     icon: <Folder className="w-6 h-6" />,
     color: "from-orange-500/20 to-orange-600/20",
@@ -44,6 +51,8 @@ const categories: CategoryCard[] = [
 ];
 
 const Categories = () => {
+  const navigate = useNavigate();
+
   return (
     <CenteredLayout>
       <div className="space-y-6">
@@ -63,6 +72,7 @@ const Categories = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3, delay: index * 0.1 }}
+              onClick={() => navigate(`/categories/${category.value}`)}
             >
               <Card className={`relative overflow-hidden card-hover cursor-pointer`}>
                 <div

@@ -17,6 +17,7 @@ const EntryDetails = lazy(() => import("./pages/EntryDetails"));
 const Timeline = lazy(() => import("./pages/Timeline"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Categories = lazy(() => import("./pages/Categories"));
+const CategoryGraph = lazy(() => import("./pages/CategoryGraph"));
 
 // Configure React Query for optimal performance
 const queryClient = new QueryClient({
@@ -108,6 +109,14 @@ const AppRoutes = () => {
           element={
             <ProtectedRoute>
               <Categories />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/categories/:category"
+          element={
+            <ProtectedRoute>
+              <CategoryGraph />
             </ProtectedRoute>
           }
         />
