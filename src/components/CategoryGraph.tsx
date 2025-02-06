@@ -173,8 +173,8 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
       .height(graphRef.current.clientHeight)
       .showNavInfo(false)
       .onNodeClick((node) => {
-        // Focus on the clicked node
-        const distance = 40;
+        // Focus on the clicked node with increased distance
+        const distance = 120; // Increased from 40 to 120 for a more distant view
         const distRatio = 1 + distance/Math.hypot(node.x, node.y, node.z);
 
         Graph.cameraPosition(
