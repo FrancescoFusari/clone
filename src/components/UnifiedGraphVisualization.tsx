@@ -176,11 +176,11 @@ export const UnifiedGraphVisualization = () => {
         id: tag,
         name: tag,
         type: "tag",
-        val: 15
+        val: 5  // Updated from 15 to 5
       });
     });
 
-    const Graph = new ForceGraph3D()(graphRef.current)
+    const Graph = ForceGraph3D()(graphRef.current)
       .graphData(graphData)
       .nodeLabel("name")
       .nodeColor(node => {
