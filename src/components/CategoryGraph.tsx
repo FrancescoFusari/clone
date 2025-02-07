@@ -194,7 +194,7 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
 
     const colorPalette = getCategoryColorPalette(category);
 
-    const Graph = ForceGraph3D()(graphRef.current)
+    const Graph = new (ForceGraph3D as any)()(graphRef.current)
       .graphData(graphData)
       .nodeLabel("name")
       .nodeColor(node => {
@@ -214,7 +214,7 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
       .nodeVal(node => (node as Node).val)
       .linkWidth(0.8)
       .linkColor(() => colorPalette.link)
-      .backgroundColor("#0f1729")
+      .backgroundColor("#0f1729") // Keeping the previous dark background
       .width(graphRef.current.clientWidth)
       .height(graphRef.current.clientHeight)
       .showNavInfo(false)
@@ -287,3 +287,4 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
     </Card>
   );
 };
+
