@@ -193,7 +193,7 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
     const colorPalette = getCategoryColorPalette(category);
 
     // Fix ForceGraph3D instantiation
-    const Graph = ForceGraph3D()(graphRef.current)
+    const Graph = new ForceGraph3D()(graphRef.current)
       .graphData(graphData)
       .nodeLabel("name")
       .nodeColor(node => {
