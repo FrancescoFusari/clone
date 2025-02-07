@@ -184,8 +184,9 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
     setGraphData(newGraphData);
 
     // Initialize ForceGraph
-    const ForceGraph = new ForceGraph3D();
-    const Graph = ForceGraph(graphRef.current)
+    const Graph = ForceGraph3D()(graphRef.current);
+    
+    Graph
       .graphData(newGraphData)
       .nodeLabel("name")
       .nodeColor(node => {
