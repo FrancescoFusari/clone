@@ -28,8 +28,6 @@ interface Link {
   source: string;
   target: string;
   color?: string;
-  curvature?: number;
-  rotation?: number;
 }
 
 interface GraphData {
@@ -39,10 +37,7 @@ interface GraphData {
 
 export const UnifiedGraphVisualization = () => {
   const graphRef = useRef<HTMLDivElement>(null);
-  const graphInstanceRef = useRef<any>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [userInteracting, setUserInteracting] = useState(false);
-  const rotationAngleRef = useRef(0);
   const { data: entries } = useQuery({
     queryKey: ["all-entries"],
     queryFn: async () => {
@@ -113,7 +108,7 @@ export const UnifiedGraphVisualization = () => {
     const tags = new Set<string>();
 
     // Process entries
-    entries.forEach((entry, index) => {
+    entries.forEach(entry => {
       categories.add(entry.category);
       
       graphData.nodes.push({
@@ -123,13 +118,11 @@ export const UnifiedGraphVisualization = () => {
         val: 20
       });
 
-      // Link entry to category with slight curve
+      // Link entry to category
       graphData.links.push({
         source: entry.category,
         target: entry.id,
-        color: getCategoryColor(entry.category).link,
-        curvature: 0.2,
-        rotation: (index % 6) * Math.PI / 3 // Distribute rotations evenly
+        color: getCategoryColor(entry.category).link
       });
 
       if (entry.subcategory) {
@@ -137,20 +130,16 @@ export const UnifiedGraphVisualization = () => {
         graphData.links.push({
           source: entry.id,
           target: entry.subcategory,
-          color: getCategoryColor(entry.category).link,
-          curvature: 0.3,
-          rotation: Math.PI * (index % 4) / 2 // Different rotation pattern
+          color: getCategoryColor(entry.category).link
         });
       }
 
-      entry.tags?.forEach((tag, tagIndex) => {
+      entry.tags?.forEach(tag => {
         tags.add(tag);
         graphData.links.push({
           source: entry.id,
           target: tag,
-          color: getCategoryColor(entry.category).link,
-          curvature: 0.1,
-          rotation: (tagIndex % 8) * Math.PI / 4 // Another rotation pattern
+          color: getCategoryColor(entry.category).link
         });
       });
     });
@@ -163,13 +152,11 @@ export const UnifiedGraphVisualization = () => {
         type: "category",
         val: 100
       });
-      // Link categories to user with curves
+      // Link categories to user
       graphData.links.push({
         source: profile.id,
         target: cat,
-        color: getCategoryColor(cat).link,
-        curvature: 0.4,
-        rotation: Math.random() * Math.PI * 2 // Random rotation for variety
+        color: getCategoryColor(cat).link
       });
     });
 
@@ -189,11 +176,11 @@ export const UnifiedGraphVisualization = () => {
         id: tag,
         name: tag,
         type: "tag",
-        val: 5
+        val: 5  // Updated from 15 to 5
       });
     });
 
-    graphInstanceRef.current = new ForceGraph3D()(graphRef.current)
+    const Graph = ForceGraph3D()(graphRef.current)
       .graphData(graphData)
       .nodeLabel("name")
       .nodeColor(node => {
@@ -216,8 +203,6 @@ export const UnifiedGraphVisualization = () => {
       .nodeVal(node => (node as Node).val)
       .linkWidth(1.5)
       .linkColor(link => (link as Link).color || "#ffffff20")
-      .linkCurvature("curvature")
-      .linkCurveRotation("rotation")
       .backgroundColor("#0f1729")
       .width(window.innerWidth)
       .height(window.innerHeight)
@@ -232,7 +217,7 @@ export const UnifiedGraphVisualization = () => {
         const distance = 150;
         const distRatio = 1 + distance/Math.hypot(node.x || 0, node.y || 0, node.z || 0);
 
-        graphInstanceRef.current.cameraPosition(
+        Graph.cameraPosition(
           { 
             x: (node.x || 0) * distRatio, 
             y: (node.y || 0) * distRatio, 
@@ -243,53 +228,22 @@ export const UnifiedGraphVisualization = () => {
         );
       });
 
-    // Setup auto-rotation
-    let animationFrameId: number;
-    const rotateScene = () => {
-      if (!userInteracting && graphInstanceRef.current) {
-        rotationAngleRef.current += 0.001;
-        const distance = 800;
-        const angle = rotationAngleRef.current;
-        
-        // Calculate camera position with a slight tilt (15 degrees)
-        const tiltAngle = Math.PI / 12; // 15 degrees in radians
-        graphInstanceRef.current.cameraPosition({
-          x: distance * Math.cos(angle),
-          y: distance * Math.sin(tiltAngle),
-          z: distance * Math.sin(angle)
-        });
-      }
-      animationFrameId = requestAnimationFrame(rotateScene);
-    };
-
-    // Start rotation
-    rotateScene();
-
-    // Handle user interaction
-    graphRef.current.addEventListener('mousedown', () => setUserInteracting(true));
-    graphRef.current.addEventListener('touchstart', () => setUserInteracting(true));
-    document.addEventListener('mouseup', () => setUserInteracting(false));
-    document.addEventListener('touchend', () => setUserInteracting(false));
-
     // Handle window resize
     const handleResize = () => {
-      if (graphInstanceRef.current) {
-        graphInstanceRef.current
-          .width(window.innerWidth)
+      Graph.width(window.innerWidth)
           .height(window.innerHeight);
-      }
     };
     window.addEventListener('resize', handleResize);
 
-    // Set initial camera position
-    graphInstanceRef.current.cameraPosition({ x: 500, y: 500, z: 800 });
+    // Set camera position
+    Graph.cameraPosition({ x: 500, y: 500, z: 800 });
 
     // Center the user node
     const userNode = graphData.nodes.find(node => node.type === "user");
     if (userNode) {
-      graphInstanceRef.current.d3Force('center', null);
-      graphInstanceRef.current.d3Force('charge')?.strength(-150);
-      graphInstanceRef.current.d3Force('link')?.distance(200);
+      Graph.d3Force('center', null);
+      Graph.d3Force('charge')?.strength(-150);
+      Graph.d3Force('link')?.distance(200);
       userNode.fx = 0;
       userNode.fy = 0;
       userNode.fz = 0;
@@ -297,81 +251,11 @@ export const UnifiedGraphVisualization = () => {
 
     return () => {
       window.removeEventListener('resize', handleResize);
-      cancelAnimationFrame(animationFrameId);
       if (graphRef.current) {
         graphRef.current.innerHTML = "";
       }
     };
   }, [entries, profile]);
-
-  const getCategoryColor = (category: EntryCategory) => {
-    const palettes = {
-      personal: {
-        primary: "#9b87f5",    // Primary purple
-        secondary: "#7E69AB",  // Secondary purple
-        tertiary: "#6E59A5",   // Tertiary purple
-        soft: "#E5DEFF",       // Soft purple
-        link: "rgba(229, 222, 255, 0.4)" // Increased opacity from 0.2 to 0.4
-      },
-      work: {
-        primary: "#60a5fa",    // Primary blue
-        secondary: "#3b82f6",  // Secondary blue
-        tertiary: "#2563eb",   // Tertiary blue
-        soft: "#dbeafe",       // Soft blue
-        link: "rgba(219, 234, 254, 0.4)" // Increased opacity from 0.2 to 0.4
-      },
-      social: {
-        primary: "#f472b6",    // Primary pink
-        secondary: "#ec4899",  // Secondary pink
-        tertiary: "#db2777",   // Tertiary pink
-        soft: "#fce7f3",       // Soft pink
-        link: "rgba(252, 231, 243, 0.4)" // Increased opacity from 0.2 to 0.4
-      },
-      interests_and_hobbies: {
-        primary: "#4ade80",    // Primary green
-        secondary: "#22c55e",  // Secondary green
-        tertiary: "#16a34a",   // Tertiary green
-        soft: "#dcfce7",       // Soft green
-        link: "rgba(220, 252, 231, 0.4)" // Increased opacity from 0.2 to 0.4
-      },
-      school: {
-        primary: "#fb923c",    // Primary orange
-        secondary: "#f97316",  // Secondary orange
-        tertiary: "#ea580c",   // Tertiary orange
-        soft: "#ffedd5",       // Soft orange
-        link: "rgba(255, 237, 213, 0.4)" // Increased opacity from 0.2 to 0.4
-      }
-    };
-    
-    return palettes[category];
-  };
-
-  const getNodeCategory = (nodeId: string, graphData: GraphData): EntryCategory | null => {
-    const findCategory = (currentId: string, visited = new Set<string>()): EntryCategory | null => {
-      if (visited.has(currentId)) return null;
-      visited.add(currentId);
-
-      const links = graphData.links.filter(link => 
-        link.target === currentId || link.source === currentId
-      );
-
-      for (const link of links) {
-        const connectedId = link.source === currentId ? link.target : link.source;
-        const connectedNode = graphData.nodes.find(n => n.id === connectedId);
-        
-        if (connectedNode?.type === "category") {
-          return connectedId as EntryCategory;
-        }
-        
-        const result = findCategory(connectedId.toString(), visited);
-        if (result) return result;
-      }
-
-      return null;
-    };
-
-    return findCategory(nodeId);
-  };
 
   if (!entries || !profile) {
     return <Skeleton className="w-screen h-screen" />;
@@ -392,4 +276,73 @@ export const UnifiedGraphVisualization = () => {
       </CardContent>
     </Card>
   );
+};
+
+const getCategoryColor = (category: EntryCategory) => {
+  const palettes = {
+    personal: {
+      primary: "#9b87f5",    // Primary purple
+      secondary: "#7E69AB",  // Secondary purple
+      tertiary: "#6E59A5",   // Tertiary purple
+      soft: "#E5DEFF",       // Soft purple
+      link: "rgba(229, 222, 255, 0.4)" // Increased opacity from 0.2 to 0.4
+    },
+    work: {
+      primary: "#60a5fa",    // Primary blue
+      secondary: "#3b82f6",  // Secondary blue
+      tertiary: "#2563eb",   // Tertiary blue
+      soft: "#dbeafe",       // Soft blue
+      link: "rgba(219, 234, 254, 0.4)" // Increased opacity from 0.2 to 0.4
+    },
+    social: {
+      primary: "#f472b6",    // Primary pink
+      secondary: "#ec4899",  // Secondary pink
+      tertiary: "#db2777",   // Tertiary pink
+      soft: "#fce7f3",       // Soft pink
+      link: "rgba(252, 231, 243, 0.4)" // Increased opacity from 0.2 to 0.4
+    },
+    interests_and_hobbies: {
+      primary: "#4ade80",    // Primary green
+      secondary: "#22c55e",  // Secondary green
+      tertiary: "#16a34a",   // Tertiary green
+      soft: "#dcfce7",       // Soft green
+      link: "rgba(220, 252, 231, 0.4)" // Increased opacity from 0.2 to 0.4
+    },
+    school: {
+      primary: "#fb923c",    // Primary orange
+      secondary: "#f97316",  // Secondary orange
+      tertiary: "#ea580c",   // Tertiary orange
+      soft: "#ffedd5",       // Soft orange
+      link: "rgba(255, 237, 213, 0.4)" // Increased opacity from 0.2 to 0.4
+    }
+  };
+  
+  return palettes[category];
+};
+
+const getNodeCategory = (nodeId: string, graphData: GraphData): EntryCategory | null => {
+  const findCategory = (currentId: string, visited = new Set<string>()): EntryCategory | null => {
+    if (visited.has(currentId)) return null;
+    visited.add(currentId);
+
+    const links = graphData.links.filter(link => 
+      link.target === currentId || link.source === currentId
+    );
+
+    for (const link of links) {
+      const connectedId = link.source === currentId ? link.target : link.source;
+      const connectedNode = graphData.nodes.find(n => n.id === connectedId);
+      
+      if (connectedNode?.type === "category") {
+        return connectedId as EntryCategory;
+      }
+      
+      const result = findCategory(connectedId.toString(), visited);
+      if (result) return result;
+    }
+
+    return null;
+  };
+
+  return findCategory(nodeId);
 };
