@@ -1,3 +1,4 @@
+
 import { useEffect, useRef } from "react";
 import ForceGraph3D from "3d-force-graph";
 import { useQuery } from "@tanstack/react-query";
@@ -201,8 +202,8 @@ export const UnifiedGraphVisualization = () => {
         }
       })
       .nodeVal(node => (node as Node).val)
-      .linkWidth(1.5)
-      .linkColor(link => (link as Link).color || "#ffffff20")
+      .linkWidth(0.8)
+      .linkColor(link => (link as Link).color || "#ffffff50")
       .backgroundColor("#0f1729")
       .width(window.innerWidth)
       .height(window.innerHeight)
@@ -285,35 +286,35 @@ const getCategoryColor = (category: EntryCategory) => {
       secondary: "#7E69AB",  // Secondary purple
       tertiary: "#6E59A5",   // Tertiary purple
       soft: "#E5DEFF",       // Soft purple
-      link: "rgba(229, 222, 255, 0.2)" // Purple with low opacity
+      link: "rgba(229, 222, 255, 0.5)" // Purple with 0.5 opacity
     },
     work: {
       primary: "#60a5fa",    // Primary blue
       secondary: "#3b82f6",  // Secondary blue
       tertiary: "#2563eb",   // Tertiary blue
       soft: "#dbeafe",       // Soft blue
-      link: "rgba(219, 234, 254, 0.2)" // Blue with low opacity
+      link: "rgba(219, 234, 254, 0.5)" // Blue with 0.5 opacity
     },
     social: {
       primary: "#f472b6",    // Primary pink
       secondary: "#ec4899",  // Secondary pink
       tertiary: "#db2777",   // Tertiary pink
       soft: "#fce7f3",       // Soft pink
-      link: "rgba(252, 231, 243, 0.2)" // Pink with low opacity
+      link: "rgba(252, 231, 243, 0.5)" // Pink with 0.5 opacity
     },
     interests_and_hobbies: {
       primary: "#4ade80",    // Primary green
       secondary: "#22c55e",  // Secondary green
       tertiary: "#16a34a",   // Tertiary green
       soft: "#dcfce7",       // Soft green
-      link: "rgba(220, 252, 231, 0.2)" // Green with low opacity
+      link: "rgba(220, 252, 231, 0.5)" // Green with 0.5 opacity
     },
     school: {
       primary: "#fb923c",    // Primary orange
       secondary: "#f97316",  // Secondary orange
       tertiary: "#ea580c",   // Tertiary orange
       soft: "#ffedd5",       // Soft orange
-      link: "rgba(255, 237, 213, 0.2)" // Orange with low opacity
+      link: "rgba(255, 237, 213, 0.5)" // Orange with 0.5 opacity
     }
   };
   
