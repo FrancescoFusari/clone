@@ -5,7 +5,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Navigation } from "./components/Navigation";
+import { TopBar } from "./components/TopBar";
 import { AuthProvider, useAuth } from "./components/AuthProvider";
+import { ThemeProvider } from "./components/ThemeProvider";
 import { Skeleton } from "@/components/ui/skeleton";
 
 // Lazy load components
@@ -19,7 +21,6 @@ const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Categories = lazy(() => import("./pages/Categories"));
 const CategoryGraph = lazy(() => import("./pages/CategoryGraph"));
 
-// Configure React Query for optimal performance
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -129,16 +130,19 @@ const AppRoutes = () => {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
-      <TooltipProvider>
-        <div className="min-h-screen bg-background">
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <AppRoutes />
-            <Navigation />
-          </BrowserRouter>
-        </div>
-      </TooltipProvider>
+      <ThemeProvider>
+        <TooltipProvider>
+          <div className="min-h-screen bg-background">
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <TopBar />
+              <AppRoutes />
+              <Navigation />
+            </BrowserRouter>
+          </div>
+        </TooltipProvider>
+      </ThemeProvider>
     </AuthProvider>
   </QueryClientProvider>
 );
