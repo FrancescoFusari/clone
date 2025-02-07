@@ -124,12 +124,12 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
       links: []
     };
 
-    // Add category node with increased size for 120 nodes
+    // Add category node with increased size for 180 nodes
     graphData.nodes.push({
       id: category,
       name: category,
       type: "category",
-      val: 120
+      val: 180
     });
 
     // Track unique subcategories and tags
@@ -142,7 +142,7 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
         id: entry.id,
         name: entry.title,
         type: "entry",
-        val: 10 // Size for 10 entry nodes
+        val: 15 // Size for 15 entry nodes
       });
 
       graphData.links.push({
@@ -167,13 +167,13 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
       });
     });
 
-    // Add subcategory nodes for 40 nodes
+    // Add subcategory nodes for 60 nodes
     subcategories.forEach(sub => {
       graphData.nodes.push({
         id: sub,
         name: sub,
         type: "subcategory",
-        val: 40
+        val: 60
       });
       graphData.links.push({
         source: category,
@@ -193,7 +193,7 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
 
     const colorPalette = getCategoryColorPalette(category);
 
-    const Graph = new ForceGraph3D()(graphRef.current)
+    const Graph = ForceGraph3D(graphRef.current)
       .graphData(graphData)
       .nodeLabel("name")
       .nodeColor(node => {
@@ -239,14 +239,14 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
       });
 
     // Set camera position further back for better view of larger nodes
-    Graph.cameraPosition({ x: 600, y: 600, z: 1000 });
+    Graph.cameraPosition({ x: 800, y: 800, z: 1200 });
 
     // Center the category node and adjust link distance
     const categoryNode = graphData.nodes.find(node => node.type === "category");
     if (categoryNode) {
       Graph.d3Force('center', null);
-      Graph.d3Force('charge')?.strength(-200);
-      Graph.d3Force('link')?.distance(250);
+      Graph.d3Force('charge')?.strength(-250);
+      Graph.d3Force('link')?.distance(300);
       categoryNode.fx = 0;
       categoryNode.fy = 0;
       categoryNode.fz = 0;
