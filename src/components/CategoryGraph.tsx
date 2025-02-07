@@ -1,4 +1,3 @@
-
 import { useEffect, useRef, useState } from "react";
 import ForceGraph3D from "3d-force-graph";
 import { useQuery } from "@tanstack/react-query";
@@ -7,6 +6,12 @@ import { Skeleton } from "./ui/skeleton";
 import { Card, CardContent } from "./ui/card";
 import { Button } from "./ui/button";
 import { Maximize2, Minimize2 } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import type { Database } from "@/integrations/supabase/types";
 
 type EntryCategory = Database["public"]["Enums"]["entry_category"];
@@ -38,9 +43,26 @@ interface CategoryGraphProps {
   category: EntryCategory;
 }
 
+const getNodeTooltip = (node: Node) => {
+  switch (node.type) {
+    case "category":
+      return `Main category: ${node.name}`;
+    case "subcategory":
+      return `Subcategory grouping related entries`;
+    case "entry":
+      return `Entry: ${node.name}`;
+    case "tag":
+      return `Tag used to organize entries`;
+    default:
+      return node.name;
+  }
+};
+
 export const CategoryGraph = ({ category }: CategoryGraphProps) => {
   const graphRef = useRef<HTMLDivElement>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [hoveredNode, setHoveredNode] = useState<Node | null>(null);
+  const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
   
   const { data: entries, isLoading } = useQuery({
     queryKey: ["category-entries", category],
@@ -149,7 +171,7 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
       });
     });
 
-    const Graph = ForceGraph3D()(graphRef.current)
+    const Graph = new ForceGraph3D()(graphRef.current)
       .graphData(graphData)
       .nodeLabel("name")
       .nodeColor(node => {
@@ -194,6 +216,15 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
           node as { x: number, y: number, z: number },
           3000
         );
+      })
+      .onNodeHover((node, prevNode) => {
+        if (node) {
+          const screenPos = Graph.getScreenPosition(node);
+          setTooltipPosition({ x: screenPos.x, y: screenPos.y });
+          setHoveredNode(node as Node);
+        } else {
+          setHoveredNode(null);
+        }
       });
 
     // Set camera position further back
@@ -224,6 +255,23 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
     <Card className="relative overflow-hidden">
       <CardContent className="p-0">
         <div ref={graphRef} className="w-full h-[600px]" />
+        {hoveredNode && (
+          <TooltipProvider>
+            <Tooltip open={true}>
+              <TooltipContent
+                style={{
+                  position: 'fixed',
+                  left: `${tooltipPosition.x}px`,
+                  top: `${tooltipPosition.y - 10}px`,
+                  transform: 'translateX(-50%)',
+                  zIndex: 1000,
+                }}
+              >
+                {getNodeTooltip(hoveredNode)}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
         <Button
           variant="outline"
           size="icon"
