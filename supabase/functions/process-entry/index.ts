@@ -108,33 +108,53 @@ function levenshteinDistance(str1: string, str2: string): number {
   return track[str2.length][str1.length];
 }
 
-function formatText(text: string): string {
-  if (text.includes('\n\n')) {
-    return text;
+async function formatTextAndGenerateComments(content: string): Promise<{ formattedContent: string, comments: any[] }> {
+  if (!openAIApiKey) {
+    throw new Error('OpenAI API key not configured');
   }
 
-  // Split text into sentences
-  const sentences = text.split(/(?<=[.!?])\s+/);
-  
-  // Group sentences into paragraphs (roughly 3-4 sentences per paragraph)
-  const paragraphs = [];
-  let currentParagraph = [];
-  
-  for (const sentence of sentences) {
-    currentParagraph.push(sentence);
-    if (currentParagraph.length >= 3 || sentence.length > 150) {
-      paragraphs.push(currentParagraph.join(' '));
-      currentParagraph = [];
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${openAIApiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: 'gpt-4o-mini',
+      messages: [
+        {
+          role: 'system',
+          content: `You are an AI that processes journal entries. You will:
+1. Format the text into well-structured paragraphs with proper spacing
+2. Generate 2-3 insightful comments about the content
+Return a JSON object with exactly these fields:
+{
+  "formattedContent": "the formatted text with proper paragraphs and spacing",
+  "comments": [
+    {
+      "id": "unique string",
+      "text": "insightful comment about the content",
+      "type": "observation" | "question" | "suggestion"
     }
+  ]
+}`
+        },
+        { role: 'user', content }
+      ],
+      temperature: 0.3,
+      response_format: { type: "json_object" }
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    console.error('OpenAI API error:', error);
+    throw new Error('Failed to process content with OpenAI');
   }
-  
-  // Add any remaining sentences
-  if (currentParagraph.length > 0) {
-    paragraphs.push(currentParagraph.join(' '));
-  }
-  
-  // Join paragraphs with double newlines
-  return paragraphs.join('\n\n');
+
+  const data = await response.json();
+  const result = JSON.parse(data.choices[0].message.content);
+  return result;
 }
 
 serve(async (req) => {
@@ -150,12 +170,9 @@ serve(async (req) => {
       throw new Error('Content is required');
     }
 
-    const formattedContent = content;
-    console.log('Formatted content:', formattedContent.substring(0, 100) + '...');
-
-    if (!openAIApiKey) {
-      throw new Error('OpenAI API key not configured');
-    }
+    // Get formatted content and comments
+    const { formattedContent, comments } = await formatTextAndGenerateComments(content);
+    console.log('Generated formatted content and comments');
 
     // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
@@ -285,65 +302,15 @@ serve(async (req) => {
       throw new Error('Failed to parse OpenAI response');
     }
 
-    // Generate a title
-    console.log('Requesting title generation from OpenAI...');
-    const titleResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          {
-            role: 'system',
-            content: `Generate a concise title (max 50 characters) for this journal entry. Respond with a JSON object in this format:
-            {
-              "title": "The generated title here"
-            }`
-          },
-          {
-            role: 'user',
-            content: formattedContent
-          }
-        ],
-        temperature: 0.3,
-        max_tokens: 50,
-        response_format: { type: "json_object" }
-      }),
-    });
-
-    if (!titleResponse.ok) {
-      const errorData = await titleResponse.json();
-      console.error('OpenAI API error (title):', errorData);
-      throw new Error(`OpenAI API error: ${errorData.error?.message || 'Unknown error'}`);
-    }
-
-    const titleData = await titleResponse.json();
-    console.log('Title API response:', titleData);
-    
-    if (!titleData.choices?.[0]?.message?.content) {
-      console.error('Invalid title response structure:', titleData);
-      throw new Error('Invalid response from OpenAI API (title)');
-    }
-
-    let titleJson;
-    try {
-      titleJson = JSON.parse(titleData.choices[0].message.content);
-    } catch (error) {
-      console.error('Error parsing title response:', error);
-      throw new Error('Failed to parse title response');
-    }
-
-    const generatedTitle = titleJson.title
+    // Add the formatted content and entry comments to the response
+    processedData.content = formattedContent;
+    processedData.formatted_content = formattedContent;
+    processedData.entry_comments = comments;
+    processedData.title = processedData.summary
+      .split('.')[0]
       .replace(/["']/g, '')
       .replace(/\.{3,}$/, '')
       .trim();
-
-    // Add the formatted content and title to the response
-    processedData.content = formattedContent;
-    processedData.title = generatedTitle;
 
     console.log('Final processed data:', processedData);
 
@@ -353,6 +320,8 @@ serve(async (req) => {
       .insert([{
         user_id,
         content: processedData.content,
+        formatted_content: processedData.formatted_content,
+        entry_comments: processedData.entry_comments,
         title: processedData.title,
         category: processedData.category,
         subcategory: processedData.subcategory,

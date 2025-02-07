@@ -40,6 +40,8 @@ export type Database = {
           category: Database["public"]["Enums"]["entry_category"]
           content: string
           created_at: string
+          entry_comments: Json | null
+          formatted_content: string | null
           id: string
           research_data: Json | null
           subcategory: string | null
@@ -54,6 +56,8 @@ export type Database = {
           category: Database["public"]["Enums"]["entry_category"]
           content: string
           created_at?: string
+          entry_comments?: Json | null
+          formatted_content?: string | null
           id?: string
           research_data?: Json | null
           subcategory?: string | null
@@ -68,6 +72,8 @@ export type Database = {
           category?: Database["public"]["Enums"]["entry_category"]
           content?: string
           created_at?: string
+          entry_comments?: Json | null
+          formatted_content?: string | null
           id?: string
           research_data?: Json | null
           subcategory?: string | null

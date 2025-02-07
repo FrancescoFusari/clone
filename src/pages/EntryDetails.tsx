@@ -1,8 +1,9 @@
+
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Calendar, Tag, FileText, Sparkles, Search, Lightbulb, BookOpen, HelpCircle } from "lucide-react";
+import { ArrowLeft, Calendar, Tag, FileText, Sparkles, Search, Lightbulb, BookOpen, HelpCircle, MessageCircle } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -21,6 +22,12 @@ type ResearchData = {
   questions: string[];
   key_concepts: string[];
   related_topics: string[];
+};
+
+type EntryComment = {
+  id: string;
+  text: string;
+  type: "observation" | "question" | "suggestion";
 };
 
 const formatContent = (text: string) => {
@@ -87,8 +94,8 @@ const EntryDetails = () => {
       console.log("Fetched entry details:", data);
       return data;
     },
-    enabled: !!id, // Only run query if we have an ID
-    retry: false, // Don't retry on failure
+    enabled: !!id,
+    retry: false,
   });
 
   const researchMutation = useMutation({
@@ -220,8 +227,32 @@ const EntryDetails = () => {
         </CardHeader>
         <CardContent>
           <div className="prose max-w-none mb-6 dark:prose-invert text-white/80">
-            {formatContent(entry.content)}
+            {formatContent(entry.formatted_content || entry.content)}
           </div>
+
+          {entry.entry_comments && entry.entry_comments.length > 0 && (
+            <div className="mb-6 space-y-4">
+              <div className="flex items-center gap-2">
+                <MessageCircle className="h-5 w-5 text-white/60" />
+                <h3 className="text-lg font-semibold text-white/90">AI Comments & Observations</h3>
+              </div>
+              <div className="grid gap-4">
+                {(entry.entry_comments as EntryComment[]).map((comment) => (
+                  <Alert key={comment.id} className="bg-white/5 border-white/10">
+                    <div className="flex items-center gap-2">
+                      {comment.type === "observation" && <Sparkles className="h-4 w-4" />}
+                      {comment.type === "question" && <HelpCircle className="h-4 w-4" />}
+                      {comment.type === "suggestion" && <Lightbulb className="h-4 w-4" />}
+                      <span className="capitalize text-sm font-medium">{comment.type}</span>
+                    </div>
+                    <AlertDescription className="mt-2 text-white/80">
+                      {comment.text}
+                    </AlertDescription>
+                  </Alert>
+                ))}
+              </div>
+            </div>
+          )}
 
           {(entry.summary || entry.title) && (
             <div className="mb-6 space-y-4">
