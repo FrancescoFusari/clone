@@ -181,7 +181,7 @@ export const UnifiedGraphVisualization = () => {
       });
     });
 
-    const Graph = ForceGraph3D()(graphRef.current)
+    const Graph = new ForceGraph3D()(graphRef.current)
       .graphData(graphData)
       .nodeLabel("name")
       .nodeColor(node => {
@@ -339,3 +339,4 @@ const getNodeCategory = (nodeId: string, graphData: GraphData): EntryCategory | 
 
   return findCategory(nodeId);
 };
+
