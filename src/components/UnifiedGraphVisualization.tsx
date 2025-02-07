@@ -1,3 +1,4 @@
+
 import { useEffect, useRef } from "react";
 import ForceGraph3D from "3d-force-graph";
 import { useQuery } from "@tanstack/react-query";
@@ -8,8 +9,6 @@ import { Button } from "./ui/button";
 import { Maximize2, Minimize2 } from "lucide-react";
 import { useState } from "react";
 import type { Database } from "@/integrations/supabase/types";
-import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass";
-import { Vector2 } from "three";
 
 type EntryCategory = Database["public"]["Enums"]["entry_category"];
 
@@ -229,15 +228,6 @@ export const UnifiedGraphVisualization = () => {
           3000
         );
       });
-
-    // Add bloom effect
-    const bloomPass = new UnrealBloomPass(
-      new Vector2(window.innerWidth, window.innerHeight),
-      4, // strength
-      1,  // radius
-      0   // threshold
-    );
-    Graph.postProcessingComposer().addPass(bloomPass);
 
     // Handle window resize
     const handleResize = () => {
