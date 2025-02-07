@@ -7,7 +7,6 @@ import { Card, CardContent } from "./ui/card";
 import { Button } from "./ui/button";
 import { Maximize2, Minimize2 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
-import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass";
 
 type EntryCategory = Database["public"]["Enums"]["entry_category"];
 
@@ -193,9 +192,7 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
 
     const colorPalette = getCategoryColorPalette(category);
 
-    const Graph = ForceGraph3D({
-      extraRenderers: []
-    })(graphRef.current)
+    const Graph = new (ForceGraph3D as any)()(graphRef.current)
       .graphData(graphData)
       .nodeLabel("name")
       .nodeColor(node => {
@@ -215,7 +212,7 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
       .nodeVal(node => (node as Node).val)
       .linkWidth(1.5)
       .linkColor(() => colorPalette.link)
-      .backgroundColor("#0f1729")  // Fixed dark background color
+      .backgroundColor("#0f1729")
       .width(graphRef.current.clientWidth)
       .height(graphRef.current.clientHeight)
       .showNavInfo(false)
@@ -239,13 +236,6 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
           3000
         );
       });
-
-    // Add bloom effect
-    const bloomPass = new UnrealBloomPass();
-    bloomPass.strength = 1;
-    bloomPass.radius = 0.5;
-    bloomPass.threshold = 0;
-    Graph.postProcessingComposer().addPass(bloomPass);
 
     // Set camera position further back
     Graph.cameraPosition({ x: 500, y: 500, z: 800 });

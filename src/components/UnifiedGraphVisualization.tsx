@@ -1,3 +1,4 @@
+
 import { useEffect, useRef } from "react";
 import ForceGraph3D from "3d-force-graph";
 import { useQuery } from "@tanstack/react-query";
@@ -203,7 +204,7 @@ export const UnifiedGraphVisualization = () => {
       .nodeVal(node => (node as Node).val)
       .linkWidth(0.8)
       .linkColor(link => (link as Link).color || "#ffffff50")
-      .backgroundColor("#0f1729")  // Fixed dark background color
+      .backgroundColor("#0f1729")
       .width(window.innerWidth)
       .height(window.innerHeight)
       .showNavInfo(false)
