@@ -285,35 +285,35 @@ const getCategoryColor = (category: EntryCategory) => {
       secondary: "#7E69AB",  // Secondary purple
       tertiary: "#6E59A5",   // Tertiary purple
       soft: "#E5DEFF",       // Soft purple
-      link: "rgba(229, 222, 255, 0.2)" // Purple with low opacity
+      link: "rgba(229, 222, 255, 0.4)" // Increased opacity from 0.2 to 0.4
     },
     work: {
       primary: "#60a5fa",    // Primary blue
       secondary: "#3b82f6",  // Secondary blue
       tertiary: "#2563eb",   // Tertiary blue
       soft: "#dbeafe",       // Soft blue
-      link: "rgba(219, 234, 254, 0.2)" // Blue with low opacity
+      link: "rgba(219, 234, 254, 0.4)" // Increased opacity from 0.2 to 0.4
     },
     social: {
       primary: "#f472b6",    // Primary pink
       secondary: "#ec4899",  // Secondary pink
       tertiary: "#db2777",   // Tertiary pink
       soft: "#fce7f3",       // Soft pink
-      link: "rgba(252, 231, 243, 0.2)" // Pink with low opacity
+      link: "rgba(252, 231, 243, 0.4)" // Increased opacity from 0.2 to 0.4
     },
     interests_and_hobbies: {
       primary: "#4ade80",    // Primary green
       secondary: "#22c55e",  // Secondary green
       tertiary: "#16a34a",   // Tertiary green
       soft: "#dcfce7",       // Soft green
-      link: "rgba(220, 252, 231, 0.2)" // Green with low opacity
+      link: "rgba(220, 252, 231, 0.4)" // Increased opacity from 0.2 to 0.4
     },
     school: {
       primary: "#fb923c",    // Primary orange
       secondary: "#f97316",  // Secondary orange
       tertiary: "#ea580c",   // Tertiary orange
       soft: "#ffedd5",       // Soft orange
-      link: "rgba(255, 237, 213, 0.2)" // Orange with low opacity
+      link: "rgba(255, 237, 213, 0.4)" // Increased opacity from 0.2 to 0.4
     }
   };
   
