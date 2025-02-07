@@ -1,3 +1,4 @@
+
 import { useEffect, useRef, useState } from "react";
 import ForceGraph3D from "3d-force-graph";
 import { useQuery } from "@tanstack/react-query";
@@ -128,7 +129,7 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
       id: category,
       name: category,
       type: "category",
-      val: 35
+      val: 180 // Updated size for category nodes
     });
 
     // Track unique subcategories and tags
@@ -141,7 +142,7 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
         id: entry.id,
         name: entry.title,
         type: "entry",
-        val: 15
+        val: 20 // Updated size for entry nodes
       });
 
       graphData.links.push({
@@ -172,7 +173,7 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
         id: sub,
         name: sub,
         type: "subcategory",
-        val: 25
+        val: 60 // Updated size for subcategory nodes
       });
       graphData.links.push({
         source: category,
@@ -186,13 +187,13 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
         id: tag,
         name: tag,
         type: "tag",
-        val: 8
+        val: 5 // Updated size for tag nodes
       });
     });
 
     const colorPalette = getCategoryColorPalette(category);
 
-    const Graph = ForceGraph3D()(graphRef.current)
+    const Graph = new ForceGraph3D()(graphRef.current)
       .graphData(graphData)
       .nodeLabel("name")
       .nodeColor(node => {
@@ -278,3 +279,4 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
     </Card>
   );
 };
+
