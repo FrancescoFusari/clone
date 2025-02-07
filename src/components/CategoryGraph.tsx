@@ -118,14 +118,14 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
       links: []
     };
 
-    // Add category node
-    const categoryNode: Node = {
+    // Add initial category node
+    const initialCategoryNode: Node = {
       id: category,
       name: category,
       type: "category",
       val: 20
     };
-    newGraphData.nodes.push(categoryNode);
+    newGraphData.nodes.push(initialCategoryNode);
 
     // Track unique subcategories and tags
     const subcategories = new Set<string>();
@@ -142,7 +142,7 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
       newGraphData.nodes.push(entryNode);
 
       newGraphData.links.push({
-        source: categoryNode,
+        source: initialCategoryNode,
         target: entryNode
       });
 
@@ -184,7 +184,8 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
     setGraphData(newGraphData);
 
     // Initialize ForceGraph
-    const Graph = new ForceGraph3D()(graphRef.current)
+    const ForceGraph = new ForceGraph3D();
+    const Graph = ForceGraph(graphRef.current)
       .graphData(newGraphData)
       .nodeLabel("name")
       .nodeColor(node => {
@@ -259,14 +260,14 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
     // Set initial camera position
     Graph.cameraPosition({ x: 400, y: 400, z: 600 });
 
-    // Center the category node
-    const categoryNode = newGraphData.nodes.find(node => node.type === "category");
-    if (categoryNode) {
+    // Center the initial category node and apply forces
+    const mainNode = newGraphData.nodes.find(node => node.type === "category");
+    if (mainNode) {
       Graph.d3Force('center', null);
       Graph.d3Force('charge')?.strength(-100);
-      categoryNode.fx = 0;
-      categoryNode.fy = 0;
-      categoryNode.fz = 0;
+      mainNode.fx = 0;
+      mainNode.fy = 0;
+      mainNode.fz = 0;
     }
 
     return () => {
