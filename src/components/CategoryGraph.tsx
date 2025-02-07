@@ -1,4 +1,3 @@
-
 import { useEffect, useRef, useState } from "react";
 import ForceGraph3D from "3d-force-graph";
 import { useQuery } from "@tanstack/react-query";
@@ -124,12 +123,12 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
       links: []
     };
 
-    // Add category node with increased size for 180 nodes
+    // Add category node with increased size
     graphData.nodes.push({
       id: category,
       name: category,
       type: "category",
-      val: 180
+      val: 35
     });
 
     // Track unique subcategories and tags
@@ -142,7 +141,7 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
         id: entry.id,
         name: entry.title,
         type: "entry",
-        val: 15 // Size for 15 entry nodes
+        val: 15
       });
 
       graphData.links.push({
@@ -167,13 +166,13 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
       });
     });
 
-    // Add subcategory nodes for 60 nodes
+    // Add subcategory nodes
     subcategories.forEach(sub => {
       graphData.nodes.push({
         id: sub,
         name: sub,
         type: "subcategory",
-        val: 60
+        val: 25
       });
       graphData.links.push({
         source: category,
@@ -181,19 +180,19 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
       });
     });
 
-    // Add tag nodes for 4 nodes
+    // Add tag nodes
     tags.forEach(tag => {
       graphData.nodes.push({
         id: tag,
         name: tag,
         type: "tag",
-        val: 4
+        val: 8
       });
     });
 
     const colorPalette = getCategoryColorPalette(category);
 
-    const Graph = ForceGraph3D(graphRef.current)
+    const Graph = ForceGraph3D()(graphRef.current)
       .graphData(graphData)
       .nodeLabel("name")
       .nodeColor(node => {
@@ -238,15 +237,15 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
         );
       });
 
-    // Set camera position further back for better view of larger nodes
-    Graph.cameraPosition({ x: 800, y: 800, z: 1200 });
+    // Set camera position further back
+    Graph.cameraPosition({ x: 500, y: 500, z: 800 });
 
     // Center the category node and adjust link distance
     const categoryNode = graphData.nodes.find(node => node.type === "category");
     if (categoryNode) {
       Graph.d3Force('center', null);
-      Graph.d3Force('charge')?.strength(-250);
-      Graph.d3Force('link')?.distance(300);
+      Graph.d3Force('charge')?.strength(-150);
+      Graph.d3Force('link')?.distance(200);
       categoryNode.fx = 0;
       categoryNode.fy = 0;
       categoryNode.fz = 0;
