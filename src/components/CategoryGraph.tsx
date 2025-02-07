@@ -149,7 +149,8 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
       });
     });
 
-    const Graph = new ForceGraph3D()(graphRef.current)
+    const ForceGraph = ForceGraph3D();
+    const Graph = ForceGraph(graphRef.current)
       .graphData(graphData)
       .nodeLabel("name")
       .nodeColor(node => {
