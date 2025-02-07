@@ -150,12 +150,14 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
     });
 
     // Initialize main graph
-    const Graph = new (ForceGraph3D())(graphRef.current);
-    graphInstanceRef.current = Graph;
+    const Graph = ForceGraph3D();
+    const graphInstance = Graph(graphRef.current);
+    graphInstanceRef.current = graphInstance;
     
-    Graph
+    // Configure graph
+    graphInstance
       .graphData(graphData)
-      .nodeLabel((node: Node) => {
+      .nodeLabel((node: any) => {
         let details = `${node.name}\nType: ${node.type}`;
         if (node.type === "entry") {
           details += "\nDouble-click to show/hide tags";
@@ -165,7 +167,7 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
         }
         return details;
       })
-      .nodeColor((node: Node) => {
+      .nodeColor((node: any) => {
         switch (node.type) {
           case "category":
             return "#E8E6E3";
@@ -179,43 +181,44 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
             return "#F5F3F2";
         }
       })
-      .nodeVal((node: Node) => node.val)
+      .nodeVal((node: any) => node.val)
       .linkWidth(1)
       .linkColor(() => "rgba(173, 164, 158, 0.2)")
       .backgroundColor("#0f1729")
       .width(graphRef.current.clientWidth)
       .height(graphRef.current.clientHeight)
-      .showNavInfo(false)
-      .onNodeDblClick((node: Node) => {
-        if (node.type === "entry") {
-          setExpandedNodes(prev => {
-            const next = new Set(prev);
-            if (next.has(node.id)) {
-              next.delete(node.id);
-              toast.info("Collapsed tags");
-            } else {
-              next.add(node.id);
-              toast.info("Expanded tags");
-            }
-            return next;
-          });
-        }
-      })
-      .onNodeRightClick((node: Node) => {
-        if (node.fx === null) {
-          // Pin the node
-          node.fx = node.x;
-          node.fy = node.y;
-          node.fz = node.z;
-          toast.info("Node pinned");
-        } else {
-          // Unpin the node
-          node.fx = null;
-          node.fy = null;
-          node.fz = null;
-          toast.info("Node unpinned");
-        }
-      });
+      .showNavInfo(false);
+
+    // Add event handlers
+    graphInstance.onNodeDblClick((node: any) => {
+      if (node.type === "entry") {
+        setExpandedNodes(prev => {
+          const next = new Set(prev);
+          if (next.has(node.id)) {
+            next.delete(node.id);
+            toast.info("Collapsed tags");
+          } else {
+            next.add(node.id);
+            toast.info("Expanded tags");
+          }
+          return next;
+        });
+      }
+    });
+
+    graphInstance.onNodeRightClick((node: any) => {
+      if (node.fx === null) {
+        node.fx = node.x;
+        node.fy = node.y;
+        node.fz = node.z;
+        toast.info("Node pinned");
+      } else {
+        node.fx = null;
+        node.fy = null;
+        node.fz = null;
+        toast.info("Node unpinned");
+      }
+    });
 
     // Add mini-map
     const miniMap = document.createElement('div');
@@ -229,10 +232,11 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
     graphRef.current.appendChild(miniMap);
 
     // Initialize mini graph
-    const miniGraph = new (ForceGraph3D())(miniMap);
-    miniGraphRef.current = miniGraph;
+    const MiniGraph = ForceGraph3D();
+    const miniGraphInstance = MiniGraph(miniMap);
+    miniGraphRef.current = miniGraphInstance;
     
-    miniGraph
+    miniGraphInstance
       .graphData(graphData)
       .width(200)
       .height(200)
@@ -242,9 +246,9 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
       .enableNodeDrag(false);
 
     // Sync camera position between main graph and mini-map
-    Graph.onEngineStop(() => {
-      const pos = Graph.cameraPosition();
-      miniGraph.cameraPosition(
+    graphInstance.onEngineStop(() => {
+      const pos = graphInstance.cameraPosition();
+      miniGraphInstance.cameraPosition(
         { x: pos.x * 2, y: pos.y * 2, z: pos.z * 2 },
         { x: 0, y: 0, z: 0 },
         100
@@ -252,18 +256,19 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
     });
 
     // Set initial camera position
-    Graph.cameraPosition({ x: 400, y: 400, z: 600 });
+    graphInstance.cameraPosition({ x: 400, y: 400, z: 600 });
 
     // Center the category node
     const categoryNode = graphData.nodes.find(node => node.type === "category");
     if (categoryNode) {
-      Graph.d3Force('center', null);
-      Graph.d3Force('charge')?.strength(-100);
+      graphInstance.d3Force('center', null);
+      graphInstance.d3Force('charge')?.strength(-100);
       categoryNode.fx = 0;
       categoryNode.fy = 0;
       categoryNode.fz = 0;
     }
 
+    // Cleanup function
     return () => {
       if (graphRef.current) {
         graphRef.current.innerHTML = "";
