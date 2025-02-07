@@ -99,7 +99,7 @@ export const UnifiedGraphVisualization = () => {
       id: profile.id,
       name: profile.username || "User",
       type: "user",
-      val: 200
+      val: 300 // Triple the size of category nodes
     });
 
     // Track unique categories, subcategories and tags
@@ -180,7 +180,7 @@ export const UnifiedGraphVisualization = () => {
       });
     });
 
-    const Graph = ForceGraph3D()(graphRef.current)
+    const Graph = new ForceGraph3D()(graphRef.current)
       .graphData(graphData)
       .nodeLabel("name")
       .nodeColor(node => {
