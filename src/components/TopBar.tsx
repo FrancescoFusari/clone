@@ -1,6 +1,6 @@
 
 import { Link } from "react-router-dom";
-import { Brain, Menu, Settings, LayoutDashboard } from "lucide-react";
+import { Menu, Settings, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -27,7 +27,6 @@ export const TopBar = () => {
               to="/" 
               className="flex items-center gap-2 text-gradient-white font-semibold text-lg"
             >
-              <Brain className="h-6 w-6" />
               Second Brain
             </Link>
 
