@@ -42,6 +42,7 @@ export const UnifiedGraphVisualization = () => {
   const graphInstanceRef = useRef<any>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [userInteracting, setUserInteracting] = useState(false);
+  const rotationAngleRef = useRef(0);
   const { data: entries } = useQuery({
     queryKey: ["all-entries"],
     queryFn: async () => {
@@ -192,7 +193,7 @@ export const UnifiedGraphVisualization = () => {
       });
     });
 
-    const Graph = ForceGraph3D()(graphRef.current)
+    graphInstanceRef.current = new ForceGraph3D()(graphRef.current)
       .graphData(graphData)
       .nodeLabel("name")
       .nodeColor(node => {
@@ -231,7 +232,7 @@ export const UnifiedGraphVisualization = () => {
         const distance = 150;
         const distRatio = 1 + distance/Math.hypot(node.x || 0, node.y || 0, node.z || 0);
 
-        Graph.cameraPosition(
+        graphInstanceRef.current.cameraPosition(
           { 
             x: (node.x || 0) * distRatio, 
             y: (node.y || 0) * distRatio, 
@@ -242,22 +243,53 @@ export const UnifiedGraphVisualization = () => {
         );
       });
 
+    // Setup auto-rotation
+    let animationFrameId: number;
+    const rotateScene = () => {
+      if (!userInteracting && graphInstanceRef.current) {
+        rotationAngleRef.current += 0.001;
+        const distance = 800;
+        const angle = rotationAngleRef.current;
+        
+        // Calculate camera position with a slight tilt (15 degrees)
+        const tiltAngle = Math.PI / 12; // 15 degrees in radians
+        graphInstanceRef.current.cameraPosition({
+          x: distance * Math.cos(angle),
+          y: distance * Math.sin(tiltAngle),
+          z: distance * Math.sin(angle)
+        });
+      }
+      animationFrameId = requestAnimationFrame(rotateScene);
+    };
+
+    // Start rotation
+    rotateScene();
+
+    // Handle user interaction
+    graphRef.current.addEventListener('mousedown', () => setUserInteracting(true));
+    graphRef.current.addEventListener('touchstart', () => setUserInteracting(true));
+    document.addEventListener('mouseup', () => setUserInteracting(false));
+    document.addEventListener('touchend', () => setUserInteracting(false));
+
     // Handle window resize
     const handleResize = () => {
-      Graph.width(window.innerWidth)
+      if (graphInstanceRef.current) {
+        graphInstanceRef.current
+          .width(window.innerWidth)
           .height(window.innerHeight);
+      }
     };
     window.addEventListener('resize', handleResize);
 
-    // Set camera position
-    Graph.cameraPosition({ x: 500, y: 500, z: 800 });
+    // Set initial camera position
+    graphInstanceRef.current.cameraPosition({ x: 500, y: 500, z: 800 });
 
     // Center the user node
     const userNode = graphData.nodes.find(node => node.type === "user");
     if (userNode) {
-      Graph.d3Force('center', null);
-      Graph.d3Force('charge')?.strength(-150);
-      Graph.d3Force('link')?.distance(200);
+      graphInstanceRef.current.d3Force('center', null);
+      graphInstanceRef.current.d3Force('charge')?.strength(-150);
+      graphInstanceRef.current.d3Force('link')?.distance(200);
       userNode.fx = 0;
       userNode.fy = 0;
       userNode.fz = 0;
@@ -265,6 +297,7 @@ export const UnifiedGraphVisualization = () => {
 
     return () => {
       window.removeEventListener('resize', handleResize);
+      cancelAnimationFrame(animationFrameId);
       if (graphRef.current) {
         graphRef.current.innerHTML = "";
       }
