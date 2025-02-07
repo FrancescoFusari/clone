@@ -41,6 +41,8 @@ interface CategoryGraphProps {
 
 export const CategoryGraph = ({ category }: CategoryGraphProps) => {
   const graphRef = useRef<HTMLDivElement>(null);
+  const graphInstanceRef = useRef<any>(null);
+  const miniGraphRef = useRef<any>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [expandedNodes, setExpandedNodes] = useState(new Set<string>());
   
@@ -147,21 +149,24 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
       }
     });
 
-    const Graph = ForceGraph3D()(graphRef.current)
+    // Initialize main graph
+    const Graph = new (ForceGraph3D())(graphRef.current);
+    graphInstanceRef.current = Graph;
+    
+    Graph
       .graphData(graphData)
-      .nodeLabel(node => {
-        const n = node as Node;
-        let details = `${n.name}\nType: ${n.type}`;
-        if (n.type === "entry") {
+      .nodeLabel((node: Node) => {
+        let details = `${node.name}\nType: ${node.type}`;
+        if (node.type === "entry") {
           details += "\nDouble-click to show/hide tags";
         }
-        if (!n.fx) {
+        if (!node.fx) {
           details += "\nRight-click to pin/unpin";
         }
         return details;
       })
-      .nodeColor(node => {
-        switch ((node as Node).type) {
+      .nodeColor((node: Node) => {
+        switch (node.type) {
           case "category":
             return "#E8E6E3";
           case "subcategory":
@@ -174,48 +179,43 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
             return "#F5F3F2";
         }
       })
-      .nodeVal(node => (node as Node).val)
+      .nodeVal((node: Node) => node.val)
       .linkWidth(1)
       .linkColor(() => "rgba(173, 164, 158, 0.2)")
       .backgroundColor("#0f1729")
       .width(graphRef.current.clientWidth)
       .height(graphRef.current.clientHeight)
       .showNavInfo(false)
-      .onNodeDblClick((node) => {
-        const n = node as Node;
-        if (n.type === "entry") {
+      .onNodeDblClick((node: Node) => {
+        if (node.type === "entry") {
           setExpandedNodes(prev => {
             const next = new Set(prev);
-            if (next.has(n.id)) {
-              next.delete(n.id);
+            if (next.has(node.id)) {
+              next.delete(node.id);
               toast.info("Collapsed tags");
             } else {
-              next.add(n.id);
+              next.add(node.id);
               toast.info("Expanded tags");
             }
             return next;
           });
         }
       })
-      .onNodeRightClick((node) => {
-        const n = node as Node;
-        if (n.fx === null) {
+      .onNodeRightClick((node: Node) => {
+        if (node.fx === null) {
           // Pin the node
-          n.fx = n.x;
-          n.fy = n.y;
-          n.fz = n.z;
+          node.fx = node.x;
+          node.fy = node.y;
+          node.fz = node.z;
           toast.info("Node pinned");
         } else {
           // Unpin the node
-          n.fx = null;
-          n.fy = null;
-          n.fz = null;
+          node.fx = null;
+          node.fy = null;
+          node.fz = null;
           toast.info("Node unpinned");
         }
-      })
-      .enableNodeDrag(true)
-      .enableNavigationControls(true)
-      .showNavInfo(true);
+      });
 
     // Add mini-map
     const miniMap = document.createElement('div');
@@ -228,7 +228,11 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
     miniMap.style.borderRadius = '4px';
     graphRef.current.appendChild(miniMap);
 
-    const miniGraph = ForceGraph3D()(miniMap)
+    // Initialize mini graph
+    const miniGraph = new (ForceGraph3D())(miniMap);
+    miniGraphRef.current = miniGraph;
+    
+    miniGraph
       .graphData(graphData)
       .width(200)
       .height(200)
@@ -263,6 +267,12 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
     return () => {
       if (graphRef.current) {
         graphRef.current.innerHTML = "";
+      }
+      if (graphInstanceRef.current) {
+        graphInstanceRef.current._destructor();
+      }
+      if (miniGraphRef.current) {
+        miniGraphRef.current._destructor();
       }
     };
   }, [entries, category, expandedNodes]);
