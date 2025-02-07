@@ -8,6 +8,7 @@ import { Card, CardContent } from "./ui/card";
 import { Button } from "./ui/button";
 import { Maximize2, Minimize2 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
+import { toast } from "sonner";
 
 type EntryCategory = Database["public"]["Enums"]["entry_category"];
 
@@ -41,6 +42,7 @@ interface CategoryGraphProps {
 export const CategoryGraph = ({ category }: CategoryGraphProps) => {
   const graphRef = useRef<HTMLDivElement>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [expandedNodes, setExpandedNodes] = useState(new Set<string>());
   
   const { data: entries, isLoading } = useQuery({
     queryKey: ["category-entries", category],
@@ -110,87 +112,142 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
 
       if (entry.subcategory) {
         subcategories.add(entry.subcategory);
+        const subcategoryNode = {
+          id: entry.subcategory,
+          name: entry.subcategory,
+          type: "subcategory" as const,
+          val: 10
+        };
+        if (!graphData.nodes.find(n => n.id === subcategoryNode.id)) {
+          graphData.nodes.push(subcategoryNode);
+        }
         graphData.links.push({
           source: entry.id,
           target: entry.subcategory
         });
       }
 
-      entry.tags?.forEach(tag => {
-        tags.add(tag);
-        graphData.links.push({
-          source: entry.id,
-          target: tag
+      if (expandedNodes.has(entry.id)) {
+        entry.tags?.forEach(tag => {
+          tags.add(tag);
+          const tagNode = {
+            id: tag,
+            name: tag,
+            type: "tag" as const,
+            val: 3
+          };
+          if (!graphData.nodes.find(n => n.id === tagNode.id)) {
+            graphData.nodes.push(tagNode);
+          }
+          graphData.links.push({
+            source: entry.id,
+            target: tag
+          });
         });
-      });
+      }
     });
 
-    // Add subcategory nodes
-    subcategories.forEach(sub => {
-      graphData.nodes.push({
-        id: sub,
-        name: sub,
-        type: "subcategory",
-        val: 10
-      });
-      graphData.links.push({
-        source: category,
-        target: sub
-      });
-    });
-
-    // Add tag nodes
-    tags.forEach(tag => {
-      graphData.nodes.push({
-        id: tag,
-        name: tag,
-        type: "tag",
-        val: 3
-      });
-    });
-
-    const ForceGraph = ForceGraph3D();
-    const Graph = ForceGraph(graphRef.current)
+    const Graph = ForceGraph3D()(graphRef.current)
       .graphData(graphData)
-      .nodeLabel("name")
+      .nodeLabel(node => {
+        const n = node as Node;
+        let details = `${n.name}\nType: ${n.type}`;
+        if (n.type === "entry") {
+          details += "\nDouble-click to show/hide tags";
+        }
+        if (!n.fx) {
+          details += "\nRight-click to pin/unpin";
+        }
+        return details;
+      })
       .nodeColor(node => {
         switch ((node as Node).type) {
           case "category":
-            return "#E8E6E3"; // Lightest beige for main category
+            return "#E8E6E3";
           case "subcategory":
-            return "#D5CEC9"; // Medium warm gray for subcategories
+            return "#D5CEC9";
           case "entry":
-            return "#C2BAB5"; // Darker warm gray for entries
+            return "#C2BAB5";
           case "tag":
-            return "#ADA49E"; // Darkest warm gray for tags
+            return "#ADA49E";
           default:
-            return "#F5F3F2"; // Fallback to very light warm gray
+            return "#F5F3F2";
         }
       })
       .nodeVal(node => (node as Node).val)
       .linkWidth(1)
-      .linkColor(() => "rgba(173, 164, 158, 0.2)") // Matching the tag color with low opacity
+      .linkColor(() => "rgba(173, 164, 158, 0.2)")
       .backgroundColor("#0f1729")
       .width(graphRef.current.clientWidth)
       .height(graphRef.current.clientHeight)
       .showNavInfo(false)
-      .onNodeClick((node) => {
-        // Focus on the clicked node with increased distance
-        const distance = 120; // Increased from 40 to 120 for a more distant view
-        const distRatio = 1 + distance/Math.hypot(node.x || 0, node.y || 0, node.z || 0);
+      .onNodeDblClick((node) => {
+        const n = node as Node;
+        if (n.type === "entry") {
+          setExpandedNodes(prev => {
+            const next = new Set(prev);
+            if (next.has(n.id)) {
+              next.delete(n.id);
+              toast.info("Collapsed tags");
+            } else {
+              next.add(n.id);
+              toast.info("Expanded tags");
+            }
+            return next;
+          });
+        }
+      })
+      .onNodeRightClick((node) => {
+        const n = node as Node;
+        if (n.fx === null) {
+          // Pin the node
+          n.fx = n.x;
+          n.fy = n.y;
+          n.fz = n.z;
+          toast.info("Node pinned");
+        } else {
+          // Unpin the node
+          n.fx = null;
+          n.fy = null;
+          n.fz = null;
+          toast.info("Node unpinned");
+        }
+      })
+      .enableNodeDrag(true)
+      .enableNavigationControls(true)
+      .showNavInfo(true);
 
-        Graph.cameraPosition(
-          { 
-            x: (node.x || 0) * distRatio, 
-            y: (node.y || 0) * distRatio, 
-            z: (node.z || 0) * distRatio 
-          }, // New position
-          node as { x: number, y: number, z: number }, // Look at
-          3000  // Transition duration in ms
-        );
-      });
+    // Add mini-map
+    const miniMap = document.createElement('div');
+    miniMap.style.position = 'absolute';
+    miniMap.style.bottom = '10px';
+    miniMap.style.right = '10px';
+    miniMap.style.width = '200px';
+    miniMap.style.height = '200px';
+    miniMap.style.background = 'rgba(0,0,0,0.3)';
+    miniMap.style.borderRadius = '4px';
+    graphRef.current.appendChild(miniMap);
 
-    // Set camera position further back
+    const miniGraph = ForceGraph3D()(miniMap)
+      .graphData(graphData)
+      .width(200)
+      .height(200)
+      .backgroundColor("rgba(0,0,0,0)")
+      .showNavInfo(false)
+      .enableNavigationControls(false)
+      .enableNodeDrag(false);
+
+    // Sync camera position between main graph and mini-map
+    Graph.onEngineStop(() => {
+      const pos = Graph.cameraPosition();
+      miniGraph.cameraPosition(
+        { x: pos.x * 2, y: pos.y * 2, z: pos.z * 2 },
+        { x: 0, y: 0, z: 0 },
+        100
+      );
+    });
+
+    // Set initial camera position
     Graph.cameraPosition({ x: 400, y: 400, z: 600 });
 
     // Center the category node
@@ -208,7 +265,7 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
         graphRef.current.innerHTML = "";
       }
     };
-  }, [entries, category]);
+  }, [entries, category, expandedNodes]);
 
   if (isLoading) {
     return <Skeleton className="w-full h-[600px]" />;
