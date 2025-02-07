@@ -1,4 +1,3 @@
-
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -230,7 +229,7 @@ const EntryDetails = () => {
             {formatContent(entry.formatted_content || entry.content)}
           </div>
 
-          {entry.entry_comments && entry.entry_comments.length > 0 && (
+          {Array.isArray(entry.entry_comments) && entry.entry_comments.length > 0 && (
             <div className="mb-6 space-y-4">
               <div className="flex items-center gap-2">
                 <MessageCircle className="h-5 w-5 text-white/60" />

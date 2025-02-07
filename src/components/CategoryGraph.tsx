@@ -1,3 +1,4 @@
+
 import { useEffect, useRef, useState } from "react";
 import ForceGraph3D from "3d-force-graph";
 import { useQuery } from "@tanstack/react-query";
@@ -148,7 +149,7 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
       });
     });
 
-    const Graph = ForceGraph3D()(graphRef.current)
+    const Graph = new ForceGraph3D()(graphRef.current)
       .graphData(graphData)
       .nodeLabel("name")
       .nodeColor(node => {
@@ -175,13 +176,13 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
       .onNodeClick((node) => {
         // Focus on the clicked node with increased distance
         const distance = 120; // Increased from 40 to 120 for a more distant view
-        const distRatio = 1 + distance/Math.hypot(node.x, node.y, node.z);
+        const distRatio = 1 + distance/Math.hypot(node.x || 0, node.y || 0, node.z || 0);
 
         Graph.cameraPosition(
           { 
-            x: node.x * distRatio, 
-            y: node.y * distRatio, 
-            z: node.z * distRatio 
+            x: (node.x || 0) * distRatio, 
+            y: (node.y || 0) * distRatio, 
+            z: (node.z || 0) * distRatio 
           }, // New position
           node as { x: number, y: number, z: number }, // Look at
           3000  // Transition duration in ms
