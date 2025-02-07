@@ -6,8 +6,8 @@ import { Skeleton } from "./ui/skeleton";
 import { Card, CardContent } from "./ui/card";
 import { Button } from "./ui/button";
 import { Maximize2, Minimize2 } from "lucide-react";
-import { UnrealBloomPass } from "@react-three/postprocessing";
 import type { Database } from "@/integrations/supabase/types";
+import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass";
 
 type EntryCategory = Database["public"]["Enums"]["entry_category"];
 
@@ -180,7 +180,7 @@ export const UnifiedGraphVisualization = () => {
       });
     });
 
-    const Graph = ForceGraph3D()(graphRef.current)
+    const Graph = new (ForceGraph3D as any)()(graphRef.current)
       .graphData(graphData)
       .nodeLabel("name")
       .nodeColor(node => {
