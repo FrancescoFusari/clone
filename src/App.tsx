@@ -20,6 +20,7 @@ const Timeline = lazy(() => import("./pages/Timeline"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Categories = lazy(() => import("./pages/Categories"));
 const CategoryGraph = lazy(() => import("./pages/CategoryGraph"));
+const UnifiedGraph = lazy(() => import("./pages/UnifiedGraph"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -118,6 +119,14 @@ const AppRoutes = () => {
           element={
             <ProtectedRoute>
               <CategoryGraph />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/mind-map"
+          element={
+            <ProtectedRoute>
+              <UnifiedGraph />
             </ProtectedRoute>
           }
         />

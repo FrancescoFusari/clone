@@ -1,6 +1,6 @@
 
 import { Link, useLocation } from "react-router-dom";
-import { Home, PlusCircle, Clock, FolderTree } from "lucide-react";
+import { Home, PlusCircle, Clock, FolderTree, Network } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -96,6 +96,26 @@ export const Navigation = () => {
               </Button>
             </TooltipTrigger>
             <TooltipContent>Categories</TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                className={cn(
+                  "flex-1 max-w-[120px] gap-2 transition-colors",
+                  isActive("/mind-map") &&
+                    "bg-primary/20 text-primary hover:bg-primary/30 hover:text-primary"
+                )}
+                asChild
+              >
+                <Link to="/mind-map">
+                  <Network className="h-5 w-5" />
+                  <span className="sr-only">Mind Map</span>
+                </Link>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Mind Map</TooltipContent>
           </Tooltip>
         </div>
       </nav>
