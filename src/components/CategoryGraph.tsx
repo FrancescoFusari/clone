@@ -1,3 +1,4 @@
+
 import { useEffect, useRef, useState } from "react";
 import ForceGraph3D from "3d-force-graph";
 import { useQuery } from "@tanstack/react-query";
@@ -6,6 +7,7 @@ import { Skeleton } from "./ui/skeleton";
 import { Card, CardContent } from "./ui/card";
 import { Button } from "./ui/button";
 import { Maximize2, Minimize2 } from "lucide-react";
+import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass";
 import type { Database } from "@/integrations/supabase/types";
 
 type EntryCategory = Database["public"]["Enums"]["entry_category"];
@@ -192,7 +194,7 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
 
     const colorPalette = getCategoryColorPalette(category);
 
-    const Graph = new (ForceGraph3D as any)()(graphRef.current)
+    const Graph = ForceGraph3D()(graphRef.current)
       .graphData(graphData)
       .nodeLabel("name")
       .nodeColor(node => {
@@ -210,7 +212,7 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
         }
       })
       .nodeVal(node => (node as Node).val)
-      .linkWidth(1.5)
+      .linkWidth(0.8)
       .linkColor(() => colorPalette.link)
       .backgroundColor("#0f1729")
       .width(graphRef.current.clientWidth)
@@ -236,6 +238,13 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
           3000
         );
       });
+
+    // Add bloom effect
+    const bloomPass = new UnrealBloomPass();
+    bloomPass.strength = 1.5;  // Adjusted for better visibility
+    bloomPass.radius = 1;
+    bloomPass.threshold = 0.1; // Adjusted to reduce over-brightness
+    Graph.postProcessingComposer().addPass(bloomPass);
 
     // Set camera position further back
     Graph.cameraPosition({ x: 500, y: 500, z: 800 });
