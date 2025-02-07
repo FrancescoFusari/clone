@@ -28,8 +28,8 @@ interface Node {
 }
 
 interface Link {
-  source: string;
-  target: string;
+  source: Node;
+  target: Node;
   highlighted?: boolean;
 }
 
@@ -99,11 +99,9 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
         matchedNodes.add(node.id);
         // Find connected nodes and links
         graphData.links.forEach(link => {
-          if (link.source === node.id || link.target === node.id) {
-            matchedNodes.add(typeof link.source === 'string' ? link.source : link.source.id);
-            matchedNodes.add(typeof link.target === 'string' ? link.target : link.target.id);
-            matchedLinks.add(`${link.source}-${link.target}`);
-          }
+          matchedNodes.add(link.source.id);
+          matchedNodes.add(link.target.id);
+          matchedLinks.add(`${link.source.id}-${link.target.id}`);
         });
       }
     });
@@ -121,12 +119,13 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
     };
 
     // Add category node
-    newGraphData.nodes.push({
+    const categoryNode: Node = {
       id: category,
       name: category,
       type: "category",
       val: 20
-    });
+    };
+    newGraphData.nodes.push(categoryNode);
 
     // Track unique subcategories and tags
     const subcategories = new Set<string>();
@@ -134,63 +133,58 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
 
     // Process entries
     entries.forEach(entry => {
-      newGraphData.nodes.push({
+      const entryNode: Node = {
         id: entry.id,
         name: entry.title,
         type: "entry",
         val: 5
-      });
+      };
+      newGraphData.nodes.push(entryNode);
 
       newGraphData.links.push({
-        source: category,
-        target: entry.id
+        source: categoryNode,
+        target: entryNode
       });
 
       if (entry.subcategory) {
         subcategories.add(entry.subcategory);
+        const subcategoryNode: Node = {
+          id: entry.subcategory,
+          name: entry.subcategory,
+          type: "subcategory",
+          val: 10
+        };
+        if (!newGraphData.nodes.find(n => n.id === subcategoryNode.id)) {
+          newGraphData.nodes.push(subcategoryNode);
+        }
         newGraphData.links.push({
-          source: entry.id,
-          target: entry.subcategory
+          source: entryNode,
+          target: subcategoryNode
         });
       }
 
       entry.tags?.forEach(tag => {
         tags.add(tag);
+        const tagNode: Node = {
+          id: tag,
+          name: tag,
+          type: "tag",
+          val: 3
+        };
+        if (!newGraphData.nodes.find(n => n.id === tagNode.id)) {
+          newGraphData.nodes.push(tagNode);
+        }
         newGraphData.links.push({
-          source: entry.id,
-          target: tag
+          source: entryNode,
+          target: tagNode
         });
-      });
-    });
-
-    // Add subcategory nodes
-    subcategories.forEach(sub => {
-      newGraphData.nodes.push({
-        id: sub,
-        name: sub,
-        type: "subcategory",
-        val: 10
-      });
-      newGraphData.links.push({
-        source: category,
-        target: sub
-      });
-    });
-
-    // Add tag nodes
-    tags.forEach(tag => {
-      newGraphData.nodes.push({
-        id: tag,
-        name: tag,
-        type: "tag",
-        val: 3
       });
     });
 
     setGraphData(newGraphData);
 
     // Initialize ForceGraph
-    const Graph = ForceGraph3D()(graphRef.current)
+    const Graph = new ForceGraph3D()(graphRef.current)
       .graphData(newGraphData)
       .nodeLabel("name")
       .nodeColor(node => {
@@ -212,12 +206,16 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
         }
       })
       .nodeVal(node => (node as Node).val)
-      .linkWidth(link => highlightLinks.has(`${link.source}-${link.target}`) ? 2 : 1)
-      .linkColor(link => 
-        highlightLinks.has(`${link.source}-${link.target}`) 
-          ? "rgba(255, 255, 255, 0.5)" 
-          : "rgba(173, 164, 158, 0.2)"
-      )
+      .linkWidth(link => {
+        const l = link as Link;
+        return highlightLinks.has(`${l.source.id}-${l.target.id}`) ? 2 : 1;
+      })
+      .linkColor(link => {
+        const l = link as Link;
+        return highlightLinks.has(`${l.source.id}-${l.target.id}`)
+          ? "rgba(255, 255, 255, 0.5)"
+          : "rgba(173, 164, 158, 0.2)";
+      })
       .backgroundColor("#0f1729")
       .width(graphRef.current.clientWidth)
       .height(graphRef.current.clientHeight)
@@ -233,10 +231,10 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
           const connectedNodes = new Set<string>();
           const connectedLinks = new Set<string>();
           graphData.links.forEach(link => {
-            if (link.source === n.id || link.target === n.id) {
-              connectedNodes.add(typeof link.source === 'string' ? link.source : link.source.id);
-              connectedNodes.add(typeof link.target === 'string' ? link.target : link.target.id);
-              connectedLinks.add(`${link.source}-${link.target}`);
+            if (link.source.id === n.id || link.target.id === n.id) {
+              connectedNodes.add(link.source.id);
+              connectedNodes.add(link.target.id);
+              connectedLinks.add(`${link.source.id}-${link.target.id}`);
             }
           });
           setHighlightNodes(connectedNodes);
