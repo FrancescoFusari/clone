@@ -28,6 +28,8 @@ interface Link {
   source: string;
   target: string;
   color?: string;
+  curvature?: number;
+  rotation?: number;
 }
 
 interface GraphData {
@@ -108,7 +110,7 @@ export const UnifiedGraphVisualization = () => {
     const tags = new Set<string>();
 
     // Process entries
-    entries.forEach(entry => {
+    entries.forEach((entry, index) => {
       categories.add(entry.category);
       
       graphData.nodes.push({
@@ -118,11 +120,13 @@ export const UnifiedGraphVisualization = () => {
         val: 20
       });
 
-      // Link entry to category
+      // Link entry to category with slight curve
       graphData.links.push({
         source: entry.category,
         target: entry.id,
-        color: getCategoryColor(entry.category).link
+        color: getCategoryColor(entry.category).link,
+        curvature: 0.2,
+        rotation: (index % 6) * Math.PI / 3 // Distribute rotations evenly
       });
 
       if (entry.subcategory) {
@@ -130,16 +134,20 @@ export const UnifiedGraphVisualization = () => {
         graphData.links.push({
           source: entry.id,
           target: entry.subcategory,
-          color: getCategoryColor(entry.category).link
+          color: getCategoryColor(entry.category).link,
+          curvature: 0.3,
+          rotation: Math.PI * (index % 4) / 2 // Different rotation pattern
         });
       }
 
-      entry.tags?.forEach(tag => {
+      entry.tags?.forEach((tag, tagIndex) => {
         tags.add(tag);
         graphData.links.push({
           source: entry.id,
           target: tag,
-          color: getCategoryColor(entry.category).link
+          color: getCategoryColor(entry.category).link,
+          curvature: 0.1,
+          rotation: (tagIndex % 8) * Math.PI / 4 // Another rotation pattern
         });
       });
     });
@@ -152,11 +160,13 @@ export const UnifiedGraphVisualization = () => {
         type: "category",
         val: 100
       });
-      // Link categories to user
+      // Link categories to user with curves
       graphData.links.push({
         source: profile.id,
         target: cat,
-        color: getCategoryColor(cat).link
+        color: getCategoryColor(cat).link,
+        curvature: 0.4,
+        rotation: Math.random() * Math.PI * 2 // Random rotation for variety
       });
     });
 
@@ -176,11 +186,11 @@ export const UnifiedGraphVisualization = () => {
         id: tag,
         name: tag,
         type: "tag",
-        val: 5  // Updated from 15 to 5
+        val: 5
       });
     });
 
-    const Graph = ForceGraph3D()(graphRef.current)
+    const Graph = new ForceGraph3D()(graphRef.current)
       .graphData(graphData)
       .nodeLabel("name")
       .nodeColor(node => {
@@ -203,6 +213,8 @@ export const UnifiedGraphVisualization = () => {
       .nodeVal(node => (node as Node).val)
       .linkWidth(1.5)
       .linkColor(link => (link as Link).color || "#ffffff20")
+      .linkCurvature("curvature")
+      .linkCurveRotation("rotation")
       .backgroundColor("#0f1729")
       .width(window.innerWidth)
       .height(window.innerHeight)
@@ -257,6 +269,75 @@ export const UnifiedGraphVisualization = () => {
     };
   }, [entries, profile]);
 
+  const getCategoryColor = (category: EntryCategory) => {
+    const palettes = {
+      personal: {
+        primary: "#9b87f5",    // Primary purple
+        secondary: "#7E69AB",  // Secondary purple
+        tertiary: "#6E59A5",   // Tertiary purple
+        soft: "#E5DEFF",       // Soft purple
+        link: "rgba(229, 222, 255, 0.4)" // Increased opacity from 0.2 to 0.4
+      },
+      work: {
+        primary: "#60a5fa",    // Primary blue
+        secondary: "#3b82f6",  // Secondary blue
+        tertiary: "#2563eb",   // Tertiary blue
+        soft: "#dbeafe",       // Soft blue
+        link: "rgba(219, 234, 254, 0.4)" // Increased opacity from 0.2 to 0.4
+      },
+      social: {
+        primary: "#f472b6",    // Primary pink
+        secondary: "#ec4899",  // Secondary pink
+        tertiary: "#db2777",   // Tertiary pink
+        soft: "#fce7f3",       // Soft pink
+        link: "rgba(252, 231, 243, 0.4)" // Increased opacity from 0.2 to 0.4
+      },
+      interests_and_hobbies: {
+        primary: "#4ade80",    // Primary green
+        secondary: "#22c55e",  // Secondary green
+        tertiary: "#16a34a",   // Tertiary green
+        soft: "#dcfce7",       // Soft green
+        link: "rgba(220, 252, 231, 0.4)" // Increased opacity from 0.2 to 0.4
+      },
+      school: {
+        primary: "#fb923c",    // Primary orange
+        secondary: "#f97316",  // Secondary orange
+        tertiary: "#ea580c",   // Tertiary orange
+        soft: "#ffedd5",       // Soft orange
+        link: "rgba(255, 237, 213, 0.4)" // Increased opacity from 0.2 to 0.4
+      }
+    };
+    
+    return palettes[category];
+  };
+
+  const getNodeCategory = (nodeId: string, graphData: GraphData): EntryCategory | null => {
+    const findCategory = (currentId: string, visited = new Set<string>()): EntryCategory | null => {
+      if (visited.has(currentId)) return null;
+      visited.add(currentId);
+
+      const links = graphData.links.filter(link => 
+        link.target === currentId || link.source === currentId
+      );
+
+      for (const link of links) {
+        const connectedId = link.source === currentId ? link.target : link.source;
+        const connectedNode = graphData.nodes.find(n => n.id === connectedId);
+        
+        if (connectedNode?.type === "category") {
+          return connectedId as EntryCategory;
+        }
+        
+        const result = findCategory(connectedId.toString(), visited);
+        if (result) return result;
+      }
+
+      return null;
+    };
+
+    return findCategory(nodeId);
+  };
+
   if (!entries || !profile) {
     return <Skeleton className="w-screen h-screen" />;
   }
@@ -276,73 +357,4 @@ export const UnifiedGraphVisualization = () => {
       </CardContent>
     </Card>
   );
-};
-
-const getCategoryColor = (category: EntryCategory) => {
-  const palettes = {
-    personal: {
-      primary: "#9b87f5",    // Primary purple
-      secondary: "#7E69AB",  // Secondary purple
-      tertiary: "#6E59A5",   // Tertiary purple
-      soft: "#E5DEFF",       // Soft purple
-      link: "rgba(229, 222, 255, 0.4)" // Increased opacity from 0.2 to 0.4
-    },
-    work: {
-      primary: "#60a5fa",    // Primary blue
-      secondary: "#3b82f6",  // Secondary blue
-      tertiary: "#2563eb",   // Tertiary blue
-      soft: "#dbeafe",       // Soft blue
-      link: "rgba(219, 234, 254, 0.4)" // Increased opacity from 0.2 to 0.4
-    },
-    social: {
-      primary: "#f472b6",    // Primary pink
-      secondary: "#ec4899",  // Secondary pink
-      tertiary: "#db2777",   // Tertiary pink
-      soft: "#fce7f3",       // Soft pink
-      link: "rgba(252, 231, 243, 0.4)" // Increased opacity from 0.2 to 0.4
-    },
-    interests_and_hobbies: {
-      primary: "#4ade80",    // Primary green
-      secondary: "#22c55e",  // Secondary green
-      tertiary: "#16a34a",   // Tertiary green
-      soft: "#dcfce7",       // Soft green
-      link: "rgba(220, 252, 231, 0.4)" // Increased opacity from 0.2 to 0.4
-    },
-    school: {
-      primary: "#fb923c",    // Primary orange
-      secondary: "#f97316",  // Secondary orange
-      tertiary: "#ea580c",   // Tertiary orange
-      soft: "#ffedd5",       // Soft orange
-      link: "rgba(255, 237, 213, 0.4)" // Increased opacity from 0.2 to 0.4
-    }
-  };
-  
-  return palettes[category];
-};
-
-const getNodeCategory = (nodeId: string, graphData: GraphData): EntryCategory | null => {
-  const findCategory = (currentId: string, visited = new Set<string>()): EntryCategory | null => {
-    if (visited.has(currentId)) return null;
-    visited.add(currentId);
-
-    const links = graphData.links.filter(link => 
-      link.target === currentId || link.source === currentId
-    );
-
-    for (const link of links) {
-      const connectedId = link.source === currentId ? link.target : link.source;
-      const connectedNode = graphData.nodes.find(n => n.id === connectedId);
-      
-      if (connectedNode?.type === "category") {
-        return connectedId as EntryCategory;
-      }
-      
-      const result = findCategory(connectedId.toString(), visited);
-      if (result) return result;
-    }
-
-    return null;
-  };
-
-  return findCategory(nodeId);
 };
