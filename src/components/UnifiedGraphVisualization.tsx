@@ -8,7 +8,6 @@ import { Button } from "./ui/button";
 import { Maximize2, Minimize2 } from "lucide-react";
 import { useState } from "react";
 import type { Database } from "@/integrations/supabase/types";
-import * as THREE from 'three';
 
 type EntryCategory = Database["public"]["Enums"]["entry_category"];
 
@@ -40,10 +39,7 @@ interface GraphData {
 
 export const UnifiedGraphVisualization = () => {
   const graphRef = useRef<HTMLDivElement>(null);
-  const graphInstance = useRef<any>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [isRotating, setIsRotating] = useState(true);
-  
   const { data: entries } = useQuery({
     queryKey: ["all-entries"],
     queryFn: async () => {
@@ -194,7 +190,7 @@ export const UnifiedGraphVisualization = () => {
       });
     });
 
-    graphInstance.current = ForceGraph3D()(graphRef.current)
+    const Graph = new ForceGraph3D()(graphRef.current)
       .graphData(graphData)
       .nodeLabel("name")
       .nodeColor(node => {
@@ -230,11 +226,10 @@ export const UnifiedGraphVisualization = () => {
         n.fz = n.z;
       })
       .onNodeClick((node) => {
-        setIsRotating(false);
         const distance = 150;
         const distRatio = 1 + distance/Math.hypot(node.x || 0, node.y || 0, node.z || 0);
 
-        graphInstance.current.cameraPosition(
+        Graph.cameraPosition(
           { 
             x: (node.x || 0) * distRatio, 
             y: (node.y || 0) * distRatio, 
@@ -247,48 +242,24 @@ export const UnifiedGraphVisualization = () => {
 
     // Handle window resize
     const handleResize = () => {
-      graphInstance.current
-        .width(window.innerWidth)
-        .height(window.innerHeight);
+      Graph.width(window.innerWidth)
+          .height(window.innerHeight);
     };
     window.addEventListener('resize', handleResize);
 
-    // Set initial camera position
-    graphInstance.current.cameraPosition({ x: 500, y: 500, z: 800 });
+    // Set camera position
+    Graph.cameraPosition({ x: 500, y: 500, z: 800 });
 
     // Center the user node
     const userNode = graphData.nodes.find(node => node.type === "user");
     if (userNode) {
-      graphInstance.current.d3Force('center', null);
-      graphInstance.current.d3Force('charge')?.strength(-150);
-      graphInstance.current.d3Force('link')?.distance(200);
+      Graph.d3Force('center', null);
+      Graph.d3Force('charge')?.strength(-150);
+      Graph.d3Force('link')?.distance(200);
       userNode.fx = 0;
       userNode.fy = 0;
       userNode.fz = 0;
     }
-
-    // Add rotation animation
-    let angle = 0;
-    const rotationSpeed = 0.001;
-    const rotationAxis = new THREE.Vector3(Math.sin(23 * Math.PI / 180), 1, 0).normalize();
-
-    function animate() {
-      if (isRotating && graphInstance.current) {
-        angle += rotationSpeed;
-        const distance = 800;
-        graphInstance.current.cameraPosition({
-          x: distance * Math.cos(angle) * rotationAxis.x,
-          y: distance * Math.sin(angle) * rotationAxis.y,
-          z: distance * Math.cos(angle) * rotationAxis.z
-        });
-      }
-      requestAnimationFrame(animate);
-    }
-    animate();
-
-    // Add interaction handlers to stop rotation
-    graphRef.current.addEventListener('mousedown', () => setIsRotating(false));
-    graphRef.current.addEventListener('touchstart', () => setIsRotating(false));
 
     return () => {
       window.removeEventListener('resize', handleResize);
@@ -296,7 +267,7 @@ export const UnifiedGraphVisualization = () => {
         graphRef.current.innerHTML = "";
       }
     };
-  }, [entries, profile, isRotating]);
+  }, [entries, profile]);
 
   const getCategoryColor = (category: EntryCategory) => {
     const palettes = {
