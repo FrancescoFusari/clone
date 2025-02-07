@@ -19,9 +19,9 @@ export const TopBar = () => {
   };
 
   return (
-    <div className="absolute top-4 left-0 right-0 z-50 px-2">
+    <div className="absolute top-4 left-0 right-0 z-50 px-4">
       <div className="neo-blur rounded-2xl mx-auto max-w-7xl">
-        <div className="container mx-auto px-2 py-3">
+        <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <Link 
               to="/" 
