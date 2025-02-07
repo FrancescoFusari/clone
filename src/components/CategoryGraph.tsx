@@ -8,7 +8,7 @@ import { Card, CardContent } from "./ui/card";
 import { Button } from "./ui/button";
 import { Maximize2, Minimize2 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
-import * as THREE from 'three';
+import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass";
 
 type EntryCategory = Database["public"]["Enums"]["entry_category"];
 
@@ -194,55 +194,26 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
 
     const colorPalette = getCategoryColorPalette(category);
 
-    // Create glowing material for nodes
-    const createGlowMaterial = (color: string) => {
-      return new THREE.MeshBasicMaterial({
-        color: new THREE.Color(color),
-        transparent: true,
-        opacity: 0.8,
-        side: THREE.FrontSide,
-        blending: THREE.AdditiveBlending
-      });
-    };
-
-    const Graph = new ForceGraph3D()(graphRef.current)
+    const Graph = ForceGraph3D({
+      extraRenderers: []
+    })(graphRef.current)
       .graphData(graphData)
       .nodeLabel("name")
-      .nodeThreeObject(node => {
-        const n = node as Node;
-        let color;
-        switch (n.type) {
+      .nodeColor(node => {
+        switch ((node as Node).type) {
           case "category":
-            color = colorPalette.primary;
-            break;
+            return colorPalette.primary;
           case "subcategory":
-            color = colorPalette.secondary;
-            break;
+            return colorPalette.secondary;
           case "entry":
-            color = colorPalette.tertiary;
-            break;
+            return colorPalette.tertiary;
           case "tag":
-            color = colorPalette.soft;
-            break;
+            return colorPalette.soft;
           default:
-            color = "#F5F3F2";
+            return "#F5F3F2";
         }
-
-        const sphere = new THREE.Mesh(
-          new THREE.SphereGeometry(Math.cbrt(n.val || 1) * 2),
-          createGlowMaterial(color)
-        );
-
-        // Add a glow effect using a larger sphere
-        const glowSphere = new THREE.Mesh(
-          new THREE.SphereGeometry(Math.cbrt(n.val || 1) * 2.2),
-          createGlowMaterial(color)
-        );
-        glowSphere.material.opacity = 0.3;
-        sphere.add(glowSphere);
-
-        return sphere;
       })
+      .nodeVal(node => (node as Node).val)
       .linkWidth(1.5)
       .linkColor(() => colorPalette.link)
       .backgroundColor("#0f1729")
@@ -269,6 +240,13 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
           3000
         );
       });
+
+    // Add bloom effect
+    const bloomPass = new UnrealBloomPass();
+    bloomPass.strength = 1;
+    bloomPass.radius = 0.5;
+    bloomPass.threshold = 0;
+    Graph.postProcessingComposer().addPass(bloomPass);
 
     // Set camera position further back
     Graph.cameraPosition({ x: 500, y: 500, z: 800 });
