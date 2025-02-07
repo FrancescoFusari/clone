@@ -1,3 +1,4 @@
+
 import { useEffect, useRef, useState } from "react";
 import ForceGraph3D from "3d-force-graph";
 import { useQuery } from "@tanstack/react-query";
@@ -7,6 +8,8 @@ import { Card, CardContent } from "./ui/card";
 import { Button } from "./ui/button";
 import { Maximize2, Minimize2 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
+import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass";
+import { Vector2 } from "three";
 
 type EntryCategory = Database["public"]["Enums"]["entry_category"];
 
@@ -192,7 +195,7 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
 
     const colorPalette = getCategoryColorPalette(category);
 
-    const Graph = new (ForceGraph3D as any)()(graphRef.current)
+    const Graph = ForceGraph3D()(graphRef.current)
       .graphData(graphData)
       .nodeLabel("name")
       .nodeColor(node => {
@@ -236,6 +239,15 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
           3000
         );
       });
+
+    // Add bloom effect
+    const bloomPass = new UnrealBloomPass(
+      new Vector2(window.innerWidth, window.innerHeight),
+      4, // strength
+      1,  // radius
+      0   // threshold
+    );
+    Graph.postProcessingComposer().addPass(bloomPass);
 
     // Set camera position further back
     Graph.cameraPosition({ x: 500, y: 500, z: 800 });
