@@ -7,7 +7,6 @@ import { Skeleton } from "./ui/skeleton";
 import { Card, CardContent } from "./ui/card";
 import { Button } from "./ui/button";
 import { Maximize2, Minimize2 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
 import type { Database } from "@/integrations/supabase/types";
 
 type EntryCategory = Database["public"]["Enums"]["entry_category"];
@@ -42,7 +41,6 @@ interface CategoryGraphProps {
 export const CategoryGraph = ({ category }: CategoryGraphProps) => {
   const graphRef = useRef<HTMLDivElement>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const { toast } = useToast();
   
   const { data: entries, isLoading } = useQuery({
     queryKey: ["category-entries", category],
@@ -98,7 +96,6 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
 
     // Process entries
     entries.forEach(entry => {
-      // Add entry node
       graphData.nodes.push({
         id: entry.id,
         name: entry.title,
@@ -106,13 +103,11 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
         val: 5
       });
 
-      // Link entry to category
       graphData.links.push({
         source: category,
         target: entry.id
       });
 
-      // Process subcategory
       if (entry.subcategory) {
         subcategories.add(entry.subcategory);
         graphData.links.push({
@@ -121,7 +116,6 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
         });
       }
 
-      // Process tags
       entry.tags?.forEach(tag => {
         tags.add(tag);
         graphData.links.push({
@@ -155,32 +149,34 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
       });
     });
 
-    const Graph = new ForceGraph3D()(graphRef.current)
+    const ForceGraph = ForceGraph3D();
+    const Graph = ForceGraph(graphRef.current)
       .graphData(graphData)
       .nodeLabel("name")
       .nodeColor(node => {
         switch ((node as Node).type) {
           case "category":
-            return "#E8E6E3";
+            return "#E8E6E3"; // Lightest beige for main category
           case "subcategory":
-            return "#D5CEC9";
+            return "#D5CEC9"; // Medium warm gray for subcategories
           case "entry":
-            return "#C2BAB5";
+            return "#C2BAB5"; // Darker warm gray for entries
           case "tag":
-            return "#ADA49E";
+            return "#ADA49E"; // Darkest warm gray for tags
           default:
-            return "#F5F3F2";
+            return "#F5F3F2"; // Fallback to very light warm gray
         }
       })
       .nodeVal(node => (node as Node).val)
       .linkWidth(1)
-      .linkColor(() => "rgba(173, 164, 158, 0.2)")
+      .linkColor(() => "rgba(173, 164, 158, 0.2)") // Matching the tag color with low opacity
       .backgroundColor("#0f1729")
       .width(graphRef.current.clientWidth)
       .height(graphRef.current.clientHeight)
       .showNavInfo(false)
       .onNodeClick((node) => {
-        const distance = 120;
+        // Focus on the clicked node with increased distance
+        const distance = 120; // Increased from 40 to 120 for a more distant view
         const distRatio = 1 + distance/Math.hypot(node.x || 0, node.y || 0, node.z || 0);
 
         Graph.cameraPosition(
@@ -188,39 +184,16 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
             x: (node.x || 0) * distRatio, 
             y: (node.y || 0) * distRatio, 
             z: (node.z || 0) * distRatio 
-          },
-          node as { x: number, y: number, z: number },
-          3000
+          }, // New position
+          node as { x: number, y: number, z: number }, // Look at
+          3000  // Transition duration in ms
         );
       });
 
-    // Add right-click event for node pinning
-    Graph.onNodeRightClick((node) => {
-      const n = node as Node;
-      if (n.fx === undefined || n.fx === null) {
-        // Pin the node
-        Object.assign(n, {
-          fx: n.x,
-          fy: n.y,
-          fz: n.z
-        });
-        toast({
-          description: `Pinned ${n.name} in place`,
-        });
-      } else {
-        // Unpin the node
-        Object.assign(n, {
-          fx: null,
-          fy: null,
-          fz: null
-        });
-        toast({
-          description: `Unpinned ${n.name}`,
-        });
-      }
-    });
+    // Set camera position further back
+    Graph.cameraPosition({ x: 400, y: 400, z: 600 });
 
-    // Center and pin the category node
+    // Center the category node
     const categoryNode = graphData.nodes.find(node => node.type === "category");
     if (categoryNode) {
       Graph.d3Force('center', null);
@@ -230,15 +203,12 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
       categoryNode.fz = 0;
     }
 
-    // Set initial camera position
-    Graph.cameraPosition({ x: 400, y: 400, z: 600 });
-
     return () => {
       if (graphRef.current) {
         graphRef.current.innerHTML = "";
       }
     };
-  }, [entries, category, toast]);
+  }, [entries, category]);
 
   if (isLoading) {
     return <Skeleton className="w-full h-[600px]" />;
