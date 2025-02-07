@@ -21,11 +21,10 @@ const UnifiedGraph = () => {
   }, []);
 
   return (
-    <CenteredLayout>
+    <div className="w-screen h-screen overflow-hidden">
       <UnifiedGraphVisualization />
-    </CenteredLayout>
+    </div>
   );
 };
 
 export default UnifiedGraph;
-

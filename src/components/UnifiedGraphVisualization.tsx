@@ -1,4 +1,3 @@
-
 import { useEffect, useRef } from "react";
 import ForceGraph3D from "3d-force-graph";
 import { useQuery } from "@tanstack/react-query";
@@ -181,7 +180,7 @@ export const UnifiedGraphVisualization = () => {
       });
     });
 
-    const Graph = new ForceGraph3D()(graphRef.current)
+    const Graph = ForceGraph3D()(graphRef.current)
       .graphData(graphData)
       .nodeLabel("name")
       .nodeColor(node => {
@@ -205,8 +204,8 @@ export const UnifiedGraphVisualization = () => {
       .linkWidth(1.5)
       .linkColor(link => (link as Link).color || "#ffffff20")
       .backgroundColor("#0f1729")
-      .width(graphRef.current.clientWidth)
-      .height(graphRef.current.clientHeight)
+      .width(window.innerWidth)
+      .height(window.innerHeight)
       .showNavInfo(false)
       .onNodeDragEnd(node => {
         const n = node as Node;
@@ -229,6 +228,13 @@ export const UnifiedGraphVisualization = () => {
         );
       });
 
+    // Handle window resize
+    const handleResize = () => {
+      Graph.width(window.innerWidth)
+          .height(window.innerHeight);
+    };
+    window.addEventListener('resize', handleResize);
+
     // Set camera position
     Graph.cameraPosition({ x: 500, y: 500, z: 800 });
 
@@ -244,6 +250,7 @@ export const UnifiedGraphVisualization = () => {
     }
 
     return () => {
+      window.removeEventListener('resize', handleResize);
       if (graphRef.current) {
         graphRef.current.innerHTML = "";
       }
@@ -251,13 +258,13 @@ export const UnifiedGraphVisualization = () => {
   }, [entries, profile]);
 
   if (!entries || !profile) {
-    return <Skeleton className="w-full h-[600px]" />;
+    return <Skeleton className="w-screen h-screen" />;
   }
 
   return (
-    <Card className="relative overflow-hidden">
-      <CardContent className="p-0">
-        <div ref={graphRef} className="w-full h-[600px]" />
+    <Card className="relative w-screen h-screen overflow-hidden">
+      <CardContent className="p-0 w-full h-full">
+        <div ref={graphRef} className="w-full h-full" />
         <Button
           variant="outline"
           size="icon"
@@ -339,4 +346,3 @@ const getNodeCategory = (nodeId: string, graphData: GraphData): EntryCategory | 
 
   return findCategory(nodeId);
 };
-
