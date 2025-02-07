@@ -20,7 +20,7 @@ export const TopBar = () => {
   };
 
   return (
-    <div className="px-4 pb-2">
+    <div className="px-4 pb-2 topbar-container">
       <Card className="glass-morphism overflow-hidden relative">
         <div className="absolute inset-0 bg-gradient-to-br from-[#8A898C]/20 to-[#F1F0FB]/20 opacity-50" />
         <div className="relative container mx-auto px-6 py-4">
