@@ -19,7 +19,7 @@ export const TopBar = () => {
   };
 
   return (
-    <div className="px-4 pt-4">
+    <div className="px-4 pb-4">
       <div className="glass-morphism rounded-lg border-white/10">
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
