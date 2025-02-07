@@ -149,7 +149,7 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
       });
     });
 
-    const Graph = ForceGraph3D()(graphRef.current)
+    const Graph = new ForceGraph3D()(graphRef.current)
       .graphData(graphData)
       .nodeLabel("name")
       .nodeColor(node => {
@@ -168,7 +168,6 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
       })
       .nodeVal(node => (node as Node).val)
       .linkWidth(1.5) // Slightly thicker links
-      .linkLength(200) // Increased from default
       .linkColor(() => "rgba(229, 222, 255, 0.2)") // Matching our soft purple with low opacity
       .backgroundColor("#0f1729")
       .width(graphRef.current.clientWidth)
@@ -198,11 +197,12 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
     // Set camera position further back
     Graph.cameraPosition({ x: 500, y: 500, z: 800 });
 
-    // Center the category node
+    // Center the category node and adjust link distance
     const categoryNode = graphData.nodes.find(node => node.type === "category");
     if (categoryNode) {
       Graph.d3Force('center', null);
       Graph.d3Force('charge')?.strength(-150); // Increased repulsion force
+      Graph.d3Force('link')?.distance(200); // Set link distance using d3Force
       categoryNode.fx = 0;
       categoryNode.fy = 0;
       categoryNode.fz = 0;
