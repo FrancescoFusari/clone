@@ -1,4 +1,3 @@
-
 import { useEffect, useRef, useState } from "react";
 import ForceGraph3D from "3d-force-graph";
 import { useQuery } from "@tanstack/react-query";
@@ -216,7 +215,7 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
       .nodeVal(node => (node as Node).val)
       .linkWidth(1.5)
       .linkColor(() => colorPalette.link)
-      .backgroundColor("#0f1729")
+      .backgroundColor("#0f1729")  // Fixed dark background color
       .width(graphRef.current.clientWidth)
       .height(graphRef.current.clientHeight)
       .showNavInfo(false)
@@ -289,4 +288,3 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
     </Card>
   );
 };
-
