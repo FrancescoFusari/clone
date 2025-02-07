@@ -82,12 +82,12 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
       links: []
     };
 
-    // Add category node
+    // Add category node with increased size
     graphData.nodes.push({
       id: category,
       name: category,
       type: "category",
-      val: 20
+      val: 35 // Increased from 20
     });
 
     // Track unique subcategories and tags
@@ -100,7 +100,7 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
         id: entry.id,
         name: entry.title,
         type: "entry",
-        val: 5
+        val: 15 // Increased from 5
       });
 
       graphData.links.push({
@@ -125,13 +125,13 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
       });
     });
 
-    // Add subcategory nodes
+    // Add subcategory nodes with increased size
     subcategories.forEach(sub => {
       graphData.nodes.push({
         id: sub,
         name: sub,
         type: "subcategory",
-        val: 10
+        val: 25 // Increased from 10
       });
       graphData.links.push({
         source: category,
@@ -139,13 +139,13 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
       });
     });
 
-    // Add tag nodes
+    // Add tag nodes with increased size
     tags.forEach(tag => {
       graphData.nodes.push({
         id: tag,
         name: tag,
         type: "tag",
-        val: 3
+        val: 8 // Increased from 3
       });
     });
 
@@ -155,34 +155,33 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
       .nodeColor(node => {
         switch ((node as Node).type) {
           case "category":
-            return "#E8E6E3"; // Lightest beige for main category
+            return "#9b87f5"; // Primary purple from our palette
           case "subcategory":
-            return "#D5CEC9"; // Medium warm gray for subcategories
+            return "#7E69AB"; // Secondary purple
           case "entry":
-            return "#C2BAB5"; // Darker warm gray for entries
+            return "#6E59A5"; // Tertiary purple
           case "tag":
-            return "#ADA49E"; // Darkest warm gray for tags
+            return "#E5DEFF"; // Soft purple for contrast
           default:
-            return "#F5F3F2"; // Fallback to very light warm gray
+            return "#F5F3F2";
         }
       })
       .nodeVal(node => (node as Node).val)
-      .linkWidth(1)
-      .linkColor(() => "rgba(173, 164, 158, 0.2)") // Matching the tag color with low opacity
+      .linkWidth(1.5) // Slightly thicker links
+      .linkLength(200) // Increased from default
+      .linkColor(() => "rgba(229, 222, 255, 0.2)") // Matching our soft purple with low opacity
       .backgroundColor("#0f1729")
       .width(graphRef.current.clientWidth)
       .height(graphRef.current.clientHeight)
       .showNavInfo(false)
       .onNodeDragEnd(node => {
-        // Fix node in place after dragging
         const n = node as Node;
         n.fx = n.x;
         n.fy = n.y;
         n.fz = n.z;
       })
       .onNodeClick((node) => {
-        // Focus on the clicked node with increased distance
-        const distance = 120;
+        const distance = 150; // Increased zoom distance
         const distRatio = 1 + distance/Math.hypot(node.x || 0, node.y || 0, node.z || 0);
 
         Graph.cameraPosition(
@@ -197,13 +196,13 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
       });
 
     // Set camera position further back
-    Graph.cameraPosition({ x: 400, y: 400, z: 600 });
+    Graph.cameraPosition({ x: 500, y: 500, z: 800 });
 
     // Center the category node
     const categoryNode = graphData.nodes.find(node => node.type === "category");
     if (categoryNode) {
       Graph.d3Force('center', null);
-      Graph.d3Force('charge')?.strength(-100);
+      Graph.d3Force('charge')?.strength(-150); // Increased repulsion force
       categoryNode.fx = 0;
       categoryNode.fy = 0;
       categoryNode.fz = 0;
