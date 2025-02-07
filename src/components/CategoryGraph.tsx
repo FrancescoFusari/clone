@@ -149,8 +149,7 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
       });
     });
 
-    const ForceGraph = ForceGraph3D();
-    const Graph = ForceGraph(graphRef.current)
+    const Graph = ForceGraph3D()(graphRef.current)
       .graphData(graphData)
       .nodeLabel("name")
       .nodeColor(node => {
@@ -174,9 +173,16 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
       .width(graphRef.current.clientWidth)
       .height(graphRef.current.clientHeight)
       .showNavInfo(false)
+      .onNodeDragEnd(node => {
+        // Fix node in place after dragging
+        const n = node as Node;
+        n.fx = n.x;
+        n.fy = n.y;
+        n.fz = n.z;
+      })
       .onNodeClick((node) => {
         // Focus on the clicked node with increased distance
-        const distance = 120; // Increased from 40 to 120 for a more distant view
+        const distance = 120;
         const distRatio = 1 + distance/Math.hypot(node.x || 0, node.y || 0, node.z || 0);
 
         Graph.cameraPosition(
@@ -184,9 +190,9 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
             x: (node.x || 0) * distRatio, 
             y: (node.y || 0) * distRatio, 
             z: (node.z || 0) * distRatio 
-          }, // New position
-          node as { x: number, y: number, z: number }, // Look at
-          3000  // Transition duration in ms
+          },
+          node as { x: number, y: number, z: number },
+          3000
         );
       });
 
