@@ -1,3 +1,4 @@
+
 import { useEffect, useRef, useState } from "react";
 import ForceGraph3D from "3d-force-graph";
 import { useQuery } from "@tanstack/react-query";
@@ -171,7 +172,7 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
       });
     });
 
-    const Graph = new ForceGraph3D()(graphRef.current)
+    const Graph = ForceGraph3D()(graphRef.current)
       .graphData(graphData)
       .nodeLabel("name")
       .nodeColor(node => {
@@ -217,11 +218,25 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
           3000
         );
       })
-      .onNodeHover((node, prevNode) => {
-        if (node) {
-          const screenPos = Graph.getScreenPosition(node);
-          setTooltipPosition({ x: screenPos.x, y: screenPos.y });
-          setHoveredNode(node as Node);
+      .onNodeHover((node) => {
+        if (node && graphRef.current) {
+          // Get the canvas-relative position of the node
+          const vector = new THREE.Vector3(node.x, node.y, node.z);
+          const canvas = graphRef.current.getElementsByTagName('canvas')[0];
+          const renderer = Graph.renderer();
+          const camera = Graph.camera();
+          
+          if (canvas && renderer && camera) {
+            // Project the 3D position to 2D screen coordinates
+            vector.project(camera);
+            
+            // Convert to screen coordinates
+            const x = (vector.x * 0.5 + 0.5) * canvas.clientWidth;
+            const y = (-vector.y * 0.5 + 0.5) * canvas.clientHeight;
+            
+            setTooltipPosition({ x, y });
+            setHoveredNode(node as Node);
+          }
         } else {
           setHoveredNode(null);
         }
