@@ -39,7 +39,9 @@ interface GraphData {
 
 export const UnifiedGraphVisualization = () => {
   const graphRef = useRef<HTMLDivElement>(null);
+  const graphInstanceRef = useRef<any>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [userInteracting, setUserInteracting] = useState(false);
   const { data: entries } = useQuery({
     queryKey: ["all-entries"],
     queryFn: async () => {
@@ -190,7 +192,7 @@ export const UnifiedGraphVisualization = () => {
       });
     });
 
-    const Graph = new ForceGraph3D()(graphRef.current)
+    const Graph = ForceGraph3D()(graphRef.current)
       .graphData(graphData)
       .nodeLabel("name")
       .nodeColor(node => {
