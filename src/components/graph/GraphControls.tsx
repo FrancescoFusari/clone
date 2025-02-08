@@ -1,12 +1,11 @@
 
 import { Search } from "lucide-react";
 import { Input } from "../ui/input";
-import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import type { Database } from "@/integrations/supabase/types";
 
 type EntryCategory = Database["public"]["Enums"]["entry_category"];
-type NodeType = "category" | "subcategory" | "entry" | "tag" | "user";
+export type NodeType = "category" | "subcategory" | "entry" | "tag" | "user";
 
 interface GraphControlsProps {
   onSearchChange: (value: string) => void;
@@ -25,7 +24,7 @@ export function GraphControls({
   activeTypes,
   showUserNode,
 }: GraphControlsProps) {
-  const types = showUserNode ? [...NODE_TYPES, "user"] : NODE_TYPES;
+  const types: NodeType[] = showUserNode ? [...NODE_TYPES, "user"] : NODE_TYPES;
 
   const toggleType = (type: NodeType) => {
     if (activeTypes.includes(type)) {

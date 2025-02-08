@@ -186,7 +186,8 @@ export const UnifiedGraphVisualization = () => {
       });
     });
 
-    const Graph = ForceGraph3D()(graphRef.current)
+    const Graph = ForceGraph3D();
+    Graph(graphRef.current)
       .graphData(graphData)
       .nodeLabel("name")
       .nodeColor(node => {

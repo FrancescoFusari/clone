@@ -8,10 +8,9 @@ import { Card, CardContent } from "./ui/card";
 import { Button } from "./ui/button";
 import { Maximize2, Minimize2 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
-import { GraphControls } from "./graph/GraphControls";
+import { GraphControls, type NodeType } from "./graph/GraphControls";
 
 type EntryCategory = Database["public"]["Enums"]["entry_category"];
-type NodeType = "category" | "subcategory" | "entry" | "tag";
 
 interface Node {
   id: string;
@@ -198,7 +197,8 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
 
     const colorPalette = getCategoryColorPalette(category);
 
-    const Graph = ForceGraph3D()(graphRef.current)
+    const Graph = ForceGraph3D();
+    Graph(graphRef.current)
       .graphData(graphData)
       .nodeLabel("name")
       .nodeColor(node => {
