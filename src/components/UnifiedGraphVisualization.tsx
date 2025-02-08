@@ -1,3 +1,4 @@
+
 import { useEffect, useRef } from "react";
 import ForceGraph3D from "3d-force-graph";
 import { useQuery } from "@tanstack/react-query";
@@ -180,7 +181,7 @@ export const UnifiedGraphVisualization = () => {
       });
     });
 
-    const Graph = new ForceGraph3D()(graphRef.current)
+    const Graph = ForceGraph3D()(graphRef.current)
       .graphData(graphData)
       .nodeLabel("name")
       .nodeColor(node => {
