@@ -1,3 +1,4 @@
+
 import { useEffect, useRef } from "react";
 import ForceGraph3D from "3d-force-graph";
 import { useQuery } from "@tanstack/react-query";
@@ -8,15 +9,13 @@ import { Button } from "./ui/button";
 import { Maximize2, Minimize2 } from "lucide-react";
 import { useState } from "react";
 import type { Database } from "@/integrations/supabase/types";
-import { GraphControls } from "./graph/GraphControls";
 
 type EntryCategory = Database["public"]["Enums"]["entry_category"];
-type NodeType = "user" | "category" | "subcategory" | "entry" | "tag";
 
 interface Node {
   id: string;
   name: string;
-  type: NodeType;
+  type: "user" | "category" | "subcategory" | "entry" | "tag";
   val: number;
   x?: number;
   y?: number;
@@ -39,11 +38,7 @@ interface GraphData {
 
 export const UnifiedGraphVisualization = () => {
   const graphRef = useRef<HTMLDivElement>(null);
-  const graphInstance = useRef<any>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [searchValue, setSearchValue] = useState("");
-  const [activeTypes, setActiveTypes] = useState<NodeType[]>(["user", "category", "subcategory", "entry", "tag"]);
-
   const { data: entries } = useQuery({
     queryKey: ["all-entries"],
     queryFn: async () => {
@@ -186,8 +181,7 @@ export const UnifiedGraphVisualization = () => {
       });
     });
 
-    const Graph = ForceGraph3D();
-    Graph(graphRef.current)
+    const Graph = ForceGraph3D()(graphRef.current)
       .graphData(graphData)
       .nodeLabel("name")
       .nodeColor(node => {
@@ -207,24 +201,7 @@ export const UnifiedGraphVisualization = () => {
             return "#F5F3F2";
         }
       })
-      .nodeVal(node => {
-        const n = node as Node;
-        const isHighlighted = searchValue && 
-          n.name.toLowerCase().includes(searchValue.toLowerCase());
-        const isVisible = activeTypes.includes(n.type);
-        return isVisible ? (isHighlighted ? n.val * 1.5 : n.val) : 0;
-      })
-      .nodeVisibility(node => {
-        const n = node as Node;
-        return activeTypes.includes(n.type);
-      })
-      .linkVisibility(link => {
-        const source = graphData.nodes.find(n => n.id === (link.source as any).id || n.id === link.source);
-        const target = graphData.nodes.find(n => n.id === (link.target as any).id || n.id === link.target);
-        return source && target && 
-               activeTypes.includes(source.type) && 
-               activeTypes.includes(target.type);
-      })
+      .nodeVal(node => (node as Node).val)
       .linkWidth(0.8)
       .linkColor(link => (link as Link).color || "#ffffff50")
       .backgroundColor("#0f1729")
@@ -279,7 +256,7 @@ export const UnifiedGraphVisualization = () => {
         graphRef.current.innerHTML = "";
       }
     };
-  }, [entries, profile, searchValue, activeTypes]);
+  }, [entries, profile]);
 
   if (!entries || !profile) {
     return <Skeleton className="w-screen h-screen" />;
@@ -297,13 +274,6 @@ export const UnifiedGraphVisualization = () => {
         >
           {isFullscreen ? <Minimize2 /> : <Maximize2 />}
         </Button>
-        <GraphControls
-          searchValue={searchValue}
-          onSearchChange={setSearchValue}
-          activeTypes={activeTypes}
-          onTypeFilter={setActiveTypes}
-          showUserNode={true}
-        />
       </CardContent>
     </Card>
   );

@@ -7,14 +7,13 @@ import { Card, CardContent } from "./ui/card";
 import { Button } from "./ui/button";
 import { Maximize2, Minimize2 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
-import { GraphControls, type NodeType } from "./graph/GraphControls";
 
 type EntryCategory = Database["public"]["Enums"]["entry_category"];
 
 interface Node {
   id: string;
   name: string;
-  type: NodeType;
+  type: "category" | "subcategory" | "entry" | "tag";
   val: number;
   x?: number;
   y?: number;
@@ -82,11 +81,7 @@ const getCategoryColorPalette = (category: EntryCategory) => {
 
 export const CategoryGraph = ({ category }: CategoryGraphProps) => {
   const graphRef = useRef<HTMLDivElement>(null);
-  const graphInstance = useRef<any>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [searchValue, setSearchValue] = useState("");
-  const [activeTypes, setActiveTypes] = useState<NodeType[]>(["category", "subcategory", "entry", "tag"]);
-  const [graphData, setGraphData] = useState<GraphData>({ nodes: [], links: [] });
   
   const { data: entries, isLoading } = useQuery({
     queryKey: ["category-entries", category],
@@ -123,13 +118,13 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
   useEffect(() => {
     if (!entries || !graphRef.current) return;
 
-    const newGraphData: GraphData = {
+    const graphData: GraphData = {
       nodes: [],
       links: []
     };
 
     // Add category node with increased size
-    newGraphData.nodes.push({
+    graphData.nodes.push({
       id: category,
       name: category,
       type: "category",
@@ -142,21 +137,21 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
 
     // Process entries
     entries.forEach(entry => {
-      newGraphData.nodes.push({
+      graphData.nodes.push({
         id: entry.id,
         name: entry.title,
         type: "entry",
         val: 20 // Updated size for entry nodes
       });
 
-      newGraphData.links.push({
+      graphData.links.push({
         source: category,
         target: entry.id
       });
 
       if (entry.subcategory) {
         subcategories.add(entry.subcategory);
-        newGraphData.links.push({
+        graphData.links.push({
           source: entry.id,
           target: entry.subcategory
         });
@@ -164,7 +159,7 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
 
       entry.tags?.forEach(tag => {
         tags.add(tag);
-        newGraphData.links.push({
+        graphData.links.push({
           source: entry.id,
           target: tag
         });
@@ -173,13 +168,13 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
 
     // Add subcategory nodes
     subcategories.forEach(sub => {
-      newGraphData.nodes.push({
+      graphData.nodes.push({
         id: sub,
         name: sub,
         type: "subcategory",
         val: 60 // Updated size for subcategory nodes
       });
-      newGraphData.links.push({
+      graphData.links.push({
         source: category,
         target: sub
       });
@@ -187,7 +182,7 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
 
     // Add tag nodes
     tags.forEach(tag => {
-      newGraphData.nodes.push({
+      graphData.nodes.push({
         id: tag,
         name: tag,
         type: "tag",
@@ -197,20 +192,11 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
 
     const colorPalette = getCategoryColorPalette(category);
 
-    setGraphData(newGraphData);
-  }, [entries, category]);
-
-  useEffect(() => {
-    if (!graphRef.current || !graphData.nodes.length) return;
-
-    const Graph = new ForceGraph3D()(graphRef.current);
-    
-    Graph
+    const Graph = new (ForceGraph3D as any)()(graphRef.current)
       .graphData(graphData)
       .nodeLabel("name")
       .nodeColor(node => {
-        const n = node as Node;
-        switch (n.type) {
+        switch ((node as Node).type) {
           case "category":
             return colorPalette.primary;
           case "subcategory":
@@ -223,22 +209,7 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
             return "#F5F3F2";
         }
       })
-      .nodeVal(node => {
-        const n = node as Node;
-        const isVisible = activeTypes.includes(n.type);
-        return isVisible ? n.val : 0;
-      })
-      .nodeVisibility(node => {
-        const n = node as Node;
-        return activeTypes.includes(n.type);
-      })
-      .linkVisibility(link => {
-        const source = graphData.nodes.find(n => n.id === (link.source as any).id || n.id === link.source);
-        const target = graphData.nodes.find(n => n.id === (link.target as any).id || n.id === link.target);
-        return source && target && 
-               activeTypes.includes(source.type) && 
-               activeTypes.includes(target.type);
-      })
+      .nodeVal(node => (node as Node).val)
       .linkWidth(1.5)
       .linkColor(() => colorPalette.link)
       .backgroundColor("#0f1729")
@@ -250,6 +221,20 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
         n.fx = n.x;
         n.fy = n.y;
         n.fz = n.z;
+      })
+      .onNodeClick((node) => {
+        const distance = 150;
+        const distRatio = 1 + distance/Math.hypot(node.x || 0, node.y || 0, node.z || 0);
+
+        Graph.cameraPosition(
+          { 
+            x: (node.x || 0) * distRatio, 
+            y: (node.y || 0) * distRatio, 
+            z: (node.z || 0) * distRatio 
+          },
+          node as { x: number, y: number, z: number },
+          3000
+        );
       });
 
     // Set camera position further back
@@ -266,32 +251,12 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
       categoryNode.fz = 0;
     }
 
-    graphInstance.current = Graph;
-
     return () => {
       if (graphRef.current) {
         graphRef.current.innerHTML = "";
       }
     };
-  }, [graphData, activeTypes]);
-
-  const handleNodeSelect = (node: Node) => {
-    const nodeInGraph = graphData.nodes.find(n => n.id === node.id);
-    if (nodeInGraph && graphInstance.current) {
-      const distance = 150;
-      const distRatio = 1 + distance/Math.hypot(nodeInGraph.x || 0, nodeInGraph.y || 0, nodeInGraph.z || 0);
-
-      graphInstance.current.cameraPosition(
-        { 
-          x: (nodeInGraph.x || 0) * distRatio, 
-          y: (nodeInGraph.y || 0) * distRatio, 
-          z: (nodeInGraph.z || 0) * distRatio 
-        },
-        nodeInGraph as { x: number, y: number, z: number },
-        3000
-      );
-    }
-  };
+  }, [entries, category]);
 
   if (isLoading) {
     return <Skeleton className="w-full h-[600px]" />;
@@ -309,15 +274,6 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
         >
           {isFullscreen ? <Minimize2 /> : <Maximize2 />}
         </Button>
-        <GraphControls
-          searchValue={searchValue}
-          onSearchChange={setSearchValue}
-          activeTypes={activeTypes}
-          onTypeFilter={setActiveTypes}
-          onNodeSelect={handleNodeSelect}
-          nodes={graphData.nodes}
-          showUserNode={false}
-        />
       </CardContent>
     </Card>
   );
