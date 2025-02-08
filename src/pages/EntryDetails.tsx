@@ -1,3 +1,4 @@
+
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,6 +23,29 @@ type ResearchData = {
   questions: string[];
   key_concepts: string[];
   related_topics: string[];
+};
+
+type ChatMessage = {
+  role: "user" | "assistant";
+  content: string;
+};
+
+type Entry = {
+  id: string;
+  title?: string;
+  content: string;
+  formatted_content?: string;
+  created_at: string;
+  tags?: string[];
+  summary?: string;
+  research_data?: ResearchData;
+  entry_comments?: EntryComment[];
+  is_chat?: boolean;
+  chat_messages?: ChatMessage[];
+  user_id: string;
+  analysis_data: any;
+  analysis_generated_at: string;
+  category: "personal" | "work" | "social" | "interests_and_hobbies" | "school";
 };
 
 type EntryComment = {
