@@ -60,22 +60,13 @@ export const EntryForm = ({ onSubmit }: EntryFormProps) => {
         </TabsList>
         
         <TabsContent value="text" className="mt-6">
-          <Card className="neo-blur border-primary/20">
-            <CardContent className="pt-6">
-              <div className="space-y-3">
-                <p className="text-sm text-white/70">
-                  Write or paste your text below. Our AI will help categorize and analyze it.
-                </p>
-                <Textarea
-                  value={content}
-                  onChange={(e) => setContent(e.target.value)}
-                  placeholder="Write your entry here..."
-                  className="min-h-[250px] text-base resize-none bg-black/20 border-white/10 text-white/90 placeholder:text-white/40 focus-visible:ring-primary/30"
-                  style={{ whiteSpace: 'pre-wrap' }}
-                />
-              </div>
-            </CardContent>
-          </Card>
+          <Textarea
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            placeholder="Write your entry here..."
+            className="min-h-[250px] text-base resize-none bg-black/20 border-white/10 text-white/90 placeholder:text-white/40 focus-visible:ring-primary/30"
+            style={{ whiteSpace: 'pre-wrap' }}
+          />
         </TabsContent>
         
         <TabsContent value="url" className="mt-6">
