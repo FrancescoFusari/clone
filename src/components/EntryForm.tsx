@@ -1,9 +1,10 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileText, Link } from "lucide-react";
+import { FileText, Link, Loader2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
 interface EntryFormProps {
@@ -36,7 +37,11 @@ export const EntryForm = ({ onSubmit }: EntryFormProps) => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "text" | "url")} className="w-full">
+      <Tabs 
+        value={activeTab} 
+        onValueChange={(v) => setActiveTab(v as "text" | "url")} 
+        className="w-full"
+      >
         <TabsList className="grid w-full grid-cols-2 bg-white/5 border border-white/10">
           <TabsTrigger 
             value="text" 
@@ -54,18 +59,18 @@ export const EntryForm = ({ onSubmit }: EntryFormProps) => {
           </TabsTrigger>
         </TabsList>
         
-        <TabsContent value="text" className="mt-4">
-          <Card className="bg-white/5 border-white/10">
+        <TabsContent value="text" className="mt-6">
+          <Card className="neo-blur border-primary/20">
             <CardContent className="pt-6">
-              <div className="space-y-2">
-                <p className="text-sm text-white/60">
+              <div className="space-y-3">
+                <p className="text-sm text-white/70">
                   Write or paste your text below. Our AI will help categorize and analyze it.
                 </p>
                 <Textarea
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
                   placeholder="Write your entry here..."
-                  className="min-h-[200px] text-base resize-none bg-black/20 border-white/10 text-white/90 placeholder:text-white/40 focus-visible:ring-primary/30"
+                  className="min-h-[250px] text-base resize-none bg-black/20 border-white/10 text-white/90 placeholder:text-white/40 focus-visible:ring-primary/30"
                   style={{ whiteSpace: 'pre-wrap' }}
                 />
               </div>
@@ -73,11 +78,11 @@ export const EntryForm = ({ onSubmit }: EntryFormProps) => {
           </Card>
         </TabsContent>
         
-        <TabsContent value="url" className="mt-4">
-          <Card className="bg-white/5 border-white/10">
+        <TabsContent value="url" className="mt-6">
+          <Card className="neo-blur border-primary/20">
             <CardContent className="pt-6">
-              <div className="space-y-2">
-                <p className="text-sm text-white/60">
+              <div className="space-y-3">
+                <p className="text-sm text-white/70">
                   Enter a URL to analyze its content and save key information.
                 </p>
                 <Input
@@ -102,7 +107,14 @@ export const EntryForm = ({ onSubmit }: EntryFormProps) => {
           disabled={loading || !(activeTab === "text" ? content.trim() : url.trim())}
           className="w-full sm:w-auto bg-primary/20 hover:bg-primary/30 text-primary disabled:bg-white/5 disabled:text-white/40"
         >
-          {loading ? "Processing..." : "Save Entry"}
+          {loading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Processing...
+            </>
+          ) : (
+            'Save Entry'
+          )}
         </Button>
       </div>
     </form>

@@ -1,3 +1,4 @@
+
 import { CenteredLayout } from "@/components/layouts/CenteredLayout";
 import { EntryForm } from "@/components/EntryForm";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,6 +7,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/components/AuthProvider";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Sparkles } from "lucide-react";
 
 const NewEntry = () => {
   const navigate = useNavigate();
@@ -86,23 +88,26 @@ const NewEntry = () => {
 
   return (
     <CenteredLayout>
-      <div className="max-w-2xl mx-auto space-y-8 py-4">
+      <div className="max-w-3xl mx-auto space-y-6 py-8">
         {/* Header Card */}
-        <Card className="glass-morphism overflow-hidden">
-          <CardHeader className="space-y-2">
-            <div className="space-y-2">
+        <Card className="neo-blur border-primary/20 overflow-hidden">
+          <CardHeader className="space-y-4 pb-8">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-full bg-primary/20">
+                <Sparkles className="w-6 h-6 text-primary" />
+              </div>
               <h1 className="text-4xl font-bold text-gradient">
                 Create New Entry
               </h1>
-              <p className="text-lg text-white/80 leading-relaxed">
-                Transform your thoughts into organized insights. Share your ideas or analyze content from around the web - our AI assistant will help structure and enhance your entries.
-              </p>
             </div>
+            <p className="text-lg text-white/80 leading-relaxed max-w-2xl">
+              Transform your thoughts into organized insights. Share your ideas or analyze content from around the web - our AI assistant will help structure and enhance your entries.
+            </p>
           </CardHeader>
         </Card>
 
         {/* Form Card */}
-        <Card className="glass-morphism">
+        <Card className="neo-blur border-primary/20">
           <CardContent className="pt-6">
             <EntryForm onSubmit={handleSubmit} />
           </CardContent>
