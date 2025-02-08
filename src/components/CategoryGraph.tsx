@@ -1,3 +1,4 @@
+
 import { useEffect, useRef, useState } from "react";
 import ForceGraph3D from "3d-force-graph";
 import { useQuery } from "@tanstack/react-query";
@@ -7,13 +8,15 @@ import { Card, CardContent } from "./ui/card";
 import { Button } from "./ui/button";
 import { Maximize2, Minimize2 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
+import { GraphControls } from "./graph/GraphControls";
 
 type EntryCategory = Database["public"]["Enums"]["entry_category"];
+type NodeType = "category" | "subcategory" | "entry" | "tag";
 
 interface Node {
   id: string;
   name: string;
-  type: "category" | "subcategory" | "entry" | "tag";
+  type: NodeType;
   val: number;
   x?: number;
   y?: number;
@@ -81,7 +84,10 @@ const getCategoryColorPalette = (category: EntryCategory) => {
 
 export const CategoryGraph = ({ category }: CategoryGraphProps) => {
   const graphRef = useRef<HTMLDivElement>(null);
+  const graphInstance = useRef<any>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [searchValue, setSearchValue] = useState("");
+  const [activeTypes, setActiveTypes] = useState<NodeType[]>(["category", "subcategory", "entry", "tag"]);
   
   const { data: entries, isLoading } = useQuery({
     queryKey: ["category-entries", category],
@@ -192,11 +198,12 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
 
     const colorPalette = getCategoryColorPalette(category);
 
-    const Graph = new (ForceGraph3D as any)()(graphRef.current)
+    const Graph = ForceGraph3D()(graphRef.current)
       .graphData(graphData)
       .nodeLabel("name")
       .nodeColor(node => {
-        switch ((node as Node).type) {
+        const n = node as Node;
+        switch (n.type) {
           case "category":
             return colorPalette.primary;
           case "subcategory":
@@ -209,7 +216,24 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
             return "#F5F3F2";
         }
       })
-      .nodeVal(node => (node as Node).val)
+      .nodeVal(node => {
+        const n = node as Node;
+        const isHighlighted = searchValue && 
+          n.name.toLowerCase().includes(searchValue.toLowerCase());
+        const isVisible = activeTypes.includes(n.type);
+        return isVisible ? (isHighlighted ? n.val * 1.5 : n.val) : 0;
+      })
+      .nodeVisibility(node => {
+        const n = node as Node;
+        return activeTypes.includes(n.type);
+      })
+      .linkVisibility(link => {
+        const source = graphData.nodes.find(n => n.id === (link.source as any).id || n.id === link.source);
+        const target = graphData.nodes.find(n => n.id === (link.target as any).id || n.id === link.target);
+        return source && target && 
+               activeTypes.includes(source.type) && 
+               activeTypes.includes(target.type);
+      })
       .linkWidth(1.5)
       .linkColor(() => colorPalette.link)
       .backgroundColor("#0f1729")
@@ -251,12 +275,14 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
       categoryNode.fz = 0;
     }
 
+    graphInstance.current = Graph;
+
     return () => {
       if (graphRef.current) {
         graphRef.current.innerHTML = "";
       }
     };
-  }, [entries, category]);
+  }, [entries, category, searchValue, activeTypes]);
 
   if (isLoading) {
     return <Skeleton className="w-full h-[600px]" />;
@@ -274,6 +300,13 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
         >
           {isFullscreen ? <Minimize2 /> : <Maximize2 />}
         </Button>
+        <GraphControls
+          searchValue={searchValue}
+          onSearchChange={setSearchValue}
+          activeTypes={activeTypes}
+          onTypeFilter={setActiveTypes}
+          showUserNode={false}
+        />
       </CardContent>
     </Card>
   );
