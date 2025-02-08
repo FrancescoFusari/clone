@@ -2,7 +2,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Calendar, Tag, FileText, Sparkles, Search, Lightbulb, BookOpen, HelpCircle, MessageCircle } from "lucide-react";
+import { ArrowLeft, Calendar, Tag, FileText, Sparkles, Search, Lightbulb, BookOpen, HelpCircle, MessageCircle, User } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -15,6 +15,7 @@ import {
 import { useToast } from "@/components/ui/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 
 type ResearchData = {
   insights: string;
@@ -44,6 +45,37 @@ const formatContent = (text: string) => {
       </p>
     ) : null;
   });
+};
+
+const ChatBubble = ({ message, isAI = false }: { message: string; isAI?: boolean }) => {
+  return (
+    <div className={cn(
+      "flex gap-2 mb-4",
+      isAI ? "justify-start" : "justify-end"
+    )}>
+      <div className={cn(
+        "flex items-start gap-2 max-w-[80%]",
+        isAI ? "flex-row" : "flex-row-reverse"
+      )}>
+        <div className={cn(
+          "w-8 h-8 rounded-full flex items-center justify-center shrink-0",
+          isAI ? "bg-primary/20" : "bg-white/10"
+        )}>
+          {isAI ? (
+            <Sparkles className="w-4 h-4 text-primary" />
+          ) : (
+            <User className="w-4 h-4 text-white/80" />
+          )}
+        </div>
+        <div className={cn(
+          "rounded-2xl px-4 py-2 text-sm",
+          isAI ? "bg-primary/20 text-primary rounded-tl-sm" : "bg-white/10 text-white/90 rounded-tr-sm"
+        )}>
+          {message}
+        </div>
+      </div>
+    </div>
+  );
 };
 
 const EntryDetails = () => {
@@ -228,6 +260,28 @@ const EntryDetails = () => {
           <div className="prose max-w-none mb-6 dark:prose-invert text-white/80">
             {formatContent(entry.formatted_content || entry.content)}
           </div>
+
+          {entry.is_chat && Array.isArray(entry.chat_messages) && entry.chat_messages.length > 0 && (
+            <div className="mb-6 space-y-4">
+              <div className="flex items-center gap-2 mb-4">
+                <MessageCircle className="h-5 w-5 text-white/60" />
+                <h3 className="text-lg font-semibold text-white/90">Chat History</h3>
+              </div>
+              <Card className="bg-black/20 border-white/10">
+                <CardContent className="pt-6">
+                  <div className="space-y-2">
+                    {entry.chat_messages.map((message: { role: string; content: string }, index: number) => (
+                      <ChatBubble
+                        key={index}
+                        message={message.content}
+                        isAI={message.role === "assistant"}
+                      />
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
 
           {Array.isArray(entry.entry_comments) && entry.entry_comments.length > 0 && (
             <div className="mb-6 space-y-4">
