@@ -4,8 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileText, Link, Loader2 } from "lucide-react";
+import { FileText, Link, Loader2, MessageCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { ChatInterface } from "./chat/ChatInterface";
 
 interface EntryFormProps {
   onSubmit: (content: string, isUrl?: boolean) => Promise<void>;
@@ -16,6 +17,7 @@ export const EntryForm = ({ onSubmit }: EntryFormProps) => {
   const [url, setUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<"text" | "url">("text");
+  const [showChat, setShowChat] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,8 +37,23 @@ export const EntryForm = ({ onSubmit }: EntryFormProps) => {
     }
   };
 
+  if (showChat) {
+    return <ChatInterface onClose={() => setShowChat(false)} />;
+  }
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="flex justify-end">
+        <Button
+          type="button"
+          onClick={() => setShowChat(true)}
+          className="bg-primary/20 hover:bg-primary/30 text-primary"
+        >
+          <MessageCircle className="w-4 h-4 mr-2" />
+          Switch to Chat
+        </Button>
+      </div>
+
       <Tabs 
         value={activeTab} 
         onValueChange={(v) => setActiveTab(v as "text" | "url")} 
