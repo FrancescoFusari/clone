@@ -10,7 +10,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Switch } from "@/components/ui/switch";
 import { useTheme } from "@/components/ThemeProvider";
-import { Card } from "@/components/ui/card";
 
 export const TopBar = () => {
   const { setTheme, theme } = useTheme();
@@ -21,13 +20,13 @@ export const TopBar = () => {
 
   return (
     <div className="px-4 pb-2 topbar-container">
-      <Card className="glass-morphism overflow-hidden relative">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#8A898C]/20 to-[#F1F0FB]/20 opacity-50" />
+      <div className="neo-blur border-primary/20 rounded-lg overflow-hidden relative">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-secondary/5" />
         <div className="relative container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <Link 
               to="/" 
-              className="text-gradient font-semibold text-xl tracking-tight"
+              className="text-gradient font-semibold text-xl tracking-tight hover:opacity-80 transition-opacity"
             >
               Second Brain
             </Link>
@@ -38,20 +37,23 @@ export const TopBar = () => {
                   <Button 
                     variant="ghost" 
                     size="icon"
-                    className="hover:bg-background/50 backdrop-blur-sm"
+                    className="hover:bg-primary/10 backdrop-blur-sm text-primary"
                   >
                     <Menu className="h-5 w-5" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48 bg-background/95 backdrop-blur-xl border-white/10">
+                <DropdownMenuContent 
+                  align="end" 
+                  className="w-48 neo-blur border-primary/20"
+                >
                   <DropdownMenuItem asChild>
-                    <Link to="/dashboard" className="flex items-center gap-2">
+                    <Link to="/dashboard" className="flex items-center gap-2 hover:text-primary transition-colors">
                       <LayoutDashboard className="h-4 w-4" />
                       Dashboard
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link to="/settings" className="flex items-center gap-2">
+                    <Link to="/settings" className="flex items-center gap-2 hover:text-primary transition-colors">
                       <Settings className="h-4 w-4" />
                       Settings
                     </Link>
@@ -68,7 +70,7 @@ export const TopBar = () => {
             </div>
           </div>
         </div>
-      </Card>
+      </div>
     </div>
   );
 };
