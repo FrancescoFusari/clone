@@ -1,4 +1,3 @@
-
 import { useEffect, useRef, useState } from "react";
 import ForceGraph3D from "3d-force-graph";
 import { useQuery } from "@tanstack/react-query";
@@ -87,6 +86,7 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
   const [activeTypes, setActiveTypes] = useState<NodeType[]>(["category", "subcategory", "entry", "tag"]);
+  const [graphData, setGraphData] = useState<GraphData>({ nodes: [], links: [] });
   
   const { data: entries, isLoading } = useQuery({
     queryKey: ["category-entries", category],
@@ -123,13 +123,13 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
   useEffect(() => {
     if (!entries || !graphRef.current) return;
 
-    const graphData: GraphData = {
+    const newGraphData: GraphData = {
       nodes: [],
       links: []
     };
 
     // Add category node with increased size
-    graphData.nodes.push({
+    newGraphData.nodes.push({
       id: category,
       name: category,
       type: "category",
@@ -142,21 +142,21 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
 
     // Process entries
     entries.forEach(entry => {
-      graphData.nodes.push({
+      newGraphData.nodes.push({
         id: entry.id,
         name: entry.title,
         type: "entry",
         val: 20 // Updated size for entry nodes
       });
 
-      graphData.links.push({
+      newGraphData.links.push({
         source: category,
         target: entry.id
       });
 
       if (entry.subcategory) {
         subcategories.add(entry.subcategory);
-        graphData.links.push({
+        newGraphData.links.push({
           source: entry.id,
           target: entry.subcategory
         });
@@ -164,7 +164,7 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
 
       entry.tags?.forEach(tag => {
         tags.add(tag);
-        graphData.links.push({
+        newGraphData.links.push({
           source: entry.id,
           target: tag
         });
@@ -173,13 +173,13 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
 
     // Add subcategory nodes
     subcategories.forEach(sub => {
-      graphData.nodes.push({
+      newGraphData.nodes.push({
         id: sub,
         name: sub,
         type: "subcategory",
         val: 60 // Updated size for subcategory nodes
       });
-      graphData.links.push({
+      newGraphData.links.push({
         source: category,
         target: sub
       });
@@ -187,7 +187,7 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
 
     // Add tag nodes
     tags.forEach(tag => {
-      graphData.nodes.push({
+      newGraphData.nodes.push({
         id: tag,
         name: tag,
         type: "tag",
@@ -197,8 +197,15 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
 
     const colorPalette = getCategoryColorPalette(category);
 
-    const Graph = ForceGraph3D();
-    Graph(graphRef.current)
+    setGraphData(newGraphData);
+  }, [entries, category]);
+
+  useEffect(() => {
+    if (!graphRef.current || !graphData.nodes.length) return;
+
+    const Graph = new ForceGraph3D()(graphRef.current);
+    
+    Graph
       .graphData(graphData)
       .nodeLabel("name")
       .nodeColor(node => {
@@ -218,10 +225,8 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
       })
       .nodeVal(node => {
         const n = node as Node;
-        const isHighlighted = searchValue && 
-          n.name.toLowerCase().includes(searchValue.toLowerCase());
         const isVisible = activeTypes.includes(n.type);
-        return isVisible ? (isHighlighted ? n.val * 1.5 : n.val) : 0;
+        return isVisible ? n.val : 0;
       })
       .nodeVisibility(node => {
         const n = node as Node;
@@ -245,20 +250,6 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
         n.fx = n.x;
         n.fy = n.y;
         n.fz = n.z;
-      })
-      .onNodeClick((node) => {
-        const distance = 150;
-        const distRatio = 1 + distance/Math.hypot(node.x || 0, node.y || 0, node.z || 0);
-
-        Graph.cameraPosition(
-          { 
-            x: (node.x || 0) * distRatio, 
-            y: (node.y || 0) * distRatio, 
-            z: (node.z || 0) * distRatio 
-          },
-          node as { x: number, y: number, z: number },
-          3000
-        );
       });
 
     // Set camera position further back
@@ -282,7 +273,25 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
         graphRef.current.innerHTML = "";
       }
     };
-  }, [entries, category, searchValue, activeTypes]);
+  }, [graphData, activeTypes]);
+
+  const handleNodeSelect = (node: Node) => {
+    const nodeInGraph = graphData.nodes.find(n => n.id === node.id);
+    if (nodeInGraph && graphInstance.current) {
+      const distance = 150;
+      const distRatio = 1 + distance/Math.hypot(nodeInGraph.x || 0, nodeInGraph.y || 0, nodeInGraph.z || 0);
+
+      graphInstance.current.cameraPosition(
+        { 
+          x: (nodeInGraph.x || 0) * distRatio, 
+          y: (nodeInGraph.y || 0) * distRatio, 
+          z: (nodeInGraph.z || 0) * distRatio 
+        },
+        nodeInGraph as { x: number, y: number, z: number },
+        3000
+      );
+    }
+  };
 
   if (isLoading) {
     return <Skeleton className="w-full h-[600px]" />;
@@ -305,6 +314,8 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
           onSearchChange={setSearchValue}
           activeTypes={activeTypes}
           onTypeFilter={setActiveTypes}
+          onNodeSelect={handleNodeSelect}
+          nodes={graphData.nodes}
           showUserNode={false}
         />
       </CardContent>
