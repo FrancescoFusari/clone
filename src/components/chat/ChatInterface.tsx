@@ -2,12 +2,13 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2, Send } from "lucide-react";
+import { Loader2, Send, Save, X } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/AuthProvider";
 import { useToast } from "@/components/ui/use-toast";
+import { Separator } from "@/components/ui/separator";
 
 interface Message {
   role: 'user' | 'assistant';
@@ -16,12 +17,14 @@ interface Message {
 
 interface ChatInterfaceProps {
   onClose: () => void;
+  onSaveEntry?: (content: string) => Promise<void>;
 }
 
-export const ChatInterface = ({ onClose }: ChatInterfaceProps) => {
+export const ChatInterface = ({ onClose, onSaveEntry }: ChatInterfaceProps) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [model, setModel] = useState<'gpt-4o-mini' | 'gpt-4o'>('gpt-4o-mini');
   const [conversationId, setConversationId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -114,27 +117,77 @@ export const ChatInterface = ({ onClose }: ChatInterfaceProps) => {
     }
   };
 
+  const handleSaveAsEntry = async () => {
+    if (!messages.length || !onSaveEntry) return;
+
+    setIsSaving(true);
+    try {
+      // Format the chat into a coherent text entry
+      const formattedContent = messages
+        .map(msg => `${msg.role === 'user' ? 'You' : 'AI'}: ${msg.content}`)
+        .join('\n\n');
+
+      await onSaveEntry(formattedContent);
+      toast({
+        title: "Success",
+        description: "Chat saved as an entry successfully",
+      });
+      onClose();
+    } catch (error) {
+      console.error('Error saving chat as entry:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to save chat as entry. Please try again.",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   return (
-    <div className="flex flex-col h-[600px] bg-black/20 rounded-lg border border-white/10">
-      <div className="p-4 border-b border-white/10 flex items-center justify-between">
-        <Select value={model} onValueChange={(value: 'gpt-4o-mini' | 'gpt-4o') => setModel(value)}>
-          <SelectTrigger className="w-[180px] bg-black/20 border-white/10">
-            <SelectValue placeholder="Select model" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="gpt-4o-mini">GPT-4 Mini (Fast)</SelectItem>
-            <SelectItem value="gpt-4o">GPT-4 (Powerful)</SelectItem>
-          </SelectContent>
-        </Select>
+    <div className="flex flex-col h-[600px] bg-black/20 rounded-lg border border-white/10 relative">
+      {/* Header */}
+      <div className="p-4 border-b border-white/10 flex items-center justify-between bg-white/5">
+        <div className="flex items-center gap-4">
+          <Select value={model} onValueChange={(value: 'gpt-4o-mini' | 'gpt-4o') => setModel(value)}>
+            <SelectTrigger className="w-[180px] bg-black/20 border-white/10">
+              <SelectValue placeholder="Select model" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="gpt-4o-mini">GPT-4 Mini (Fast)</SelectItem>
+              <SelectItem value="gpt-4o">GPT-4 (Powerful)</SelectItem>
+            </SelectContent>
+          </Select>
+          <Separator orientation="vertical" className="h-6" />
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleSaveAsEntry}
+            disabled={isSaving || !messages.length}
+            className="bg-primary/20 hover:bg-primary/30 text-primary border-primary/20"
+          >
+            {isSaving ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <>
+                <Save className="h-4 w-4 mr-2" />
+                Save as Entry
+              </>
+            )}
+          </Button>
+        </div>
         <Button 
           variant="ghost" 
+          size="icon"
           onClick={onClose}
           className="hover:bg-white/10"
         >
-          Exit Chat
+          <X className="h-4 w-4" />
         </Button>
       </div>
 
+      {/* Messages */}
       <ScrollArea className="flex-1 p-4">
         <div className="space-y-4">
           {messages.map((message, index) => (
@@ -145,13 +198,16 @@ export const ChatInterface = ({ onClose }: ChatInterfaceProps) => {
               }`}
             >
               <div
-                className={`max-w-[80%] p-3 rounded-lg ${
+                className={`max-w-[80%] p-4 rounded-lg transition-colors ${
                   message.role === 'user'
-                    ? 'bg-primary/20 text-primary ml-4'
-                    : 'bg-white/10 text-white/90 mr-4'
+                    ? 'bg-primary/20 text-primary ml-4 rounded-br-sm'
+                    : 'bg-white/10 text-white/90 mr-4 rounded-bl-sm'
                 }`}
               >
-                {message.content}
+                <div className="text-xs text-white/50 mb-1">
+                  {message.role === 'user' ? 'You' : 'AI'}
+                </div>
+                <div className="whitespace-pre-wrap">{message.content}</div>
               </div>
             </div>
           ))}
@@ -159,7 +215,8 @@ export const ChatInterface = ({ onClose }: ChatInterfaceProps) => {
         </div>
       </ScrollArea>
 
-      <form onSubmit={handleSubmit} className="p-4 border-t border-white/10">
+      {/* Input */}
+      <form onSubmit={handleSubmit} className="p-4 border-t border-white/10 bg-white/5">
         <div className="flex gap-2">
           <Input
             value={inputValue}
@@ -170,6 +227,7 @@ export const ChatInterface = ({ onClose }: ChatInterfaceProps) => {
           />
           <Button 
             type="submit" 
+            size="icon"
             disabled={isLoading || !inputValue.trim()}
             className="bg-primary/20 hover:bg-primary/30 text-primary"
           >
@@ -184,3 +242,4 @@ export const ChatInterface = ({ onClose }: ChatInterfaceProps) => {
     </div>
   );
 };
+

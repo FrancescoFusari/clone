@@ -38,7 +38,19 @@ export const EntryForm = ({ onSubmit }: EntryFormProps) => {
   };
 
   if (showChat) {
-    return <ChatInterface onClose={() => setShowChat(false)} />;
+    return (
+      <ChatInterface 
+        onClose={() => setShowChat(false)} 
+        onSaveEntry={async (chatContent) => {
+          setLoading(true);
+          try {
+            await onSubmit(chatContent);
+          } finally {
+            setLoading(false);
+          }
+        }}
+      />
+    );
   }
 
   return (
@@ -128,3 +140,4 @@ export const EntryForm = ({ onSubmit }: EntryFormProps) => {
     </form>
   );
 };
+
