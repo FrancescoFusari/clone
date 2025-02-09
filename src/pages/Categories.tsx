@@ -3,8 +3,8 @@ import { CenteredLayout } from "@/components/layouts/CenteredLayout";
 import { Card, CardHeader } from "@/components/ui/card";
 import { Archive, Database, FolderTree, Grid, List } from "lucide-react";
 import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
-import { AIInsightsCard } from "@/components/dashboard/AIInsightsCard";
+import { useNavigate, useParams } from "react-router-dom";
+import { CategoryAIInsights } from "@/components/category/CategoryAIInsights";
 
 interface CategoryCard {
   name: string;
@@ -54,7 +54,42 @@ const categories: CategoryCard[] = [
 
 const Categories = () => {
   const navigate = useNavigate();
+  const { category } = useParams<{ category: string }>();
 
+  // If we're in a specific category view
+  if (category) {
+    const currentCategory = categories.find((c) => c.value === category);
+    if (!currentCategory) {
+      return <div>Category not found</div>;
+    }
+
+    return (
+      <CenteredLayout>
+        <div className="space-y-6">
+          {/* Header Card */}
+          <Card className="glass-morphism overflow-hidden relative">
+            <div className="absolute inset-0 bg-gradient-to-br from-[#8A898C]/20 to-[#F1F0FB]/20 opacity-50" />
+            <CardHeader className="relative space-y-2">
+              <div className="space-y-2">
+                <div className="p-3 w-fit rounded-xl bg-background/50 backdrop-blur-sm">
+                  {currentCategory.icon}
+                </div>
+                <h1 className="text-3xl font-bold tracking-tighter">{currentCategory.name}</h1>
+                <p className="text-lg text-white/80 leading-relaxed">
+                  {currentCategory.description}
+                </p>
+              </div>
+            </CardHeader>
+          </Card>
+
+          {/* Category AI Insights */}
+          <CategoryAIInsights />
+        </div>
+      </CenteredLayout>
+    );
+  }
+
+  // Categories overview page
   return (
     <CenteredLayout>
       <div className="space-y-6">
@@ -73,9 +108,6 @@ const Categories = () => {
             </div>
           </CardHeader>
         </Card>
-
-        {/* AI Insights */}
-        <AIInsightsCard />
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {categories.map((category, index) => (
