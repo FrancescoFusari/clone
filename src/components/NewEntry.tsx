@@ -31,15 +31,22 @@ const NewEntry = () => {
         const fileExt = file.name.split('.').pop();
         const fileName = `${crypto.randomUUID()}.${fileExt}`;
 
+        console.log("Uploading image:", { fileName, fileType: file.type });
+
         // Upload image to storage
-        const { error: uploadError } = await supabase.storage
+        const { data: uploadData, error: uploadError } = await supabase.storage
           .from('entry-images')
-          .upload(fileName, file);
+          .upload(fileName, file, {
+            cacheControl: '3600',
+            upsert: false
+          });
 
         if (uploadError) {
           console.error("Error uploading image:", uploadError);
-          throw uploadError;
+          throw new Error(`Failed to upload image: ${uploadError.message}`);
         }
+
+        console.log("Image uploaded successfully:", uploadData);
 
         // Get public URL for the uploaded image
         const { data: { publicUrl } } = supabase.storage
@@ -98,7 +105,7 @@ const NewEntry = () => {
       toast({
         variant: "destructive",
         title: "Error creating entry",
-        description: "There was a problem creating your entry. Please try again.",
+        description: error instanceof Error ? error.message : "There was a problem creating your entry. Please try again.",
       });
     }
   };
