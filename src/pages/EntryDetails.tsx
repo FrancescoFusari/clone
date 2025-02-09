@@ -368,14 +368,6 @@ const EntryDetails = () => {
     }
   };
 
-  const handleCategoryChange = (value: string) => {
-    if (value === "personal" || value === "work" || value === "social" || 
-        value === "interests_and_hobbies" || value === "school") {
-      setEditedCategory(value);
-      setEditedSubcategory(''); // Reset subcategory when category changes
-    }
-  };
-
   if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
@@ -521,7 +513,10 @@ const EntryDetails = () => {
                 <Label htmlFor="category">Category</Label>
                 <Select 
                   value={editedCategory} 
-                  onValueChange={handleCategoryChange}
+                  onValueChange={(value) => {
+                    setEditedCategory(value);
+                    setEditedSubcategory(''); // Reset subcategory when category changes
+                  }}
                 >
                   <SelectTrigger className="bg-white/5 border-white/10 text-white/90">
                     <SelectValue placeholder="Select a category" />

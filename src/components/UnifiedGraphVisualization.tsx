@@ -180,8 +180,7 @@ export const UnifiedGraphVisualization = () => {
       });
     });
 
-    const Graph = ForceGraph3D();
-    const graphInstance = Graph(graphRef.current)
+    const Graph = new ForceGraph3D()(graphRef.current)
       .graphData(graphData)
       .nodeLabel("name")
       .nodeColor(node => {
@@ -218,7 +217,7 @@ export const UnifiedGraphVisualization = () => {
         const distance = 150;
         const distRatio = 1 + distance/Math.hypot(node.x || 0, node.y || 0, node.z || 0);
 
-        graphInstance.cameraPosition(
+        Graph.cameraPosition(
           { 
             x: (node.x || 0) * distRatio, 
             y: (node.y || 0) * distRatio, 
