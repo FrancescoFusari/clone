@@ -51,6 +51,47 @@ type EntryComment = {
   type: "observation" | "question" | "suggestion";
 };
 
+const SUBCATEGORIES = {
+  personal: [
+    { value: 'health_and_wellness', label: 'Health and Wellness' },
+    { value: 'mental_health', label: 'Mental Health' },
+    { value: 'personal_growth', label: 'Personal Growth' },
+    { value: 'relationships', label: 'Relationships' },
+    { value: 'spirituality', label: 'Spirituality' },
+    { value: 'daily_life', label: 'Daily Life' }
+  ],
+  work: [
+    { value: 'projects', label: 'Projects' },
+    { value: 'career_development', label: 'Career Development' },
+    { value: 'workplace_dynamics', label: 'Workplace Dynamics' },
+    { value: 'job_search', label: 'Job Search' },
+    { value: 'business_ideas', label: 'Business Ideas' },
+    { value: 'work_life_balance', label: 'Work-Life Balance' }
+  ],
+  social: [
+    { value: 'friendships', label: 'Friendships' },
+    { value: 'family', label: 'Family' },
+    { value: 'networking', label: 'Networking' },
+    { value: 'social_events', label: 'Social Events' },
+    { value: 'community', label: 'Community' }
+  ],
+  interests_and_hobbies: [
+    { value: 'arts_and_creativity', label: 'Arts and Creativity' },
+    { value: 'sports_and_fitness', label: 'Sports and Fitness' },
+    { value: 'reading_and_literature', label: 'Reading and Literature' },
+    { value: 'music', label: 'Music' },
+    { value: 'travel', label: 'Travel' },
+    { value: 'technology', label: 'Technology' }
+  ],
+  school: [
+    { value: 'academics', label: 'Academics' },
+    { value: 'study_habits', label: 'Study Habits' },
+    { value: 'extracurricular', label: 'Extracurricular' },
+    { value: 'career_planning', label: 'Career Planning' },
+    { value: 'student_life', label: 'Student Life' }
+  ]
+};
+
 const formatContent = (text: string) => {
   const paragraphs = text.split(/\n\s*\n/);
   
@@ -413,31 +454,15 @@ const EntryDetails = () => {
                     <SelectValue placeholder="Select a subcategory" />
                   </SelectTrigger>
                   <SelectContent>
-                    {entry?.category === 'personal' && [
-                      'health_and_wellness',
-                      'mental_health',
-                      'personal_growth',
-                      'relationships',
-                      'spirituality',
-                      'daily_life'
-                    ].map(sub => (
-                      <SelectItem key={sub} value={sub}>
-                        {sub.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                    {entry?.category && SUBCATEGORIES[entry.category]?.map(sub => (
+                      <SelectItem 
+                        key={sub.value} 
+                        value={sub.value}
+                        className="cursor-pointer"
+                      >
+                        {sub.label}
                       </SelectItem>
                     ))}
-                    {entry?.category === 'work' && [
-                      'projects',
-                      'career_development',
-                      'workplace_dynamics',
-                      'job_search',
-                      'business_ideas',
-                      'work_life_balance'
-                    ].map(sub => (
-                      <SelectItem key={sub} value={sub}>
-                        {sub.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                      </SelectItem>
-                    ))}
-                    {/* Add other categories as needed */}
                   </SelectContent>
                 </Select>
               </div>
