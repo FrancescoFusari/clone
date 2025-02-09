@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Badge } from "./ui/badge";
@@ -50,13 +51,22 @@ export const CategoryAIInsights = ({ category }: CategoryAIInsightsProps) => {
       }
 
       // Type assertion with type guard
-      const insightsData = existingInsights.insights;
-      if (typeof insightsData === 'object' && insightsData !== null && 
-          'commonThemes' in insightsData && 
-          'connections' in insightsData && 
-          'insights' in insightsData && 
-          'questions' in insightsData) {
-        return { insights: insightsData as CategoryInsightsData };
+      const rawInsights = existingInsights.insights;
+      if (
+        typeof rawInsights === 'object' && 
+        rawInsights !== null &&
+        'commonThemes' in rawInsights &&
+        Array.isArray(rawInsights.commonThemes) &&
+        'connections' in rawInsights &&
+        Array.isArray(rawInsights.connections) &&
+        'insights' in rawInsights &&
+        Array.isArray(rawInsights.insights) &&
+        'questions' in rawInsights &&
+        Array.isArray(rawInsights.questions)
+      ) {
+        return {
+          insights: rawInsights as CategoryInsightsData
+        };
       }
       
       return null;

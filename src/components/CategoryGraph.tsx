@@ -1,3 +1,4 @@
+
 import { useEffect, useRef, useState } from "react";
 import ForceGraph3D from "3d-force-graph";
 import { useQuery } from "@tanstack/react-query";
@@ -192,6 +193,7 @@ export const CategoryGraph = ({ category }: CategoryGraphProps) => {
 
     const colorPalette = getCategoryColorPalette(category);
 
+    // Create a new instance of ForceGraph3D
     const Graph = new (ForceGraph3D as any)()(graphRef.current)
       .graphData(graphData)
       .nodeLabel("name")
