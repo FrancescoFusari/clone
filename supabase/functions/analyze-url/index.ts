@@ -35,19 +35,28 @@ serve(async (req) => {
       throw new Error('Invalid URL provided');
     }
 
-    // Fetch URL content with timeout and proper error handling
+    // Fetch URL content with enhanced options
     let response;
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+      const timeoutId = setTimeout(() => controller.abort(), 30000);
 
-      response = await fetch(validUrl.toString(), {
+      const fetchOptions = {
         headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+          'Accept-Language': 'en-US,en;q=0.5',
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
         },
-        signal: controller.signal
-      });
+        redirect: 'follow',
+        signal: controller.signal,
+        method: 'GET'
+      };
 
+      console.log('Fetching URL with options:', fetchOptions);
+      
+      response = await fetch(validUrl.toString(), fetchOptions);
       clearTimeout(timeoutId);
 
       if (!response.ok) {
@@ -57,6 +66,9 @@ serve(async (req) => {
       }
     } catch (error) {
       console.error('Error fetching URL:', error);
+      if (error.name === 'AbortError') {
+        throw new Error('Request timed out after 30 seconds');
+      }
       throw new Error(`Failed to fetch URL: ${error.message}`);
     }
 
@@ -65,6 +77,8 @@ serve(async (req) => {
     let textContent;
 
     try {
+      console.log('Content type:', contentType);
+      
       if (contentType.includes('application/json')) {
         const jsonData = await response.json();
         textContent = JSON.stringify(jsonData, null, 2);
@@ -143,7 +157,7 @@ Return ONLY the JSON object, no additional text or formatting.`
       let processedData;
       try {
         const content = aiData.choices[0].message.content.trim();
-        console.log('Attempting to parse JSON:', content);
+        console.log('Raw OpenAI response:', content);
         processedData = JSON.parse(content);
       } catch (e) {
         console.error('Failed to parse OpenAI response:', e);
