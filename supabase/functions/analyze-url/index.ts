@@ -73,7 +73,39 @@ serve(async (req) => {
 
     console.log('Extracted text content:', textContent.substring(0, 200) + '...');
 
-    // Process with OpenAI
+    // First, get the formatted content from GPT
+    const formattingResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openAIApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [
+          {
+            role: 'system',
+            content: `You are an expert at formatting and structuring text content. Format the given text into well-structured paragraphs with proper spacing and organization. Return only the formatted text, no additional commentary.`
+          },
+          {
+            role: 'user',
+            content: textContent
+          }
+        ],
+      }),
+    });
+
+    if (!formattingResponse.ok) {
+      const errorData = await formattingResponse.text();
+      console.error('OpenAI API error (formatting):', errorData);
+      throw new Error('Failed to format content');
+    }
+
+    const formattingData = await formattingResponse.json();
+    const formattedContent = formattingData.choices[0].message.content.trim();
+    console.log('Formatted content:', formattedContent.substring(0, 200) + '...');
+
+    // Process with OpenAI for categorization and analysis
     const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -97,7 +129,7 @@ Return ONLY the JSON object, no additional text or formatting.`
           },
           {
             role: 'user',
-            content: textContent
+            content: formattedContent
           }
         ],
       }),
@@ -105,7 +137,7 @@ Return ONLY the JSON object, no additional text or formatting.`
 
     if (!aiResponse.ok) {
       const errorData = await aiResponse.text();
-      console.error('OpenAI API error:', aiResponse.status, errorData);
+      console.error('OpenAI API error:', errorData);
       throw new Error(`OpenAI API error: ${aiResponse.status}`);
     }
 
@@ -147,7 +179,7 @@ Return ONLY the JSON object, no additional text or formatting.`
       .insert([{
         user_id,
         content: `URL: ${url}\n\n${textContent}`,
-        formatted_content: textContent,
+        formatted_content: formattedContent,
         title: processedData.title,
         category: processedData.category,
         subcategory: processedData.subcategory,
