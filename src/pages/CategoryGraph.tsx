@@ -11,7 +11,7 @@ import { Archive, Brain, Database as DatabaseIcon, Folder, Grid, List } from "lu
 import { Badge } from "@/components/ui/badge";
 import { CategoryAIInsights } from "@/components/CategoryAIInsights";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 type EntryCategory = Database["public"]["Enums"]["entry_category"];
 
@@ -74,7 +74,10 @@ const CategoryGraphPage = () => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Supabase error:", error);
+        throw error;
+      }
       return data;
     },
     onSuccess: () => {
