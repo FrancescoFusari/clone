@@ -163,7 +163,7 @@ serve(async (req) => {
   }
 
   try {
-    const { content, user_id } = await req.json();
+    const { content, user_id, metadata } = await req.json();
     console.log('Processing entry:', content.substring(0, 100) + '...');
 
     if (!content) {
@@ -200,53 +200,9 @@ serve(async (req) => {
               "category": "personal" | "work" | "social" | "interests_and_hobbies" | "school",
               "subcategory": "string describing specific topic within the category",
               "tags": ["array of 1-5 relevant keywords"],
-              "summary": "1-2 sentence summary"
-            }
-            
-            For subcategories, strictly use these predefined options for each category:
-
-            personal:
-            - "health_and_wellness" - for entries about physical health, exercise, nutrition
-            - "mental_health" - for entries about emotional wellbeing, therapy, stress
-            - "personal_growth" - for entries about self-improvement, goals, habits
-            - "relationships" - for entries about family, romance, friendships
-            - "spirituality" - for entries about faith, meditation, beliefs
-            - "daily_life" - for entries about routines, experiences, observations
-
-            work:
-            - "projects" - for entries about specific work assignments or initiatives
-            - "career_development" - for entries about skills, learning, advancement
-            - "workplace_dynamics" - for entries about colleagues, culture, communication
-            - "job_search" - for entries about finding work, applications, interviews
-            - "business_ideas" - for entries about entrepreneurship, innovation
-            - "work_life_balance" - for entries about managing professional/personal life
-
-            social:
-            - "friendships" - for entries about friends and social connections
-            - "family" - for entries about family relationships and dynamics
-            - "events" - for entries about social gatherings, parties, meetups
-            - "community" - for entries about neighborhood, local involvement
-            - "online_social" - for entries about social media, online communities
-            - "networking" - for entries about professional connections
-
-            interests_and_hobbies:
-            - "arts_and_creativity" - for entries about art, music, writing, crafts
-            - "sports_and_fitness" - for entries about athletics, exercise
-            - "technology" - for entries about gadgets, programming, digital interests
-            - "entertainment" - for entries about movies, games, books, media
-            - "travel" - for entries about trips, places, cultural experiences
-            - "learning" - for entries about new skills, knowledge acquisition
-
-            school:
-            - "academics" - for entries about courses, studying, grades
-            - "student_life" - for entries about campus activities, dorm life
-            - "assignments" - for entries about homework, projects, papers
-            - "exams" - for entries about tests, preparation, results
-            - "group_work" - for entries about collaboration, study groups
-            - "career_planning" - for entries about future profession plans
-
-            Choose the most appropriate category and subcategory based on the content.
-            If the content doesn't clearly fit into any subcategory, use the most general one for that category.`
+              "summary": "1-2 sentence summary",
+              "color": "hex color code that represents the mood or theme of the entry"
+            }`
           },
           {
             role: 'user',
@@ -294,6 +250,11 @@ serve(async (req) => {
         );
       }
 
+      // If there's a custom subcategory from metadata, use that instead
+      if (metadata?.customSubcategory) {
+        processedData.subcategory = metadata.customSubcategory;
+      }
+
       // Normalize and find similar tags
       processedData.tags = await getSimilarTags(supabase, processedData.tags || []);
       
@@ -312,6 +273,13 @@ serve(async (req) => {
       .replace(/\.{3,}$/, '')
       .trim();
 
+    // Add metadata from the request
+    if (metadata) {
+      processedData.priority = metadata.priority || 'medium';
+      processedData.has_attachments = !!(metadata.attachments && metadata.attachments.length > 0);
+      processedData.attachments = metadata.attachments || [];
+    }
+
     console.log('Final processed data:', processedData);
 
     // Create the entry in the database
@@ -326,7 +294,11 @@ serve(async (req) => {
         category: processedData.category,
         subcategory: processedData.subcategory,
         tags: processedData.tags,
-        summary: processedData.summary
+        summary: processedData.summary,
+        priority: processedData.priority,
+        has_attachments: processedData.has_attachments,
+        attachments: processedData.attachments,
+        color: processedData.color
       }])
       .select()
       .single();
