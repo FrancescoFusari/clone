@@ -8,6 +8,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Archive, Database as DatabaseIcon, Folder, Grid, List } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { CategoryAIInsights } from "@/components/dashboard/CategoryAIInsights";
 
 type EntryCategory = Database["public"]["Enums"]["entry_category"];
 
@@ -152,6 +153,8 @@ const CategoryGraphPage = () => {
             </CardContent>
           </div>
         </Card>
+
+        <CategoryAIInsights category={category} />
 
         <CategoryGraph category={category} />
 
