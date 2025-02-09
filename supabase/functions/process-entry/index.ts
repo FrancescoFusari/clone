@@ -1,3 +1,4 @@
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -145,55 +146,81 @@ async function formatTextAndGenerateComments(content: string, type: "text" | "ur
 
   console.log('Making OpenAI request with:', {
     type,
-    contentLength: typeof content === 'string' ? content.length : 'image URL'
+    contentLength: typeof content === 'string' ? content.length : 'image URL',
+    content: type === "image" ? content : undefined
   });
 
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${openAIApiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'gpt-4o-mini',
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { 
-          role: 'user', 
-          content: type === "image" 
-            ? [
-                { type: "text", text: "Please analyze this image:" },
-                { 
-                  type: "image_url",
-                  image_url: {
-                    url: content
-                  }
-                }
-              ]
-            : content
-        }
-      ],
-      max_tokens: 1000,
-      temperature: 0.3,
-    }),
-  });
-
-  if (!response.ok) {
-    const error = await response.json();
-    console.error('OpenAI API error:', error);
-    throw new Error('Failed to process content with OpenAI');
-  }
-
-  const data = await response.json();
-  console.log('OpenAI response:', data);
-  
   try {
-    const result = JSON.parse(data.choices[0].message.content);
-    return result;
+    const messages = type === "image" 
+      ? [
+          { role: 'system', content: systemPrompt },
+          { 
+            role: 'user', 
+            content: [
+              { type: "text", text: "Please analyze this image:" },
+              { 
+                type: "image_url",
+                image_url: {
+                  url: content
+                }
+              }
+            ]
+          }
+        ]
+      : [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: content }
+        ];
+
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openAIApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages,
+        max_tokens: 1000,
+        temperature: 0.3,
+        response_format: { type: "json_object" }
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      console.error('OpenAI API error:', error);
+      throw new Error('Failed to process content with OpenAI');
+    }
+
+    const data = await response.json();
+    console.log('OpenAI response:', data);
+    
+    try {
+      const result = JSON.parse(data.choices[0].message.content);
+      
+      // Validate the response structure
+      if (!result.formattedContent || !Array.isArray(result.comments)) {
+        console.error('Invalid response structure:', result);
+        throw new Error('Invalid response structure from OpenAI');
+      }
+      
+      // Ensure each comment has required fields
+      result.comments = result.comments.map((comment: any, index: number) => ({
+        id: comment.id || `comment-${index}`,
+        text: comment.text || 'No comment text provided',
+        type: comment.type || 'observation'
+      }));
+
+      return result;
+    } catch (error) {
+      console.error('Error parsing OpenAI response:', error);
+      console.log('Raw response content:', data.choices[0].message.content);
+      throw new Error('Failed to parse OpenAI response');
+    }
   } catch (error) {
-    console.error('Error parsing OpenAI response:', error);
-    console.log('Raw response content:', data.choices[0].message.content);
-    throw new Error('Failed to parse OpenAI response');
+    console.error('Error in OpenAI request:', error);
+    throw new Error('Failed to process content with OpenAI');
   }
 }
 
