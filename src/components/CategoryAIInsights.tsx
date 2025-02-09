@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Badge } from "./ui/badge";
@@ -50,9 +49,17 @@ export const CategoryAIInsights = ({ category }: CategoryAIInsightsProps) => {
         return null;
       }
 
-      // Type assertion for the insights field
-      const insights = existingInsights.insights as CategoryInsightsData;
-      return { insights };
+      // Type assertion with type guard
+      const insightsData = existingInsights.insights;
+      if (typeof insightsData === 'object' && insightsData !== null && 
+          'commonThemes' in insightsData && 
+          'connections' in insightsData && 
+          'insights' in insightsData && 
+          'questions' in insightsData) {
+        return { insights: insightsData as CategoryInsightsData };
+      }
+      
+      return null;
     },
   });
 
