@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Calendar, Tag, FileText, Sparkles, Search, Lightbulb, BookOpen, HelpCircle, MessageCircle, Trash, Edit2, Save, X } from "lucide-react";
+import { ArrowLeft, Calendar, Tag, FileText, Sparkles, Search, Lightbulb, BookOpen, HelpCircle, MessageCircle, Trash, Edit2, Save, X, ExternalLink } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -117,6 +117,15 @@ const formatContent = (text: string) => {
   });
 };
 
+const isValidUrl = (text: string): boolean => {
+  try {
+    new URL(text);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
 const EntryDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -126,7 +135,7 @@ const EntryDetails = () => {
   const [editedTitle, setEditedTitle] = useState("");
   const [editedContent, setEditedContent] = useState("");
   const [editedTags, setEditedTags] = useState("");
-  const [editedCategory, setEditedCategory] = useState("");
+  const [editedCategory, setEditedCategory] = useState<Category>("personal");
   const [editedSubcategory, setEditedSubcategory] = useState("");
 
   if (!id) {
@@ -243,7 +252,7 @@ const EntryDetails = () => {
       title: string; 
       content: string; 
       tags: string[]; 
-      category: string;
+      category: Category;
       subcategory: string;
     }) => {
       const { data, error } = await supabase
@@ -385,6 +394,16 @@ const EntryDetails = () => {
         >
           <ArrowLeft className="mr-2 h-4 w-4" /> Back to Entries
         </Button>
+        
+        {!isEditing && isValidUrl(entry?.content || '') && (
+          <Button
+            variant="outline"
+            onClick={() => window.open(entry?.content, '_blank')}
+            className="bg-white/5 border-white/10 text-white/90 hover:bg-white/10"
+          >
+            <ExternalLink className="mr-2 h-4 w-4" /> Visit URL
+          </Button>
+        )}
         
         {!isEditing && (
           <>
