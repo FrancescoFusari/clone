@@ -62,17 +62,23 @@ const CategoryGraphPage = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("User not authenticated");
 
-      // Create or update insights entry
+      // Create or update insights entry with proper conflict handling
       const { data, error } = await supabase
         .from('category_insights')
-        .upsert({
-          category,
-          user_id: user.id,
-          status: 'pending',
-          updated_at: new Date().toISOString()
-        })
+        .upsert(
+          {
+            category,
+            user_id: user.id,
+            status: 'pending',
+            updated_at: new Date().toISOString()
+          },
+          {
+            onConflict: 'user_id,category',
+            ignoreDuplicates: false
+          }
+        )
         .select()
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error("Supabase error:", error);
