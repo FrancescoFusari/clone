@@ -103,14 +103,20 @@ export type Database = {
         Row: {
           analysis_data: Json | null
           analysis_generated_at: string | null
+          attachments: Json | null
           category: Database["public"]["Enums"]["entry_category"]
           chat_messages: Json | null
+          color: string | null
           content: string
           created_at: string
+          custom_subcategory: string | null
           entry_comments: Json | null
           formatted_content: string | null
+          has_attachments: boolean | null
           id: string
           is_chat: boolean | null
+          priority: string | null
+          related_entries: string[] | null
           research_data: Json | null
           subcategory: string | null
           summary: string | null
@@ -121,14 +127,20 @@ export type Database = {
         Insert: {
           analysis_data?: Json | null
           analysis_generated_at?: string | null
+          attachments?: Json | null
           category: Database["public"]["Enums"]["entry_category"]
           chat_messages?: Json | null
+          color?: string | null
           content: string
           created_at?: string
+          custom_subcategory?: string | null
           entry_comments?: Json | null
           formatted_content?: string | null
+          has_attachments?: boolean | null
           id?: string
           is_chat?: boolean | null
+          priority?: string | null
+          related_entries?: string[] | null
           research_data?: Json | null
           subcategory?: string | null
           summary?: string | null
@@ -139,14 +151,20 @@ export type Database = {
         Update: {
           analysis_data?: Json | null
           analysis_generated_at?: string | null
+          attachments?: Json | null
           category?: Database["public"]["Enums"]["entry_category"]
           chat_messages?: Json | null
+          color?: string | null
           content?: string
           created_at?: string
+          custom_subcategory?: string | null
           entry_comments?: Json | null
           formatted_content?: string | null
+          has_attachments?: boolean | null
           id?: string
           is_chat?: boolean | null
+          priority?: string | null
+          related_entries?: string[] | null
           research_data?: Json | null
           subcategory?: string | null
           summary?: string | null
