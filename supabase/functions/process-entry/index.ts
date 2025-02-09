@@ -1,4 +1,3 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -144,6 +143,11 @@ async function formatTextAndGenerateComments(content: string, type: "text" | "ur
          ]
        }`;
 
+  console.log('Making OpenAI request with:', {
+    type,
+    contentLength: typeof content === 'string' ? content.length : 'image URL'
+  });
+
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -151,7 +155,7 @@ async function formatTextAndGenerateComments(content: string, type: "text" | "ur
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'gpt-4-vision-preview',
+      model: 'gpt-4o-mini',
       messages: [
         { role: 'system', content: systemPrompt },
         { 
@@ -161,7 +165,9 @@ async function formatTextAndGenerateComments(content: string, type: "text" | "ur
                 { type: "text", text: "Please analyze this image:" },
                 { 
                   type: "image_url",
-                  image_url: content
+                  image_url: {
+                    url: content
+                  }
                 }
               ]
             : content
@@ -179,8 +185,16 @@ async function formatTextAndGenerateComments(content: string, type: "text" | "ur
   }
 
   const data = await response.json();
-  const result = JSON.parse(data.choices[0].message.content);
-  return result;
+  console.log('OpenAI response:', data);
+  
+  try {
+    const result = JSON.parse(data.choices[0].message.content);
+    return result;
+  } catch (error) {
+    console.error('Error parsing OpenAI response:', error);
+    console.log('Raw response content:', data.choices[0].message.content);
+    throw new Error('Failed to parse OpenAI response');
+  }
 }
 
 serve(async (req) => {
