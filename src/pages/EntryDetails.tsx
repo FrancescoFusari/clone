@@ -129,6 +129,21 @@ const isValidUrl = (text: string): boolean => {
   }
 };
 
+const extractUrl = (content: string): string | null => {
+  // First try to extract URL from "URL: ..." format
+  const urlMatch = content.match(/^URL:\s*(\S+)/);
+  if (urlMatch && isValidUrl(urlMatch[1])) {
+    return urlMatch[1];
+  }
+  
+  // If no URL prefix found, check if the entire content is a URL
+  if (isValidUrl(content)) {
+    return content;
+  }
+  
+  return null;
+};
+
 const EntryDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -338,6 +353,21 @@ const EntryDetails = () => {
     deleteMutation.mutate();
   };
 
+  const handleOpenUrl = () => {
+    if (entry?.content) {
+      const url = extractUrl(entry.content);
+      if (url) {
+        window.open(url, '_blank', 'noopener,noreferrer');
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "No valid URL found in entry content",
+        });
+      }
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
@@ -398,10 +428,10 @@ const EntryDetails = () => {
           <ArrowLeft className="mr-2 h-4 w-4" /> Back to Entries
         </Button>
         
-        {!isEditing && isValidUrl(entry?.content || '') && (
+        {!isEditing && entry?.content && extractUrl(entry.content) && (
           <Button
             variant="outline"
-            onClick={() => window.open(entry?.content, '_blank')}
+            onClick={handleOpenUrl}
             className="bg-white/5 border-white/10 text-white/90 hover:bg-white/10"
           >
             <ExternalLink className="mr-2 h-4 w-4" /> Visit URL
