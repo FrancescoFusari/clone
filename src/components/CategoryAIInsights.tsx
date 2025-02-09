@@ -9,6 +9,22 @@ import { Brain, Lightbulb, Network, PieChart } from "lucide-react";
 
 type EntryCategory = Database["public"]["Enums"]["entry_category"];
 
+interface ThemeCount {
+  theme: string;
+  count: number;
+}
+
+interface CategoryInsightsData {
+  commonThemes: ThemeCount[];
+  connections: string[];
+  insights: string[];
+  questions: string[];
+}
+
+interface CategoryInsights {
+  insights: CategoryInsightsData;
+}
+
 interface CategoryAIInsightsProps {
   category: EntryCategory;
 }
@@ -29,7 +45,7 @@ export const CategoryAIInsights = ({ category }: CategoryAIInsightsProps) => {
         throw error;
       }
 
-      return existingInsights;
+      return existingInsights as { insights: CategoryInsightsData };
     },
   });
 
