@@ -30,7 +30,7 @@ interface CategoryAIInsightsProps {
 }
 
 export const CategoryAIInsights = ({ category }: CategoryAIInsightsProps) => {
-  const { data: insights, isLoading } = useQuery({
+  const { data: insightsData, isLoading } = useQuery({
     queryKey: ["category-insights", category],
     queryFn: async () => {
       console.log("Fetching insights for category:", category);
@@ -38,14 +38,21 @@ export const CategoryAIInsights = ({ category }: CategoryAIInsightsProps) => {
         .from("category_insights")
         .select("*")
         .eq("category", category)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error("Error fetching insights:", error);
         throw error;
       }
 
-      return existingInsights as { insights: CategoryInsightsData };
+      // If no insights exist yet, return null
+      if (!existingInsights) {
+        return null;
+      }
+
+      // Type assertion for the insights field
+      const insights = existingInsights.insights as CategoryInsightsData;
+      return { insights };
     },
   });
 
@@ -64,7 +71,7 @@ export const CategoryAIInsights = ({ category }: CategoryAIInsightsProps) => {
     );
   }
 
-  if (!insights?.insights) {
+  if (!insightsData?.insights) {
     return (
       <Card>
         <CardHeader>
@@ -75,7 +82,7 @@ export const CategoryAIInsights = ({ category }: CategoryAIInsightsProps) => {
     );
   }
 
-  const { commonThemes, connections, insights: insightsList, questions } = insights.insights;
+  const { commonThemes, connections, insights: insightsList, questions } = insightsData.insights;
 
   return (
     <Card>
