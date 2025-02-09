@@ -4,6 +4,7 @@ import { Card, CardHeader } from "@/components/ui/card";
 import { Archive, Database, FolderTree, Grid, List } from "lucide-react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import { AIInsightsCard } from "@/components/dashboard/AIInsightsCard";
 
 interface CategoryCard {
   name: string;
@@ -72,6 +73,9 @@ const Categories = () => {
             </div>
           </CardHeader>
         </Card>
+
+        {/* AI Insights */}
+        <AIInsightsCard />
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {categories.map((category, index) => (
