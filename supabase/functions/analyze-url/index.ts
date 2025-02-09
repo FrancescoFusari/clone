@@ -1,6 +1,7 @@
 
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 
@@ -15,8 +16,13 @@ serve(async (req) => {
   }
 
   try {
-    const { url } = await req.json();
+    const { url, user_id } = await req.json();
     console.log('Analyzing URL:', url);
+    console.log('User ID:', user_id);
+
+    if (!user_id) {
+      throw new Error('User ID is required');
+    }
 
     // Validate URL
     try {
@@ -127,13 +133,39 @@ Return ONLY the JSON object, no additional text or formatting.`
       throw new Error('Invalid data structure in analysis results');
     }
 
-    // Add the original URL and content to the response
-    processedData.content = `URL: ${url}\n\n${textContent}`;
+    // Initialize Supabase client
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error('Supabase configuration missing');
+    }
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
-    console.log('Final processed data:', processedData);
+    // Create the entry in the database
+    const { data: entry, error: insertError } = await supabase
+      .from('entries')
+      .insert([{
+        user_id,
+        content: `URL: ${url}\n\n${textContent}`,
+        formatted_content: textContent,
+        title: processedData.title,
+        category: processedData.category,
+        subcategory: processedData.subcategory,
+        tags: processedData.tags,
+        summary: processedData.summary
+      }])
+      .select()
+      .single();
+
+    if (insertError) {
+      console.error('Error inserting entry:', insertError);
+      throw new Error(`Database error: ${insertError.message}`);
+    }
+
+    console.log('Entry created successfully:', entry);
 
     return new Response(
-      JSON.stringify(processedData),
+      JSON.stringify(entry),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {

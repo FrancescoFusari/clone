@@ -31,7 +31,10 @@ const NewEntry = () => {
       if (isUrl) {
         console.log("Processing URL content");
         const { data, error } = await supabase.functions.invoke('analyze-url', {
-          body: { url: content }
+          body: { 
+            url: content,
+            user_id: session.user.id
+          }
         });
 
         if (error) {
@@ -89,7 +92,6 @@ const NewEntry = () => {
   return (
     <CenteredLayout>
       <div className="max-w-3xl mx-auto space-y-6 py-8">
-        {/* Header Card */}
         <Card className="neo-blur border-primary/20 overflow-hidden">
           <CardHeader className="space-y-4 pb-8">
             <div className="flex items-center gap-3">
@@ -106,7 +108,6 @@ const NewEntry = () => {
           </CardHeader>
         </Card>
 
-        {/* Form Card */}
         <Card className="neo-blur border-primary/20">
           <CardContent className="pt-6">
             <EntryForm onSubmit={handleSubmit} />
