@@ -15,6 +15,11 @@ serve(async (req) => {
   }
 
   try {
+    if (!openAIApiKey) {
+      console.error('OpenAI API key not found');
+      throw new Error('OpenAI API key not configured');
+    }
+
     const { url } = await req.json();
     console.log('Analyzing URL:', url);
 
@@ -46,6 +51,8 @@ serve(async (req) => {
       clearTimeout(timeoutId);
 
       if (!response.ok) {
+        console.error('HTTP error status:', response.status);
+        console.error('Response headers:', Object.fromEntries(response.headers.entries()));
         throw new Error(`HTTP error! status: ${response.status}`);
       }
     } catch (error) {
@@ -79,7 +86,8 @@ serve(async (req) => {
         throw new Error('No text content found in the URL');
       }
 
-      console.log('Extracted text content:', textContent.substring(0, 200) + '...');
+      console.log('Extracted text content length:', textContent.length);
+      console.log('Content sample:', textContent.substring(0, 200) + '...');
     } catch (error) {
       console.error('Error processing content:', error);
       throw new Error(`Failed to process content: ${error.message}`);
@@ -87,6 +95,7 @@ serve(async (req) => {
 
     // Process with OpenAI
     try {
+      console.log('Sending request to OpenAI...');
       const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -113,6 +122,8 @@ Return ONLY the JSON object, no additional text or formatting.`
               content: textContent
             }
           ],
+          temperature: 0.7,
+          max_tokens: 500
         }),
       });
 
@@ -123,7 +134,7 @@ Return ONLY the JSON object, no additional text or formatting.`
       }
 
       const aiData = await aiResponse.json();
-      console.log('OpenAI response:', aiData);
+      console.log('OpenAI response received');
 
       if (!aiData.choices?.[0]?.message?.content) {
         throw new Error('Invalid response from OpenAI');
