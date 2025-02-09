@@ -15,7 +15,7 @@ const NewEntry = () => {
   const queryClient = useQueryClient();
   const { session } = useAuth();
 
-  const handleSubmit = async (content: string, isUrl?: boolean) => {
+  const handleSubmit = async (content: string | File, type: "text" | "url" | "image") => {
     try {
       if (!session?.user) {
         toast({
@@ -26,49 +26,63 @@ const NewEntry = () => {
         return;
       }
 
-      console.log("Processing entry with content:", content.substring(0, 100) + "...");
+      if (type === "image") {
+        const file = content as File;
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${crypto.randomUUID()}.${fileExt}`;
 
-      if (isUrl) {
-        console.log("Processing URL content");
-        const { data, error } = await supabase.functions.invoke('analyze-url', {
+        // Upload image to storage
+        const { error: uploadError } = await supabase.storage
+          .from('entry-images')
+          .upload(fileName, file);
+
+        if (uploadError) {
+          console.error("Error uploading image:", uploadError);
+          throw uploadError;
+        }
+
+        // Get public URL for the uploaded image
+        const { data: { publicUrl } } = supabase.storage
+          .from('entry-images')
+          .getPublicUrl(fileName);
+
+        console.log("Processing image content from URL:", publicUrl);
+
+        const { data, error } = await supabase.functions.invoke('process-entry', {
           body: { 
-            url: content,
-            user_id: session.user.id
+            content: publicUrl,
+            user_id: session.user.id,
+            type: "image"
           }
         });
 
         if (error) {
-          console.error("Error processing URL:", error);
+          console.error("Error processing image entry:", error);
           throw error;
         }
 
-        console.log("URL processed successfully:", data);
-        
-        await queryClient.invalidateQueries({ queryKey: ['entries'] });
-        await queryClient.invalidateQueries({ queryKey: ['timeline-entries'] });
-        
-        toast({
-          title: "URL processed successfully",
-          description: "Your entry has been created",
-        });
-        navigate('/');
-        return;
-      }
+        console.log("Image entry processed successfully:", data);
+      } else {
+        console.log(`Processing ${type} content:`, content.toString().substring(0, 100) + "...");
 
-      console.log("Processing text content");
-      const { data, error } = await supabase.functions.invoke('process-entry', {
-        body: { 
-          content,
-          user_id: session.user.id
+        const { data, error } = await supabase.functions.invoke(
+          type === "url" ? 'analyze-url' : 'process-entry',
+          {
+            body: { 
+              [type === "url" ? "url" : "content"]: content,
+              user_id: session.user.id,
+              type
+            }
+          }
+        );
+
+        if (error) {
+          console.error(`Error processing ${type} entry:`, error);
+          throw error;
         }
-      });
 
-      if (error) {
-        console.error("Error processing entry:", error);
-        throw error;
+        console.log(`${type} entry processed successfully:`, data);
       }
-
-      console.log("Entry processed successfully:", data);
 
       await queryClient.invalidateQueries({ queryKey: ['entries'] });
       await queryClient.invalidateQueries({ queryKey: ['timeline-entries'] });
@@ -103,7 +117,7 @@ const NewEntry = () => {
               </h1>
             </div>
             <p className="text-lg text-white/80 leading-relaxed max-w-2xl">
-              Transform your thoughts into organized insights. Share your ideas or analyze content from around the web - our AI assistant will help structure and enhance your entries.
+              Transform your thoughts into organized insights. Share your ideas, analyze content from around the web, or upload images - our AI assistant will help structure and enhance your entries.
             </p>
           </CardHeader>
         </Card>

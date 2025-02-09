@@ -1,3 +1,4 @@
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -108,10 +109,40 @@ function levenshteinDistance(str1: string, str2: string): number {
   return track[str2.length][str1.length];
 }
 
-async function formatTextAndGenerateComments(content: string): Promise<{ formattedContent: string, comments: any[] }> {
+async function formatTextAndGenerateComments(content: string, type: "text" | "url" | "image"): Promise<{ formattedContent: string, comments: any[] }> {
   if (!openAIApiKey) {
     throw new Error('OpenAI API key not configured');
   }
+
+  const systemPrompt = type === "image" 
+    ? `You are an AI that analyzes images. You will:
+       1. Describe the image content in detail
+       2. Generate 2-3 insightful comments about the image
+       Return a JSON object with exactly these fields:
+       {
+         "formattedContent": "detailed description of the image",
+         "comments": [
+           {
+             "id": "unique string",
+             "text": "insightful comment about the image",
+             "type": "observation" | "analysis" | "suggestion"
+           }
+         ]
+       }`
+    : `You are an AI that processes journal entries. You will:
+       1. Format the text into well-structured paragraphs with proper spacing
+       2. Generate 2-3 insightful comments about the content
+       Return a JSON object with exactly these fields:
+       {
+         "formattedContent": "the formatted text with proper paragraphs and spacing",
+         "comments": [
+           {
+             "id": "unique string",
+             "text": "insightful comment about the content",
+             "type": "observation" | "question" | "suggestion"
+           }
+         ]
+       }`;
 
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
@@ -120,29 +151,24 @@ async function formatTextAndGenerateComments(content: string): Promise<{ formatt
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'gpt-4o-mini',
+      model: 'gpt-4-vision-preview',
       messages: [
-        {
-          role: 'system',
-          content: `You are an AI that processes journal entries. You will:
-1. Format the text into well-structured paragraphs with proper spacing
-2. Generate 2-3 insightful comments about the content
-Return a JSON object with exactly these fields:
-{
-  "formattedContent": "the formatted text with proper paragraphs and spacing",
-  "comments": [
-    {
-      "id": "unique string",
-      "text": "insightful comment about the content",
-      "type": "observation" | "question" | "suggestion"
-    }
-  ]
-}`
-        },
-        { role: 'user', content }
+        { role: 'system', content: systemPrompt },
+        { 
+          role: 'user', 
+          content: type === "image" 
+            ? [
+                { type: "text", text: "Please analyze this image:" },
+                { 
+                  type: "image_url",
+                  image_url: content
+                }
+              ]
+            : content
+        }
       ],
+      max_tokens: 1000,
       temperature: 0.3,
-      response_format: { type: "json_object" }
     }),
   });
 
@@ -163,15 +189,16 @@ serve(async (req) => {
   }
 
   try {
-    const { content, user_id } = await req.json();
-    console.log('Processing entry:', content.substring(0, 100) + '...');
+    const { content, user_id, type = "text" } = await req.json();
+    console.log(`Processing ${type} entry:`, 
+      typeof content === 'string' ? content.substring(0, 100) + "..." : "File content");
 
     if (!content) {
       throw new Error('Content is required');
     }
 
     // Get formatted content and comments
-    const { formattedContent, comments } = await formatTextAndGenerateComments(content);
+    const { formattedContent, comments } = await formatTextAndGenerateComments(content, type as "text" | "url" | "image");
     console.log('Generated formatted content and comments');
 
     // Initialize Supabase client
@@ -195,7 +222,7 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `You are an AI that analyzes journal entries. You must respond with a valid JSON object containing exactly these fields:
+            content: `You are an AI that analyzes ${type === "image" ? "image descriptions" : "journal entries"}. You must respond with a valid JSON object containing exactly these fields:
             {
               "category": "personal" | "work" | "social" | "interests_and_hobbies" | "school",
               "subcategory": "string describing specific topic within the category",
@@ -254,7 +281,6 @@ serve(async (req) => {
           }
         ],
         temperature: 0.3,
-        max_tokens: 500,
         response_format: { type: "json_object" }
       }),
     });
@@ -312,6 +338,16 @@ serve(async (req) => {
       .replace(/\.{3,}$/, '')
       .trim();
 
+    // If this is an image entry, add the image URL to attachments
+    if (type === "image") {
+      processedData.has_attachments = true;
+      processedData.attachments = [{
+        type: "image",
+        url: content,
+        caption: processedData.summary
+      }];
+    }
+
     console.log('Final processed data:', processedData);
 
     // Create the entry in the database
@@ -326,7 +362,9 @@ serve(async (req) => {
         category: processedData.category,
         subcategory: processedData.subcategory,
         tags: processedData.tags,
-        summary: processedData.summary
+        summary: processedData.summary,
+        has_attachments: processedData.has_attachments,
+        attachments: processedData.attachments
       }])
       .select()
       .single();
