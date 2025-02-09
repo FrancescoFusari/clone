@@ -51,6 +51,14 @@ type EntryComment = {
   type: "observation" | "question" | "suggestion";
 };
 
+const CATEGORIES = [
+  { value: 'personal', label: 'Personal' },
+  { value: 'work', label: 'Work' },
+  { value: 'social', label: 'Social' },
+  { value: 'interests_and_hobbies', label: 'Interests & Hobbies' },
+  { value: 'school', label: 'School' }
+];
+
 const SUBCATEGORIES = {
   personal: [
     { value: 'health_and_wellness', label: 'Health and Wellness' },
@@ -118,6 +126,7 @@ const EntryDetails = () => {
   const [editedTitle, setEditedTitle] = useState("");
   const [editedContent, setEditedContent] = useState("");
   const [editedTags, setEditedTags] = useState("");
+  const [editedCategory, setEditedCategory] = useState("");
   const [editedSubcategory, setEditedSubcategory] = useState("");
 
   if (!id) {
@@ -169,6 +178,7 @@ const EntryDetails = () => {
       setEditedTitle(entry.title || "");
       setEditedContent(entry.formatted_content || entry.content || "");
       setEditedTags((entry.tags || []).join(", "));
+      setEditedCategory(entry.category || "");
       setEditedSubcategory(entry.subcategory || "");
     }
   }, [entry]);
@@ -229,10 +239,11 @@ const EntryDetails = () => {
   };
 
   const updateMutation = useMutation({
-    mutationFn: async ({ title, content, tags, subcategory }: { 
+    mutationFn: async ({ title, content, tags, category, subcategory }: { 
       title: string; 
       content: string; 
       tags: string[]; 
+      category: string;
       subcategory: string;
     }) => {
       const { data, error } = await supabase
@@ -242,6 +253,7 @@ const EntryDetails = () => {
           content,
           formatted_content: content,
           tags,
+          category,
           subcategory
         })
         .eq('id', id)
@@ -305,6 +317,7 @@ const EntryDetails = () => {
       title: editedTitle,
       content: editedContent,
       tags: trimmedTags,
+      category: editedCategory,
       subcategory: editedSubcategory,
     });
   };
@@ -445,6 +458,31 @@ const EntryDetails = () => {
                 />
               </div>
               <div>
+                <Label htmlFor="category">Category</Label>
+                <Select 
+                  value={editedCategory} 
+                  onValueChange={(value) => {
+                    setEditedCategory(value);
+                    setEditedSubcategory(''); // Reset subcategory when category changes
+                  }}
+                >
+                  <SelectTrigger className="bg-white/5 border-white/10 text-white/90">
+                    <SelectValue placeholder="Select a category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CATEGORIES.map(category => (
+                      <SelectItem 
+                        key={category.value} 
+                        value={category.value}
+                        className="cursor-pointer"
+                      >
+                        {category.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
                 <Label htmlFor="subcategory">Subcategory</Label>
                 <Select 
                   value={editedSubcategory} 
@@ -454,7 +492,7 @@ const EntryDetails = () => {
                     <SelectValue placeholder="Select a subcategory" />
                   </SelectTrigger>
                   <SelectContent>
-                    {entry?.category && SUBCATEGORIES[entry.category]?.map(sub => (
+                    {editedCategory && SUBCATEGORIES[editedCategory]?.map(sub => (
                       <SelectItem 
                         key={sub.value} 
                         value={sub.value}
