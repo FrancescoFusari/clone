@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Calendar, Tag, FileText, Sparkles, Search, Lightbulb, BookOpen, HelpCircle, MessageCircle, Trash, Edit2, Save, X, ExternalLink } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
+import type { Database } from "@/integrations/supabase/types";
 import {
   Card,
   CardContent,
@@ -50,6 +51,8 @@ type EntryComment = {
   text: string;
   type: "observation" | "question" | "suggestion";
 };
+
+type EntryCategory = Database["public"]["Enums"]["entry_category"];
 
 const CATEGORIES = [
   { value: 'personal', label: 'Personal' },
@@ -135,7 +138,7 @@ const EntryDetails = () => {
   const [editedTitle, setEditedTitle] = useState("");
   const [editedContent, setEditedContent] = useState("");
   const [editedTags, setEditedTags] = useState("");
-  const [editedCategory, setEditedCategory] = useState<Category>("personal");
+  const [editedCategory, setEditedCategory] = useState<EntryCategory>("personal");
   const [editedSubcategory, setEditedSubcategory] = useState("");
 
   if (!id) {
@@ -252,7 +255,7 @@ const EntryDetails = () => {
       title: string; 
       content: string; 
       tags: string[]; 
-      category: Category;
+      category: EntryCategory;
       subcategory: string;
     }) => {
       const { data, error } = await supabase
