@@ -9,46 +9,6 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      category_insights: {
-        Row: {
-          category: Database["public"]["Enums"]["entry_category"]
-          created_at: string | null
-          error_message: string | null
-          id: string
-          insights: Json | null
-          last_analyzed_at: string | null
-          status: Database["public"]["Enums"]["category_analysis_status"] | null
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          category: Database["public"]["Enums"]["entry_category"]
-          created_at?: string | null
-          error_message?: string | null
-          id?: string
-          insights?: Json | null
-          last_analyzed_at?: string | null
-          status?:
-            | Database["public"]["Enums"]["category_analysis_status"]
-            | null
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          category?: Database["public"]["Enums"]["entry_category"]
-          created_at?: string | null
-          error_message?: string | null
-          id?: string
-          insights?: Json | null
-          last_analyzed_at?: string | null
-          status?:
-            | Database["public"]["Enums"]["category_analysis_status"]
-            | null
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
       chat_conversations: {
         Row: {
           created_at: string
@@ -291,11 +251,6 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      category_analysis_status:
-        | "pending"
-        | "processing"
-        | "completed"
-        | "failed"
       chat_model: "gpt-4o-mini" | "gpt-4o"
       entry_category:
         | "personal"
