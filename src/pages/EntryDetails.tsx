@@ -2,7 +2,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Calendar, Tag, FileText, Sparkles, Search, Lightbulb, BookOpen, HelpCircle, MessageCircle } from "lucide-react";
+import { ArrowLeft, Calendar, Tag, FileText, Sparkles, Search, Lightbulb, BookOpen, HelpCircle, MessageCircle, Trash, Edit2, Save, X } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -15,6 +15,28 @@ import {
 import { useToast } from "@/components/ui/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { useState } from "react";
 
 type ResearchData = {
   insights: string;
@@ -51,8 +73,12 @@ const EntryDetails = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedTitle, setEditedTitle] = useState("");
+  const [editedContent, setEditedContent] = useState("");
+  const [editedTags, setEditedTags] = useState("");
+  const [editedSubcategory, setEditedSubcategory] = useState("");
 
-  // Early return if no ID is provided
   if (!id) {
     console.log("No entry ID provided, redirecting to entries list");
     navigate("/");
@@ -96,6 +122,15 @@ const EntryDetails = () => {
     enabled: !!id,
     retry: false,
   });
+
+  React.useEffect(() => {
+    if (entry) {
+      setEditedTitle(entry.title || "");
+      setEditedContent(entry.formatted_content || entry.content || "");
+      setEditedTags((entry.tags || []).join(", "));
+      setEditedSubcategory(entry.subcategory || "");
+    }
+  }, [entry]);
 
   const researchMutation = useMutation({
     mutationFn: async () => {
@@ -152,6 +187,91 @@ const EntryDetails = () => {
     }
   };
 
+  const updateMutation = useMutation({
+    mutationFn: async ({ title, content, tags, subcategory }: { 
+      title: string; 
+      content: string; 
+      tags: string[]; 
+      subcategory: string;
+    }) => {
+      const { data, error } = await supabase
+        .from('entries')
+        .update({
+          title,
+          content,
+          formatted_content: content,
+          tags,
+          subcategory
+        })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["entry", id] });
+      toast({
+        title: "Success",
+        description: "Entry updated successfully",
+      });
+      setIsEditing(false);
+    },
+    onError: (error) => {
+      console.error("Error updating entry:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to update entry",
+      });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase
+        .from('entries')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Entry deleted successfully",
+      });
+      navigate("/");
+    },
+    onError: (error) => {
+      console.error("Error deleting entry:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to delete entry",
+      });
+    },
+  });
+
+  const handleSave = () => {
+    const trimmedTags = editedTags
+      .split(",")
+      .map(tag => tag.trim())
+      .filter(tag => tag.length > 0);
+
+    updateMutation.mutate({
+      title: editedTitle,
+      content: editedContent,
+      tags: trimmedTags,
+      subcategory: editedSubcategory,
+    });
+  };
+
+  const handleDelete = () => {
+    deleteMutation.mutate();
+  };
+
   if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
@@ -192,7 +312,6 @@ const EntryDetails = () => {
 
   return (
     <div className="container mx-auto px-4 py-8 mb-24">
-      {/* Header Card */}
       <Card className="glass-morphism overflow-hidden mb-8">
         <CardHeader className="space-y-2">
           <div className="space-y-2">
@@ -204,183 +323,321 @@ const EntryDetails = () => {
         </CardHeader>
       </Card>
 
-      <Button
-        variant="outline"
-        onClick={() => navigate(-1)}
-        className="mb-6 bg-white/5 border-white/10 text-white/90 hover:bg-white/10"
-      >
-        <ArrowLeft className="mr-2 h-4 w-4" /> Back to Entries
-      </Button>
+      <div className="flex items-center gap-4 mb-6">
+        <Button
+          variant="outline"
+          onClick={() => navigate(-1)}
+          className="bg-white/5 border-white/10 text-white/90 hover:bg-white/10"
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" /> Back to Entries
+        </Button>
+        
+        {!isEditing && (
+          <>
+            <Button
+              variant="outline"
+              onClick={() => setIsEditing(true)}
+              className="bg-white/5 border-white/10 text-white/90 hover:bg-white/10"
+            >
+              <Edit2 className="mr-2 h-4 w-4" /> Edit Entry
+            </Button>
+            
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="destructive"
+                  className="bg-red-500/10 hover:bg-red-500/20"
+                >
+                  <Trash className="mr-2 h-4 w-4" /> Delete Entry
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This action cannot be undone. This will permanently delete your entry.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleDelete}>
+                    Delete
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </>
+        )}
+        
+        {isEditing && (
+          <>
+            <Button
+              variant="default"
+              onClick={handleSave}
+              className="bg-green-500/10 hover:bg-green-500/20"
+              disabled={updateMutation.isPending}
+            >
+              <Save className="mr-2 h-4 w-4" /> Save Changes
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setIsEditing(false)}
+              className="bg-white/5 border-white/10 text-white/90 hover:bg-white/10"
+            >
+              <X className="mr-2 h-4 w-4" /> Cancel
+            </Button>
+          </>
+        )}
+      </div>
 
-      {/* Entry Content Card */}
       <Card className="mb-6 backdrop-blur-lg bg-white/5 border-white/10">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-white/90">
-            <FileText className="h-5 w-5" />
-            {entry.title || "Untitled Entry"}
-          </CardTitle>
-          <CardDescription className="flex items-center gap-2 text-white/60">
-            <Calendar className="h-4 w-4" />
-            {format(new Date(entry.created_at), "PPp")}
-          </CardDescription>
+          {isEditing ? (
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="title">Title</Label>
+                <Input
+                  id="title"
+                  value={editedTitle}
+                  onChange={(e) => setEditedTitle(e.target.value)}
+                  className="bg-white/5 border-white/10 text-white/90"
+                />
+              </div>
+              <div>
+                <Label htmlFor="subcategory">Subcategory</Label>
+                <Select 
+                  value={editedSubcategory} 
+                  onValueChange={setEditedSubcategory}
+                >
+                  <SelectTrigger className="bg-white/5 border-white/10 text-white/90">
+                    <SelectValue placeholder="Select a subcategory" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {entry?.category === 'personal' && [
+                      'health_and_wellness',
+                      'mental_health',
+                      'personal_growth',
+                      'relationships',
+                      'spirituality',
+                      'daily_life'
+                    ].map(sub => (
+                      <SelectItem key={sub} value={sub}>
+                        {sub.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                      </SelectItem>
+                    ))}
+                    {entry?.category === 'work' && [
+                      'projects',
+                      'career_development',
+                      'workplace_dynamics',
+                      'job_search',
+                      'business_ideas',
+                      'work_life_balance'
+                    ].map(sub => (
+                      <SelectItem key={sub} value={sub}>
+                        {sub.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                      </SelectItem>
+                    ))}
+                    {/* Add other categories as needed */}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          ) : (
+            <>
+              <CardTitle className="flex items-center gap-2 text-white/90">
+                <FileText className="h-5 w-5" />
+                {entry.title || "Untitled Entry"}
+              </CardTitle>
+              <CardDescription className="flex items-center gap-2 text-white/60">
+                <Calendar className="h-4 w-4" />
+                {format(new Date(entry.created_at), "PPp")}
+              </CardDescription>
+            </>
+          )}
         </CardHeader>
         <CardContent>
-          <div className="prose max-w-none mb-6 dark:prose-invert text-white/80">
-            {formatContent(entry.formatted_content || entry.content)}
-          </div>
-
-          {Array.isArray(entry.entry_comments) && entry.entry_comments.length > 0 && (
-            <div className="mb-6 space-y-4">
-              <div className="flex items-center gap-2">
-                <MessageCircle className="h-5 w-5 text-white/60" />
-                <h3 className="text-lg font-semibold text-white/90">AI Comments & Observations</h3>
+          {isEditing ? (
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="content">Content</Label>
+                <Textarea
+                  id="content"
+                  value={editedContent}
+                  onChange={(e) => setEditedContent(e.target.value)}
+                  className="min-h-[200px] bg-white/5 border-white/10 text-white/90"
+                />
               </div>
-              <div className="grid gap-4">
-                {(entry.entry_comments as EntryComment[]).map((comment) => (
-                  <Alert key={comment.id} className="bg-white/5 border-white/10">
-                    <div className="flex items-center gap-2">
-                      {comment.type === "observation" && <Sparkles className="h-4 w-4" />}
-                      {comment.type === "question" && <HelpCircle className="h-4 w-4" />}
-                      {comment.type === "suggestion" && <Lightbulb className="h-4 w-4" />}
-                      <span className="capitalize text-sm font-medium">{comment.type}</span>
-                    </div>
-                    <AlertDescription className="mt-2 text-white/80">
-                      {comment.text}
+              <div>
+                <Label htmlFor="tags">Tags (comma-separated)</Label>
+                <Input
+                  id="tags"
+                  value={editedTags}
+                  onChange={(e) => setEditedTags(e.target.value)}
+                  placeholder="tag1, tag2, tag3"
+                  className="bg-white/5 border-white/10 text-white/90"
+                />
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="prose max-w-none mb-6 dark:prose-invert text-white/80">
+                {formatContent(entry.formatted_content || entry.content)}
+              </div>
+
+              {Array.isArray(entry.entry_comments) && entry.entry_comments.length > 0 && (
+                <div className="mb-6 space-y-4">
+                  <div className="flex items-center gap-2">
+                    <MessageCircle className="h-5 w-5 text-white/60" />
+                    <h3 className="text-lg font-semibold text-white/90">AI Comments & Observations</h3>
+                  </div>
+                  <div className="grid gap-4">
+                    {(entry.entry_comments as EntryComment[]).map((comment) => (
+                      <Alert key={comment.id} className="bg-white/5 border-white/10">
+                        <div className="flex items-center gap-2">
+                          {comment.type === "observation" && <Sparkles className="h-4 w-4" />}
+                          {comment.type === "question" && <HelpCircle className="h-4 w-4" />}
+                          {comment.type === "suggestion" && <Lightbulb className="h-4 w-4" />}
+                          <span className="capitalize text-sm font-medium">{comment.type}</span>
+                        </div>
+                        <AlertDescription className="mt-2 text-white/80">
+                          {comment.text}
+                        </AlertDescription>
+                      </Alert>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {(entry.summary || entry.title) && (
+                <div className="mb-6 space-y-4">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="h-5 w-5 text-white/60" />
+                    <h3 className="text-lg font-semibold text-white/90">AI Generated Content</h3>
+                  </div>
+                  <div className="grid gap-4 p-4 rounded-lg bg-white/5">
+                    {entry.title && (
+                      <div>
+                        <span className="text-sm font-medium text-white/60">Title:</span>
+                        <p className="text-white/80">{entry.title}</p>
+                      </div>
+                    )}
+                    {entry.summary && (
+                      <div>
+                        <span className="text-sm font-medium text-white/60">Summary:</span>
+                        <p className="text-white/80">{entry.summary}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {entry.tags && entry.tags.length > 0 && (
+                <div className="flex items-center gap-2 flex-wrap mb-6">
+                  <Tag className="h-4 w-4 text-white/60" />
+                  {entry.tags.map((tag: string) => (
+                    <Badge 
+                      key={tag} 
+                      variant="secondary"
+                      className="bg-white/10 text-white/80 hover:bg-white/20"
+                    >
+                      {tag}
+                    </Badge>
+                  ))}
+                </div>
+              )}
+
+              <div className="mt-8 space-y-6">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <Search className="h-5 w-5 text-white/60" />
+                    <h3 className="text-lg font-semibold text-white/90">AI Research Insights</h3>
+                  </div>
+                  {!research && !isResearchLoading && (
+                    <Button
+                      onClick={handleGenerateResearch}
+                      variant="outline"
+                      className="bg-white/5 border-white/10 text-white/90 hover:bg-white/10"
+                    >
+                      Generate Insights
+                    </Button>
+                  )}
+                </div>
+
+                {isResearchLoading ? (
+                  <div className="space-y-4">
+                    <Skeleton className="h-4 w-3/4 bg-white/5" />
+                    <Skeleton className="h-4 w-1/2 bg-white/5" />
+                    <Skeleton className="h-4 w-2/3 bg-white/5" />
+                  </div>
+                ) : research ? (
+                  <div className="grid gap-6">
+                    <Alert className="bg-white/5 border-white/10">
+                      <Lightbulb className="h-4 w-4" />
+                      <AlertTitle>Key Concepts</AlertTitle>
+                      <AlertDescription>
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          {research.key_concepts.map((concept: string) => (
+                            <Badge 
+                              key={concept}
+                              variant="secondary" 
+                              className="bg-white/10 text-white/80 hover:bg-white/20"
+                            >
+                              {concept}
+                            </Badge>
+                          ))}
+                        </div>
+                      </AlertDescription>
+                    </Alert>
+
+                    <Alert className="bg-white/5 border-white/10">
+                      <BookOpen className="h-4 w-4" />
+                      <AlertTitle>Related Topics</AlertTitle>
+                      <AlertDescription>
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          {research.related_topics.map((topic: string) => (
+                            <Badge 
+                              key={topic}
+                              variant="secondary"
+                              className="bg-white/10 text-white/80 hover:bg-white/20"
+                            >
+                              {topic}
+                            </Badge>
+                          ))}
+                        </div>
+                      </AlertDescription>
+                    </Alert>
+
+                    <Alert className="bg-white/5 border-white/10">
+                      <Sparkles className="h-4 w-4" />
+                      <AlertTitle>AI Insights</AlertTitle>
+                      <AlertDescription className="mt-2 text-white/80">
+                        {research.insights}
+                      </AlertDescription>
+                    </Alert>
+
+                    <Alert className="bg-white/5 border-white/10">
+                      <HelpCircle className="h-4 w-4" />
+                      <AlertTitle>Questions to Consider</AlertTitle>
+                      <AlertDescription>
+                        <ul className="list-disc pl-4 mt-2 space-y-2 text-white/80">
+                          {research.questions.map((question: string) => (
+                            <li key={question}>{question}</li>
+                          ))}
+                        </ul>
+                      </AlertDescription>
+                    </Alert>
+                  </div>
+                ) : (
+                  <Alert className="bg-white/5 border-white/10">
+                    <AlertTitle>No research insights available</AlertTitle>
+                    <AlertDescription>
+                      Click the "Generate Insights" button to analyze this entry and generate research insights.
                     </AlertDescription>
                   </Alert>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {(entry.summary || entry.title) && (
-            <div className="mb-6 space-y-4">
-              <div className="flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-white/60" />
-                <h3 className="text-lg font-semibold text-white/90">AI Generated Content</h3>
-              </div>
-              <div className="grid gap-4 p-4 rounded-lg bg-white/5">
-                {entry.title && (
-                  <div>
-                    <span className="text-sm font-medium text-white/60">Title:</span>
-                    <p className="text-white/80">{entry.title}</p>
-                  </div>
-                )}
-                {entry.summary && (
-                  <div>
-                    <span className="text-sm font-medium text-white/60">Summary:</span>
-                    <p className="text-white/80">{entry.summary}</p>
-                  </div>
                 )}
               </div>
-            </div>
+            </>
           )}
-
-          {entry.tags && entry.tags.length > 0 && (
-            <div className="flex items-center gap-2 flex-wrap mb-6">
-              <Tag className="h-4 w-4 text-white/60" />
-              {entry.tags.map((tag: string) => (
-                <Badge 
-                  key={tag} 
-                  variant="secondary"
-                  className="bg-white/10 text-white/80 hover:bg-white/20"
-                >
-                  {tag}
-                </Badge>
-              ))}
-            </div>
-          )}
-
-          <div className="mt-8 space-y-6">
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2">
-                <Search className="h-5 w-5 text-white/60" />
-                <h3 className="text-lg font-semibold text-white/90">AI Research Insights</h3>
-              </div>
-              {!research && !isResearchLoading && (
-                <Button
-                  onClick={handleGenerateResearch}
-                  variant="outline"
-                  className="bg-white/5 border-white/10 text-white/90 hover:bg-white/10"
-                >
-                  Generate Insights
-                </Button>
-              )}
-            </div>
-
-            {isResearchLoading ? (
-              <div className="space-y-4">
-                <Skeleton className="h-4 w-3/4 bg-white/5" />
-                <Skeleton className="h-4 w-1/2 bg-white/5" />
-                <Skeleton className="h-4 w-2/3 bg-white/5" />
-              </div>
-            ) : research ? (
-              <div className="grid gap-6">
-                <Alert className="bg-white/5 border-white/10">
-                  <Lightbulb className="h-4 w-4" />
-                  <AlertTitle>Key Concepts</AlertTitle>
-                  <AlertDescription>
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {research.key_concepts.map((concept: string) => (
-                        <Badge 
-                          key={concept}
-                          variant="secondary" 
-                          className="bg-white/10 text-white/80 hover:bg-white/20"
-                        >
-                          {concept}
-                        </Badge>
-                      ))}
-                    </div>
-                  </AlertDescription>
-                </Alert>
-
-                <Alert className="bg-white/5 border-white/10">
-                  <BookOpen className="h-4 w-4" />
-                  <AlertTitle>Related Topics</AlertTitle>
-                  <AlertDescription>
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {research.related_topics.map((topic: string) => (
-                        <Badge 
-                          key={topic}
-                          variant="secondary"
-                          className="bg-white/10 text-white/80 hover:bg-white/20"
-                        >
-                          {topic}
-                        </Badge>
-                      ))}
-                    </div>
-                  </AlertDescription>
-                </Alert>
-
-                <Alert className="bg-white/5 border-white/10">
-                  <Sparkles className="h-4 w-4" />
-                  <AlertTitle>AI Insights</AlertTitle>
-                  <AlertDescription className="mt-2 text-white/80">
-                    {research.insights}
-                  </AlertDescription>
-                </Alert>
-
-                <Alert className="bg-white/5 border-white/10">
-                  <HelpCircle className="h-4 w-4" />
-                  <AlertTitle>Questions to Consider</AlertTitle>
-                  <AlertDescription>
-                    <ul className="list-disc pl-4 mt-2 space-y-2 text-white/80">
-                      {research.questions.map((question: string) => (
-                        <li key={question}>{question}</li>
-                      ))}
-                    </ul>
-                  </AlertDescription>
-                </Alert>
-              </div>
-            ) : (
-              <Alert className="bg-white/5 border-white/10">
-                <AlertTitle>No research insights available</AlertTitle>
-                <AlertDescription>
-                  Click the "Generate Insights" button to analyze this entry and generate research insights.
-                </AlertDescription>
-              </Alert>
-            )}
-          </div>
         </CardContent>
       </Card>
     </div>
