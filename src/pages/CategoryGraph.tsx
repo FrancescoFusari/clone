@@ -1,3 +1,4 @@
+
 import { useParams } from "react-router-dom";
 import { CenteredLayout } from "@/components/layouts/CenteredLayout";
 import { CategoryGraph } from "@/components/CategoryGraph";

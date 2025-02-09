@@ -1,3 +1,4 @@
+
 project_id = "bupbikzhhouzlwzpkwxp"
 
 [api]
@@ -7,4 +8,8 @@ schemas = ["public", "storage", "graphql_public"]
 
 [[functions]]
 [functions.process-entry]
+verify_jwt = true
+
+[[functions]]
+[functions.analyze-entries]
 verify_jwt = true
