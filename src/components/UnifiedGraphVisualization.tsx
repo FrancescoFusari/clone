@@ -28,34 +28,12 @@ interface Link {
   source: string;
   target: string;
   color?: string;
-  distance?: number;
 }
 
 interface GraphData {
   nodes: Node[];
   links: Link[];
 }
-
-// Function to determine link distance based on node types
-const getLinkDistance = (sourceType: string, targetType: string): number => {
-  // Hierarchical distances
-  const distances = {
-    user_to_category: 300,
-    category_to_subcategory: 200,
-    category_to_entry: 150,
-    entry_to_subcategory: 100,
-    entry_to_tag: 50
-  };
-
-  if (sourceType === "user" && targetType === "category") return distances.user_to_category;
-  if (sourceType === "category" && targetType === "subcategory") return distances.category_to_subcategory;
-  if (sourceType === "category" && targetType === "entry") return distances.category_to_entry;
-  if (sourceType === "entry" && targetType === "subcategory") return distances.entry_to_subcategory;
-  if (sourceType === "entry" && targetType === "tag") return distances.entry_to_tag;
-
-  // Default distance for other combinations
-  return 100;
-};
 
 export const UnifiedGraphVisualization = () => {
   const graphRef = useRef<HTMLDivElement>(null);
@@ -121,7 +99,7 @@ export const UnifiedGraphVisualization = () => {
       id: profile.id,
       name: profile.username || "User",
       type: "user",
-      val: 300
+      val: 300 // Triple the size of category nodes
     });
 
     // Track unique categories, subcategories and tags
@@ -140,12 +118,11 @@ export const UnifiedGraphVisualization = () => {
         val: 20
       });
 
-      // Link entry to category with custom distance
+      // Link entry to category
       graphData.links.push({
         source: entry.category,
         target: entry.id,
-        color: getCategoryColor(entry.category).link,
-        distance: getLinkDistance("category", "entry")
+        color: getCategoryColor(entry.category).link
       });
 
       if (entry.subcategory) {
@@ -153,8 +130,7 @@ export const UnifiedGraphVisualization = () => {
         graphData.links.push({
           source: entry.id,
           target: entry.subcategory,
-          color: getCategoryColor(entry.category).link,
-          distance: getLinkDistance("entry", "subcategory")
+          color: getCategoryColor(entry.category).link
         });
       }
 
@@ -163,13 +139,12 @@ export const UnifiedGraphVisualization = () => {
         graphData.links.push({
           source: entry.id,
           target: tag,
-          color: getCategoryColor(entry.category).link,
-          distance: getLinkDistance("entry", "tag")
+          color: getCategoryColor(entry.category).link
         });
       });
     });
 
-    // Add category nodes and link to user
+    // Add category nodes
     categories.forEach(cat => {
       graphData.nodes.push({
         id: cat,
@@ -177,11 +152,11 @@ export const UnifiedGraphVisualization = () => {
         type: "category",
         val: 100
       });
+      // Link categories to user
       graphData.links.push({
         source: profile.id,
         target: cat,
-        color: getCategoryColor(cat).link,
-        distance: getLinkDistance("user", "category")
+        color: getCategoryColor(cat).link
       });
     });
 
@@ -201,11 +176,11 @@ export const UnifiedGraphVisualization = () => {
         id: tag,
         name: tag,
         type: "tag",
-        val: 5
+        val: 5  // Updated from 15 to 5
       });
     });
 
-    const Graph = ForceGraph3D()(graphRef.current)
+    const Graph = new ForceGraph3D()(graphRef.current)
       .graphData(graphData)
       .nodeLabel("name")
       .nodeColor(node => {
@@ -253,9 +228,6 @@ export const UnifiedGraphVisualization = () => {
         );
       });
 
-    // Set custom link distances based on node types
-    Graph.d3Force('link')?.distance((link: any) => (link as Link).distance || 100);
-
     // Handle window resize
     const handleResize = () => {
       Graph.width(window.innerWidth)
@@ -271,6 +243,7 @@ export const UnifiedGraphVisualization = () => {
     if (userNode) {
       Graph.d3Force('center', null);
       Graph.d3Force('charge')?.strength(-150);
+      Graph.d3Force('link')?.distance(200);
       userNode.fx = 0;
       userNode.fy = 0;
       userNode.fz = 0;
