@@ -15,11 +15,7 @@ const NewEntry = () => {
   const queryClient = useQueryClient();
   const { session } = useAuth();
 
-  const handleSubmit = async (content: string, isUrl?: boolean, metadata?: {
-    priority?: 'high' | 'medium' | 'low';
-    attachments?: File[];
-    customSubcategory?: string;
-  }) => {
+  const handleSubmit = async (content: string, isUrl?: boolean) => {
     try {
       if (!session?.user) {
         toast({
@@ -37,8 +33,7 @@ const NewEntry = () => {
         const { data, error } = await supabase.functions.invoke('analyze-url', {
           body: { 
             url: content,
-            user_id: session.user.id,
-            metadata
+            user_id: session.user.id
           }
         });
 
@@ -60,45 +55,11 @@ const NewEntry = () => {
         return;
       }
 
-      // Handle file uploads first if there are any attachments
-      let uploadedAttachments = [];
-      if (metadata?.attachments && metadata.attachments.length > 0) {
-        for (const file of metadata.attachments) {
-          const fileExt = file.name.split('.').pop();
-          const filePath = `${session.user.id}/${crypto.randomUUID()}.${fileExt}`;
-          
-          const { data: uploadData, error: uploadError } = await supabase.storage
-            .from('entry-attachments')
-            .upload(filePath, file);
-
-          if (uploadError) {
-            console.error("Error uploading file:", uploadError);
-            toast({
-              variant: "destructive",
-              title: "Upload failed",
-              description: `Failed to upload ${file.name}`,
-            });
-            continue;
-          }
-
-          uploadedAttachments.push({
-            name: file.name,
-            path: filePath,
-            type: file.type,
-            size: file.size
-          });
-        }
-      }
-
       console.log("Processing text content");
       const { data, error } = await supabase.functions.invoke('process-entry', {
         body: { 
           content,
-          user_id: session.user.id,
-          metadata: {
-            ...metadata,
-            attachments: uploadedAttachments
-          }
+          user_id: session.user.id
         }
       });
 
