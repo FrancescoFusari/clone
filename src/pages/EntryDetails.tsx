@@ -205,7 +205,7 @@ const EntryDetails = () => {
       setEditedTitle(entry.title || "");
       setEditedContent(entry.formatted_content || entry.content || "");
       setEditedTags((entry.tags || []).join(", "));
-      setEditedCategory(entry.category || "");
+      setEditedCategory(entry.category || "personal");
       setEditedSubcategory(entry.subcategory || "");
     }
   }, [entry]);

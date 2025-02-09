@@ -4,24 +4,31 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Lightbulb, Loader2 } from "lucide-react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
+
+type EntryCategory = Database["public"]["Enums"]["entry_category"];
 
 export const CategoryAIInsights = () => {
   const { category } = useParams<{ category: string }>();
 
+  // Validate that category is a valid EntryCategory
+  const validCategory = category as EntryCategory;
+  if (!validCategory || !["personal", "work", "social", "interests_and_hobbies", "school"].includes(validCategory)) {
+    return null;
+  }
+
   const { data: insights, isLoading } = useQuery({
-    queryKey: ["category-insights", category],
+    queryKey: ["category-insights", validCategory],
     queryFn: async () => {
-      // Get all entries for this category
       const { data: entries } = await supabase
         .from("entries")
         .select("*")
-        .eq("category", category);
+        .eq("category", validCategory);
 
       if (!entries?.length) {
         return null;
       }
 
-      // Call the analyze-entries function
       const { data, error } = await supabase.functions.invoke("analyze-entries", {
         body: { entries },
       });
@@ -33,7 +40,7 @@ export const CategoryAIInsights = () => {
 
       return data;
     },
-    enabled: !!category,
+    enabled: !!validCategory,
   });
 
   if (!insights) {
