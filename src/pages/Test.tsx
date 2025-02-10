@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { User, Briefcase, Users, Palette, GraduationCap, MoreVertical, ThumbsUp, Bookmark, Share2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -89,7 +88,6 @@ const Test = () => {
     }
   };
 
-  // Touch event handlers
   const handleTouchStart = (e: React.TouchEvent) => {
     setTouchStartY(e.touches[0].clientY);
     setLastTouchY(e.touches[0].clientY);
@@ -147,16 +145,16 @@ const Test = () => {
         </button>
       </div>
 
-      <div className="flex gap-2 mb-6 overflow-x-auto scrollbar-none py-1">
+      <div className="flex gap-2 mb-8 overflow-x-auto scrollbar-none py-1">
         <button
           onClick={() => {
             setSelectedCategory(null);
             setActiveIndex(0);
           }}
-          className={`flex items-center px-4 py-1.5 rounded-full text-base transition-colors border border-white/10 ${
+          className={`flex items-center px-4 py-2 rounded-full text-base transition-all ${
             selectedCategory === null 
-              ? 'bg-white/10 text-white font-medium' 
-              : 'bg-transparent text-white/70 hover:bg-white/5'
+              ? 'bg-white text-black font-medium shadow-lg shadow-white/10' 
+              : 'bg-zinc-800/50 text-white/70 hover:bg-zinc-700/50'
           }`}
         >
           <span>All</span>
@@ -168,10 +166,10 @@ const Test = () => {
               setSelectedCategory(category);
               setActiveIndex(0);
             }}
-            className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-base transition-colors border border-white/10 ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-full text-base transition-all ${
               selectedCategory === category
-                ? 'bg-white/10 text-white font-medium'
-                : 'bg-transparent text-white/70 hover:bg-white/5'
+                ? 'bg-white text-black font-medium shadow-lg shadow-white/10'
+                : 'bg-zinc-800/50 text-white/70 hover:bg-zinc-700/50'
             }`}
           >
             {getCategoryIcon(category)}
@@ -181,16 +179,16 @@ const Test = () => {
       </div>
 
       {isLoading ? (
-        <div className="flex justify-center items-center h-64">
+        <div className="flex justify-center items-center h-[60vh]">
           <div className="animate-pulse text-white/50">Loading entries...</div>
         </div>
       ) : entries.length === 0 ? (
-        <div className="flex justify-center items-center h-64">
+        <div className="flex justify-center items-center h-[60vh]">
           <div className="text-white/50">No entries found</div>
         </div>
       ) : (
         <div 
-          className="relative h-[600px] overflow-hidden perspective touch-none select-none"
+          className="relative h-[70vh] overflow-hidden perspective touch-none select-none"
           onWheel={handleWheel}
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
@@ -204,67 +202,73 @@ const Test = () => {
               return (
                 <motion.div
                   key={entry.id}
-                  className="absolute w-full"
+                  className="absolute w-full top-1/2 -translate-y-1/2"
                   initial={{ 
-                    scale: 0.9,
-                    y: 60,
+                    scale: 0.8,
+                    y: "50%",
                     rotateX: 10,
                     opacity: 0 
                   }}
                   animate={{ 
-                    scale: 1 - (Math.abs(distance) * 0.05),
-                    y: distance * 30,
-                    rotateX: distance * 5,
-                    opacity: 1 - (Math.abs(distance) * 0.2),
+                    scale: isActive ? 1 : 0.8 - (Math.abs(distance) * 0.1),
+                    y: `${50 + (distance * 10)}%`,
+                    rotateX: distance * 3,
+                    opacity: 1 - (Math.abs(distance) * 0.3),
                     zIndex: entries.length - Math.abs(distance)
                   }}
                   exit={{ 
-                    scale: 0.9,
+                    scale: 0.8,
                     opacity: 0,
-                    transition: { duration: 0.2 }
+                    transition: { duration: 0.3 }
                   }}
                   transition={{
                     type: "spring",
                     stiffness: 300,
-                    damping: 30
+                    damping: 30,
+                    mass: 1
                   }}
                   style={{
                     transformStyle: 'preserve-3d',
-                    transformOrigin: 'top center',
+                    transformOrigin: 'center center',
                     touchAction: 'none',
                     pointerEvents: isActive ? 'auto' : 'none'
                   }}
                 >
-                  <div className={`bg-gradient-to-br from-zinc-800/90 to-zinc-900/90 backdrop-blur-xl rounded-3xl p-6 border transition-all duration-300 ${
-                    isActive ? 'border-white/20 shadow-lg' : 'border-white/10'
-                  }`}>
+                  <div 
+                    className={`mx-auto max-w-2xl bg-gradient-to-br from-zinc-800/90 to-zinc-900/90 backdrop-blur-xl 
+                    rounded-3xl p-6 border shadow-xl transition-all duration-300 ${
+                      isActive 
+                        ? 'border-white/20 shadow-white/5' 
+                        : 'border-white/5'
+                    }`}
+                  >
                     <div className="flex justify-between items-start mb-4">
                       <div>
-                        <h3 className="text-xl font-semibold mb-1">{entry.title}</h3>
+                        <h3 className="text-2xl font-semibold mb-1">{entry.title}</h3>
                         <p className="text-sm text-white/60">
                           {format(new Date(entry.created_at), "MMM d, yyyy")}
                         </p>
                       </div>
-                      <span className="flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-sm">
+                      <span className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 text-sm backdrop-blur-md">
                         {getCategoryIcon(entry.category)}
                         {entry.category.charAt(0).toUpperCase() + entry.category.slice(1)}
                       </span>
                     </div>
                     
-                    <p className="text-white/80 line-clamp-3 mb-4">
+                    <p className="text-white/80 text-lg leading-relaxed line-clamp-3 mb-4">
                       {entry.content}
                     </p>
 
                     <div className="flex justify-between items-center pt-4 border-t border-white/10">
-                      <div className="flex gap-6">
+                      <div className="flex gap-8">
                         <button className="flex items-center gap-2 text-white/60 hover:text-white transition-colors">
-                          <ThumbsUp className="w-4 h-4" />
+                          <ThumbsUp className="w-5 h-5" />
                         </button>
                         <button className="flex items-center gap-2 text-white/60 hover:text-white transition-colors">
-                          <Bookmark className="w-4 h-4" />
+                          <Bookmark className="w-5 h-5" />
                         </button>
                         <button className="flex items-center gap-2 text-white/60 hover:text-white transition-colors">
-                          <Share2 className="w-4 h-4" />
+                          <Share2 className="w-5 h-5" />
                         </button>
                       </div>
                     </div>
