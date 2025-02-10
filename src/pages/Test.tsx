@@ -19,6 +19,8 @@ const Test = () => {
   const [touchStartY, setTouchStartY] = useState<number | null>(null);
   const [lastTouchY, setLastTouchY] = useState<number | null>(null);
   const [isScrolling, setIsScrolling] = useState(false);
+  const [lastWheelTime, setLastWheelTime] = useState(0);
+  const [wheelAccumulator, setWheelAccumulator] = useState(0);
 
   useEffect(() => {
     const fetchEntries = async () => {
@@ -59,13 +61,35 @@ const Test = () => {
   };
 
   const handleWheel = (e: React.WheelEvent) => {
-    if (e.deltaY > 0 && activeIndex < entries.length - 1) {
-      setActiveIndex(prev => prev + 1);
-    } else if (e.deltaY < 0 && activeIndex > 0) {
-      setActiveIndex(prev => prev - 1);
+    e.preventDefault();
+    const now = Date.now();
+    const deltaY = e.deltaY;
+    
+    // Reset accumulator if enough time has passed since last wheel event
+    if (now - lastWheelTime > 150) {
+      setWheelAccumulator(0);
+    }
+    
+    // Update accumulator with new delta
+    const newAccumulator = wheelAccumulator + deltaY;
+    setWheelAccumulator(newAccumulator);
+    setLastWheelTime(now);
+    
+    // Threshold for triggering card change - adjust for sensitivity
+    const threshold = 50;
+    
+    if (Math.abs(newAccumulator) >= threshold) {
+      if (newAccumulator > 0 && activeIndex < entries.length - 1) {
+        setActiveIndex(prev => prev + 1);
+        setWheelAccumulator(0);
+      } else if (newAccumulator < 0 && activeIndex > 0) {
+        setActiveIndex(prev => prev - 1);
+        setWheelAccumulator(0);
+      }
     }
   };
 
+  // Touch event handlers
   const handleTouchStart = (e: React.TouchEvent) => {
     setTouchStartY(e.touches[0].clientY);
     setLastTouchY(e.touches[0].clientY);
@@ -166,7 +190,7 @@ const Test = () => {
         </div>
       ) : (
         <div 
-          className="relative h-[600px] overflow-hidden perspective touch-none"
+          className="relative h-[600px] overflow-hidden perspective touch-none select-none"
           onWheel={handleWheel}
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
@@ -207,7 +231,8 @@ const Test = () => {
                   style={{
                     transformStyle: 'preserve-3d',
                     transformOrigin: 'top center',
-                    touchAction: 'none'
+                    touchAction: 'none',
+                    pointerEvents: isActive ? 'auto' : 'none'
                   }}
                 >
                   <div className={`bg-gradient-to-br from-zinc-800/90 to-zinc-900/90 backdrop-blur-xl rounded-3xl p-6 border transition-all duration-300 ${
