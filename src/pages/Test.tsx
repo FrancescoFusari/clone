@@ -65,18 +65,20 @@ const Test = () => {
     const now = Date.now();
     const deltaY = e.deltaY;
     
-    // Reset accumulator if enough time has passed since last wheel event
-    if (now - lastWheelTime > 150) {
-      setWheelAccumulator(0);
-    }
+    // Smoother accumulation with time-based decay
+    const timeDiff = now - lastWheelTime;
+    const decayFactor = Math.max(0, 1 - (timeDiff / 200)); // Decay over 200ms
     
-    // Update accumulator with new delta
-    const newAccumulator = wheelAccumulator + deltaY;
+    // Reset accumulator if enough time has passed
+    const newAccumulator = timeDiff > 200 
+      ? deltaY 
+      : wheelAccumulator * decayFactor + deltaY;
+    
     setWheelAccumulator(newAccumulator);
     setLastWheelTime(now);
     
-    // Threshold for triggering card change - adjust for sensitivity
-    const threshold = 50;
+    // Dynamic threshold based on scroll speed
+    const threshold = Math.max(40, Math.min(80, Math.abs(deltaY)));
     
     if (Math.abs(newAccumulator) >= threshold) {
       if (newAccumulator > 0 && activeIndex < entries.length - 1) {
@@ -89,7 +91,6 @@ const Test = () => {
     }
   };
 
-  // Touch event handlers
   const handleTouchStart = (e: React.TouchEvent) => {
     setTouchStartY(e.touches[0].clientY);
     setLastTouchY(e.touches[0].clientY);
@@ -97,7 +98,7 @@ const Test = () => {
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    e.preventDefault(); // Prevent default scrolling behavior
+    e.preventDefault();
     
     if (!touchStartY || !lastTouchY) return;
     
@@ -105,14 +106,14 @@ const Test = () => {
     const deltaY = currentY - lastTouchY;
     const totalDeltaY = currentY - touchStartY;
 
-    // Only start scrolling if we've moved more than 10px vertically
-    if (Math.abs(totalDeltaY) > 10) {
+    // Smoother scroll initiation
+    if (Math.abs(totalDeltaY) > 5) {
       setIsScrolling(true);
     }
 
     if (isScrolling) {
-      // Adjust sensitivity - larger number means more movement needed to change cards
-      const sensitivity = 30;
+      // Dynamic sensitivity based on speed of movement
+      const sensitivity = Math.max(20, Math.min(40, Math.abs(deltaY) * 1.5));
       
       if (Math.abs(deltaY) > sensitivity) {
         if (deltaY < 0 && activeIndex < entries.length - 1) {
@@ -196,7 +197,7 @@ const Test = () => {
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
         >
-          <AnimatePresence>
+          <AnimatePresence mode="popLayout">
             {entries.map((entry, index) => {
               const isActive = index === activeIndex;
               const distance = index - activeIndex;
@@ -220,17 +221,19 @@ const Test = () => {
                   }}
                   exit={{ 
                     scale: 0.9,
-                    opacity: 0,
-                    transition: { duration: 0.2 }
+                    y: -60,
+                    rotateX: -10,
+                    opacity: 0
                   }}
                   transition={{
                     type: "spring",
-                    stiffness: 300,
-                    damping: 30
+                    stiffness: 400,
+                    damping: 40,
+                    mass: 1
                   }}
                   style={{
                     transformStyle: 'preserve-3d',
-                    transformOrigin: 'top center',
+                    transformOrigin: 'center',
                     touchAction: 'none',
                     pointerEvents: isActive ? 'auto' : 'none'
                   }}
