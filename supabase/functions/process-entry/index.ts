@@ -179,7 +179,7 @@ async function formatTextAndGenerateComments(content: string, type: "text" | "ur
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4-vision-preview', // Changed from gpt-4o-mini to gpt-4-vision-preview
         messages,
         max_tokens: 1000,
         temperature: 0.3,
