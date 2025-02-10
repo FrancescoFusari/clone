@@ -43,11 +43,11 @@ const Test = () => {
       </div>
 
       {/* Cards Grid */}
-      <div className="grid grid-cols-2 auto-rows-auto gap-2">
+      <div className="columns-2 gap-2 space-y-2">
         {isLoading ? (
           // Loading skeleton
           Array.from({ length: 4 }).map((_, index) => (
-            <Card key={index} className="bg-zinc-800/50 rounded-3xl p-5 animate-pulse">
+            <Card key={index} className="bg-zinc-800/50 rounded-3xl p-5 animate-pulse break-inside-avoid mb-2">
               <div className="h-6 bg-zinc-700/50 rounded-full w-2/3 mb-4"></div>
               <div className="h-4 bg-zinc-700/50 rounded-full w-full mb-2"></div>
               <div className="h-4 bg-zinc-700/50 rounded-full w-3/4"></div>
@@ -60,7 +60,7 @@ const Test = () => {
           return (
             <Card 
               key={entry.id} 
-              className="rounded-3xl p-5 h-fit" 
+              className="rounded-3xl p-5 break-inside-avoid mb-2" 
               style={{ backgroundColor: bgColor }}
             >
               <div className="flex justify-between items-start mb-4">
