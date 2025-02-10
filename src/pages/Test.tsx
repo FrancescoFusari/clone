@@ -43,7 +43,7 @@ const Test = () => {
       </div>
 
       {/* Cards Grid */}
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-2 auto-rows-auto gap-2">
         {isLoading ? (
           // Loading skeleton
           Array.from({ length: 4 }).map((_, index) => (
@@ -58,7 +58,11 @@ const Test = () => {
           const bgColor = bgColors[index % bgColors.length];
           
           return (
-            <Card key={entry.id} className="rounded-3xl p-5" style={{ backgroundColor: bgColor }}>
+            <Card 
+              key={entry.id} 
+              className="rounded-3xl p-5 h-fit" 
+              style={{ backgroundColor: bgColor }}
+            >
               <div className="flex justify-between items-start mb-4">
                 <div>
                   <h2 className="text-black text-2xl font-semibold">{entry.title}</h2>
