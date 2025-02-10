@@ -154,7 +154,7 @@ const EntryDetails = () => {
   const [editedContent, setEditedContent] = useState("");
   const [editedTags, setEditedTags] = useState("");
   const [editedCategory, setEditedCategory] = useState<EntryCategory>("personal");
-  const [editedSubcategory, setEditedSubcategory] = useState("");
+  const [editedSubcategory, setEditedSubcategory] = useState<string>("");
 
   if (!id) {
     console.log("No entry ID provided, redirecting to entries list");
@@ -513,9 +513,9 @@ const EntryDetails = () => {
                 <Label htmlFor="category">Category</Label>
                 <Select 
                   value={editedCategory} 
-                  onValueChange={(value) => {
+                  onValueChange={(value: EntryCategory) => {
                     setEditedCategory(value);
-                    setEditedSubcategory(''); // Reset subcategory when category changes
+                    setEditedSubcategory('');
                   }}
                 >
                   <SelectTrigger className="bg-white/5 border-white/10 text-white/90">
@@ -525,7 +525,7 @@ const EntryDetails = () => {
                     {CATEGORIES.map(category => (
                       <SelectItem 
                         key={category.value} 
-                        value={category.value}
+                        value={category.value as EntryCategory}
                         className="cursor-pointer"
                       >
                         {category.label}
