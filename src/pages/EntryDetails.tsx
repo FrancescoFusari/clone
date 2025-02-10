@@ -52,7 +52,7 @@ type EntryComment = {
   type: "observation" | "question" | "suggestion";
 };
 
-type EntryCategory = Database["public"]["Enums"]["entry_category"];
+type EntryCategory = Database["public"]["Tables"]["entries"]["Row"]["category"];
 
 const CATEGORIES = [
   { value: 'personal', label: 'Personal' },
