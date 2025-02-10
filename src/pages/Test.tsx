@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { useIsMobile } from "@/hooks/use-mobile";
 import type { Database } from "@/integrations/supabase/types";
-import { ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
+import { ResizablePanel, ResizablePanelGroup, ResizableHandle } from '@/components/ui/resizable';
 
 type EntryCategory = Database["public"]["Enums"]["entry_category"];
 type Entry = Database["public"]["Tables"]["entries"]["Row"];
@@ -155,59 +155,63 @@ const Test = () => {
           const categoryColor = getCategoryColor(entry.category).split(' ')[1];
           
           return (
-            <ResizablePanel 
+            <ResizablePanelGroup 
               key={entry.id}
-              minSize={15}
-              defaultSize={20}
+              direction="vertical"
               className="break-inside-avoid mb-2"
             >
-              <Card className={`rounded-xl ${isMobile ? 'p-3' : 'p-4'} bg-zinc-800/50 backdrop-blur-sm border border-white/5`}>
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h2 className={`text-white ${isMobile ? 'text-base' : 'text-lg'} font-medium leading-tight`}>
-                      {entry.title}
-                    </h2>
-                    <div className="flex items-center gap-1.5 mt-1">
-                      <span className={`flex items-center gap-1 text-[10px] ${categoryColor}`}>
-                        {getCategoryIcon(entry.category)}
-                        {entry.category.split('_').map(word => 
-                          word.charAt(0).toUpperCase() + word.slice(1)
-                        ).join(' ')}
-                      </span>
-                      <span className="text-white/40 text-[10px]">•</span>
-                      <span className="text-white/40 text-[10px]">
-                        {format(new Date(entry.created_at), 'MMM d, yyyy')}
-                      </span>
+              <ResizablePanel 
+                minSize={15}
+                defaultSize={20}
+              >
+                <Card className={`rounded-xl ${isMobile ? 'p-3' : 'p-4'} bg-zinc-800/50 backdrop-blur-sm border border-white/5`}>
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h2 className={`text-white ${isMobile ? 'text-base' : 'text-lg'} font-medium leading-tight`}>
+                        {entry.title}
+                      </h2>
+                      <div className="flex items-center gap-1.5 mt-1">
+                        <span className={`flex items-center gap-1 text-[10px] ${categoryColor}`}>
+                          {getCategoryIcon(entry.category)}
+                          {entry.category.split('_').map(word => 
+                            word.charAt(0).toUpperCase() + word.slice(1)
+                          ).join(' ')}
+                        </span>
+                        <span className="text-white/40 text-[10px]">•</span>
+                        <span className="text-white/40 text-[10px]">
+                          {format(new Date(entry.created_at), 'MMM d, yyyy')}
+                        </span>
+                      </div>
                     </div>
+                    <Heart className="text-white/40 hover:text-pink-500 transition-colors cursor-pointer" 
+                           size={isMobile ? 16 : 18} />
                   </div>
-                  <Heart className="text-white/40 hover:text-pink-500 transition-colors cursor-pointer" 
-                         size={isMobile ? 16 : 18} />
-                </div>
 
-                <div className="text-white/80 mt-2 transition-all duration-300">
-                  <p className={`${isMobile ? 'text-xs' : 'text-sm'} leading-snug`}>
-                    {entry.content}
-                  </p>
-                </div>
-
-                {entry.tags && entry.tags.length > 0 && (
-                  <div className="flex gap-1 mt-2 flex-wrap">
-                    {entry.tags.map((tag: string) => (
-                      <span 
-                        key={tag} 
-                        className={`px-1.5 py-0.5 rounded-full bg-white/5 text-white/60 ${isMobile ? 'text-[10px]' : 'text-xs'}`}
-                      >
-                        {tag}
-                      </span>
-                    ))}
+                  <div className="text-white/80 mt-2 transition-all duration-300">
+                    <p className={`${isMobile ? 'text-xs' : 'text-sm'} leading-snug`}>
+                      {entry.content}
+                    </p>
                   </div>
-                )}
 
-                <ResizableHandle className="w-full h-6 hover:bg-white/5 rounded-b-xl flex items-center justify-center cursor-ns-resize mt-2 group">
-                  <GripHorizontal className="w-4 h-4 text-white/20 group-hover:text-white/40 transition-colors" />
-                </ResizableHandle>
-              </Card>
-            </ResizablePanel>
+                  {entry.tags && entry.tags.length > 0 && (
+                    <div className="flex gap-1 mt-2 flex-wrap">
+                      {entry.tags.map((tag: string) => (
+                        <span 
+                          key={tag} 
+                          className={`px-1.5 py-0.5 rounded-full bg-white/5 text-white/60 ${isMobile ? 'text-[10px]' : 'text-xs'}`}
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  <ResizableHandle className="w-full h-6 hover:bg-white/5 rounded-b-xl flex items-center justify-center cursor-ns-resize mt-2 group">
+                    <GripHorizontal className="w-4 h-4 text-white/20 group-hover:text-white/40 transition-colors" />
+                  </ResizableHandle>
+                </Card>
+              </ResizablePanel>
+            </ResizablePanelGroup>
           );
         })}
 
