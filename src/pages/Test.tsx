@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import { Heart, Plus, Mic, User, Briefcase, Users, Palette, GraduationCap, MoreVertical } from "lucide-react";
@@ -76,7 +75,7 @@ const Test = () => {
         return <Briefcase className="h-4 w-4" />;
       case "social":
         return <Users className="h-4 w-4" />;
-      case "interests_and_hobbies":
+      case "interests":
         return <Palette className="h-4 w-4" />;
       case "school":
         return <GraduationCap className="h-4 w-4" />;
@@ -91,18 +90,17 @@ const Test = () => {
         return "bg-blue-500/10 text-blue-500";
       case "social":
         return "bg-pink-500/10 text-pink-500";
-      case "interests_and_hobbies":
+      case "interests":
         return "bg-green-500/10 text-green-500";
       case "school":
         return "bg-orange-500/10 text-orange-500";
     }
   };
 
-  const categories: EntryCategory[] = ["personal", "work", "social", "interests_and_hobbies", "school"];
+  const categories: EntryCategory[] = ["personal", "work", "social", "interests", "school"];
 
   return (
     <div className="min-h-screen bg-black text-white px-4">
-      {/* Header */}
       <div className="flex justify-between items-start pt-6 pb-4">
         <h1 className="text-[3rem] font-medium leading-[0.9]">
           My<br />Entries
@@ -112,7 +110,6 @@ const Test = () => {
         </button>
       </div>
 
-      {/* Category Filters */}
       <div className="flex gap-2 mb-6 overflow-x-auto scrollbar-none py-1">
         <button
           onClick={() => setSelectedCategory(null)}
@@ -143,10 +140,8 @@ const Test = () => {
         ))}
       </div>
 
-      {/* Cards Grid */}
       <div className={`columns-${isMobile ? '1' : '2'} gap-2 space-y-2`}>
         {isLoading ? (
-          // Loading skeleton
           Array.from({ length: 4 }).map((_, index) => (
             <Card key={index} className="bg-zinc-800/50 rounded-xl p-3 animate-pulse break-inside-avoid mb-2">
               <div className="h-4 bg-zinc-700/50 rounded-full w-2/3 mb-2"></div>
@@ -204,17 +199,15 @@ const Test = () => {
           );
         })}
 
-        {/* Loading indicator for infinite scroll */}
-        <div ref={loaderRef} className="col-span-full py-4">
-          {isFetchingNextPage && (
+        {isFetchingNextPage && (
+          <div ref={loaderRef} className="col-span-full py-4">
             <div className="flex justify-center">
               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white/20"></div>
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
-      {/* Bottom Navigation */}
       <div className="fixed bottom-4 left-0 right-0 flex justify-center gap-3">
         <button className={`${isMobile ? 'w-12 h-12' : 'w-14 h-14'} bg-black rounded-full flex items-center justify-center shadow-lg`}>
           <Plus className="text-white" size={isMobile ? 20 : 24} />

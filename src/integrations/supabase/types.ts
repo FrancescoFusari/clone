@@ -300,12 +300,7 @@ export type Database = {
         | "completed"
         | "failed"
       chat_model: "gpt-4o-mini" | "gpt-4o"
-      entry_category:
-        | "personal"
-        | "work"
-        | "social"
-        | "interests_and_hobbies"
-        | "school"
+      entry_category: "personal" | "work" | "social" | "interests" | "school"
     }
     CompositeTypes: {
       [_ in never]: never
