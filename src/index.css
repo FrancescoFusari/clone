@@ -1,29 +1,28 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 222 47% 11%;
+    --background: 234 27% 13%;
     --foreground: 210 40% 98%;
-    --card: 222 47% 11%;
+    --card: 234 27% 13%;
     --card-foreground: 210 40% 98%;
-    --popover: 222 47% 11%;
+    --popover: 234 27% 13%;
     --popover-foreground: 210 40% 98%;
-    --primary: 142 69% 58%;
-    --primary-foreground: 222 47% 11%;
-    --secondary: 217 19% 27%;
+    --primary: 255 83% 75%;
+    --primary-foreground: 234 27% 13%;
+    --secondary: 261 28% 54%;
     --secondary-foreground: 210 40% 98%;
-    --muted: 217 19% 27%;
+    --muted: 261 28% 54%;
     --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217 19% 27%;
+    --accent: 261 28% 54%;
     --accent-foreground: 210 40% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
-    --border: 217 19% 27%;
-    --input: 217 19% 27%;
-    --ring: 142 69% 58%;
+    --border: 261 28% 54%;
+    --input: 261 28% 54%;
+    --ring: 255 83% 75%;
     --radius: 1.5rem;
   }
 }
@@ -36,6 +35,10 @@
   body {
     @apply bg-background text-foreground antialiased;
     font-feature-settings: "ss01", "ss02", "cv01", "cv02", "cv03";
+    background-image: radial-gradient(circle at center,
+      hsl(234 27% 13%) 0%,
+      hsl(234 27% 11%) 100%
+    );
   }
 
   html {
@@ -54,11 +57,11 @@
   }
 
   .glass-morphism {
-    @apply backdrop-blur-xl bg-secondary/30 border border-white/10 shadow-[0_8px_16px_-4px_rgba(0,0,0,0.3)] hover:bg-secondary/40 transition-colors;
+    @apply backdrop-blur-xl bg-white/5 border border-white/10 shadow-[0_8px_16px_-4px_rgba(0,0,0,0.3)] hover:bg-white/10 transition-colors;
   }
   
   .neo-blur {
-    @apply backdrop-blur-2xl bg-secondary/40 border border-white/10 hover:bg-secondary/50 transition-colors;
+    @apply backdrop-blur-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors;
   }
   
   .text-gradient {
@@ -70,6 +73,10 @@
   }
 
   .card-hover {
-    @apply hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 hover:scale-[1.02] hover:bg-secondary/40;
+    @apply hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 hover:scale-[1.02] hover:bg-white/10;
+  }
+
+  .card-gradient {
+    @apply bg-gradient-to-br from-secondary/20 via-secondary/10 to-transparent;
   }
 }
