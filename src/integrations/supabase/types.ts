@@ -156,6 +156,8 @@ export type Database = {
           has_attachments: boolean | null
           id: string
           is_chat: boolean | null
+          position_x: number | null
+          position_y: number | null
           priority: string | null
           related_entries: string[] | null
           research_data: Json | null
@@ -181,6 +183,8 @@ export type Database = {
           has_attachments?: boolean | null
           id?: string
           is_chat?: boolean | null
+          position_x?: number | null
+          position_y?: number | null
           priority?: string | null
           related_entries?: string[] | null
           research_data?: Json | null
@@ -206,6 +210,8 @@ export type Database = {
           has_attachments?: boolean | null
           id?: string
           is_chat?: boolean | null
+          position_x?: number | null
+          position_y?: number | null
           priority?: string | null
           related_entries?: string[] | null
           research_data?: Json | null
