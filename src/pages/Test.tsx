@@ -1,11 +1,12 @@
 
 import React, { useState } from 'react';
-import { User, Briefcase, Users, Palette, GraduationCap, MoreVertical } from "lucide-react";
+import { User, Briefcase, Users, Palette, GraduationCap, MoreVertical, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useIsMobile } from "@/hooks/use-mobile";
 import type { Database } from "@/integrations/supabase/types";
-import { motion } from "framer-motion";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
+import { useQuery } from "@tanstack/react-query";
+import { format } from "date-fns";
 
 type EntryCategory = Database["public"]["Enums"]["entry_category"];
 type Entry = Database["public"]["Tables"]["entries"]["Row"];
@@ -25,85 +26,25 @@ const getCategoryIcon = (category: EntryCategory) => {
   }
 };
 
-interface EntryWindowProps {
-  entry: {
-    id: string;
-    title: string;
-    content: string;
-    category: EntryCategory;
-    position?: { x: number; y: number };
-  };
-  onDragEnd: (id: string, position: { x: number; y: number }) => void;
-}
-
-const EntryWindow = ({ entry, onDragEnd }: EntryWindowProps) => {
-  const [isDragging, setIsDragging] = useState(false);
-
-  return (
-    <motion.div
-      drag
-      dragMomentum={false}
-      initial={entry.position || { x: 0, y: 0 }}
-      animate={{ scale: isDragging ? 1.02 : 1 }}
-      onDragStart={() => setIsDragging(true)}
-      onDragEnd={(_, info) => {
-        setIsDragging(false);
-        onDragEnd(entry.id, { x: info.point.x, y: info.point.y });
-      }}
-      className="absolute"
-      style={{ position: 'absolute', ...entry.position }}
-    >
-      <Card className="w-[300px] neo-blur overflow-hidden cursor-move">
-        <CardHeader className="p-4 flex flex-row items-center justify-between">
-          <div className="flex items-center gap-2">
-            {getCategoryIcon(entry.category)}
-            <h3 className="font-medium text-sm">{entry.title}</h3>
-          </div>
-          <button className="rounded-full hover:bg-white/5 p-1 transition-colors">
-            <MoreVertical className="w-4 h-4" />
-          </button>
-        </CardHeader>
-        <CardContent className="p-4 pt-0">
-          <p className="text-sm text-white/70">{entry.content}</p>
-        </CardContent>
-      </Card>
-    </motion.div>
-  );
-};
-
 const Test = () => {
   const isMobile = useIsMobile();
   const [selectedCategory, setSelectedCategory] = useState<EntryCategory | null>(null);
-  const [entries] = useState([
-    {
-      id: '1',
-      title: 'First Entry',
-      content: 'This is a sample entry that you can drag around the canvas.',
-      category: 'personal' as EntryCategory,
-      position: { x: 100, y: 100 },
+
+  // Fetch entries from Supabase
+  const { data: entries = [], isLoading } = useQuery({
+    queryKey: ["entries"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("entries")
+        .select("*")
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return data as Entry[];
     },
-    {
-      id: '2',
-      title: 'Work Notes',
-      content: 'Important meeting notes and tasks to follow up on.',
-      category: 'work' as EntryCategory,
-      position: { x: 450, y: 150 },
-    },
-    {
-      id: '3',
-      title: 'Project Ideas',
-      content: 'Brainstorming new features and improvements.',
-      category: 'interests' as EntryCategory,
-      position: { x: 200, y: 300 },
-    },
-  ]);
+  });
 
   const categories: EntryCategory[] = ["personal", "work", "social", "interests", "school"];
-
-  const handleDragEnd = (id: string, position: { x: number; y: number }) => {
-    // In a real app, you would update the entry position in your state management system
-    console.log(`Entry ${id} moved to:`, position);
-  };
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -139,24 +80,47 @@ const Test = () => {
               }`}
             >
               {getCategoryIcon(category)}
-              <span>{category.split('_').map(word => 
-                word.charAt(0).toUpperCase() + word.slice(1)
-              ).join(' ')}</span>
+              <span>{category.charAt(0).toUpperCase() + category.slice(1)}</span>
             </button>
           ))}
         </div>
       </div>
 
-      <div className="pt-[220px] min-h-screen w-full relative">
-        {entries
-          .filter(entry => !selectedCategory || entry.category === selectedCategory)
-          .map(entry => (
-            <EntryWindow
-              key={entry.id}
-              entry={entry}
-              onDragEnd={handleDragEnd}
-            />
-          ))}
+      <div className="pt-[220px] pb-20 px-4 max-w-3xl mx-auto">
+        {isLoading ? (
+          <div className="flex items-center justify-center py-20">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white/20" />
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {entries
+              .filter(entry => !selectedCategory || entry.category === selectedCategory)
+              .map(entry => (
+                <Card 
+                  key={entry.id}
+                  className="backdrop-blur-lg bg-white/5 border-white/10 hover:bg-white/10 transition-colors"
+                >
+                  <CardHeader className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        {getCategoryIcon(entry.category)}
+                        <h3 className="font-medium">{entry.title}</h3>
+                      </div>
+                      <div className="flex items-center gap-2 text-white/60">
+                        <Clock className="w-4 h-4" />
+                        <span className="text-sm">
+                          {format(new Date(entry.created_at), "MMM d, yyyy")}
+                        </span>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="p-4 pt-0">
+                    <p className="text-white/70">{entry.content}</p>
+                  </CardContent>
+                </Card>
+              ))}
+          </div>
+        )}
       </div>
     </div>
   );
