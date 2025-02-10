@@ -1,7 +1,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { FileText, Tag, Calendar } from "lucide-react";
+import { FileText, Tag, Calendar, Plus } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -9,7 +9,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
@@ -66,6 +68,20 @@ const Index = () => {
     enabled: !!session?.user,
   });
 
+  // Fetch user profile for the personalized greeting
+  const { data: profile } = useQuery({
+    queryKey: ["profile", session?.user?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", session?.user.id)
+        .single();
+      return data;
+    },
+    enabled: !!session?.user,
+  });
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -86,14 +102,53 @@ const Index = () => {
   }
 
   return (
-    <CenteredLayout>
-      <h1 className="text-3xl font-bold mb-8 text-white/90">Your Entries</h1>
+    <div className="min-h-screen bg-background px-6 py-8">
+      {/* New Personal Header */}
+      <div className="max-w-7xl mx-auto mb-12">
+        <div className="flex items-start justify-between">
+          <div className="space-y-4">
+            <div className="flex items-center gap-4">
+              <Avatar className="h-16 w-16 border-2 border-primary/20">
+                <AvatarImage src={profile?.avatar_url} />
+                <AvatarFallback className="bg-primary/10 text-primary">
+                  {profile?.username?.[0]?.toUpperCase() || session.user.email?.[0]?.toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <h1 className="text-4xl font-bold bg-gradient-to-br from-white to-white/70 bg-clip-text text-transparent">
+                  Welcome back, {profile?.username || session.user.email?.split('@')[0]}
+                </h1>
+                <p className="text-lg text-white/60 mt-1">
+                  Here are your entries
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                onClick={() => navigate('/new')}
+                className="glass-morphism border-none"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                New Entry
+              </Button>
+            </div>
+          </div>
+          <div className="text-right">
+            <p className="text-2xl font-semibold text-white/90">
+              {entries?.length || 0}
+            </p>
+            <p className="text-sm text-white/60">Total Entries</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Entries Grid */}
       {entries && entries.length > 0 ? (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 max-w-7xl mx-auto">
           {entries.map((entry) => (
             <Card 
               key={entry.id} 
-              className="hover:shadow-lg transition-all duration-300 cursor-pointer backdrop-blur-lg bg-white/5 border border-white/10 rounded-2xl hover:scale-[1.02]"
+              className="bg-secondary/30 backdrop-blur-sm border-white/5 rounded-2xl hover:scale-[1.02] transition-all duration-300 cursor-pointer"
               onClick={() => navigate(`/entries/${entry.id}`)}
             >
               <CardHeader>
@@ -115,7 +170,7 @@ const Index = () => {
                       <Badge 
                         key={tag} 
                         variant="secondary"
-                        className="bg-white/10 text-white/80 hover:bg-white/20 rounded-full"
+                        className="bg-white/5 text-white/80 hover:bg-white/10 rounded-full"
                       >
                         {tag}
                       </Badge>
@@ -127,12 +182,13 @@ const Index = () => {
           ))}
         </div>
       ) : (
-        <div className="text-center">
+        <div className="text-center max-w-7xl mx-auto">
           <p className="text-white/60">No entries found. Create your first entry to get started!</p>
         </div>
       )}
-    </CenteredLayout>
+    </div>
   );
 };
 
 export default Index;
+
