@@ -63,20 +63,24 @@ const Test = () => {
     }
   }, []);
 
+  const getWrappedIndex = useCallback((index: number) => {
+    if (entries.length === 0) return 0;
+    // Wrap around to the other end when reaching boundaries
+    if (index < 0) return entries.length - 1;
+    if (index >= entries.length) return 0;
+    return index;
+  }, [entries.length]);
+
   const handleScroll = useCallback((direction: 'up' | 'down') => {
     const now = Date.now();
     if (now - lastScrollTime < SCROLL_COOLDOWN) return;
     
     setLastScrollTime(now);
     setActiveIndex(prev => {
-      if (direction === 'down' && prev < entries.length - 1) {
-        return prev + 1;
-      } else if (direction === 'up' && prev > 0) {
-        return prev - 1;
-      }
-      return prev;
+      const newIndex = direction === 'down' ? prev + 1 : prev - 1;
+      return getWrappedIndex(newIndex);
     });
-  }, [entries.length, lastScrollTime]);
+  }, [lastScrollTime, getWrappedIndex]);
 
   const handleWheel = useCallback((e: React.WheelEvent) => {
     e.preventDefault();
@@ -221,7 +225,8 @@ const Test = () => {
           <AnimatePresence mode="popLayout" initial={false}>
             {entries.map((entry, index) => {
               const isActive = index === activeIndex;
-              const distance = index - activeIndex;
+              const distance = ((index - activeIndex + entries.length) % entries.length) - Math.floor(entries.length / 2);
+              const adjustedDistance = distance > entries.length / 2 ? distance - entries.length : distance;
               
               return (
                 <motion.div
@@ -231,7 +236,7 @@ const Test = () => {
                   animate="animate"
                   exit="exit"
                   variants={cardVariants}
-                  custom={distance}
+                  custom={adjustedDistance}
                   transition={springConfig}
                   style={{
                     transformStyle: 'preserve-3d',
@@ -286,4 +291,3 @@ const Test = () => {
 };
 
 export default Test;
-
