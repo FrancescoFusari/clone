@@ -1,8 +1,8 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import { Heart, Plus, Mic, User, Briefcase, Users, Palette, GraduationCap } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -12,14 +12,20 @@ type EntryCategory = Database["public"]["Enums"]["entry_category"];
 
 const Test = () => {
   const isMobile = useIsMobile();
-  const [page, setPage] = useState(1);
   const [selectedCategory, setSelectedCategory] = useState<EntryCategory | null>(null);
+  const loaderRef = useRef<HTMLDivElement>(null);
   const pageSize = 10;
 
-  const { data: entries, isLoading } = useQuery({
-    queryKey: ["entries", page, selectedCategory],
-    queryFn: async () => {
-      const from = (page - 1) * pageSize;
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading
+  } = useInfiniteQuery({
+    queryKey: ["infinite-entries", selectedCategory],
+    queryFn: async ({ pageParam = 0 }) => {
+      const from = pageParam * pageSize;
       const to = from + pageSize - 1;
       
       let query = supabase
@@ -36,14 +42,29 @@ const Test = () => {
       if (error) throw error;
       return data;
     },
+    getNextPageParam: (lastPage, allPages) => {
+      return lastPage?.length === pageSize ? allPages.length : undefined;
+    },
   });
 
-  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    const { scrollTop, clientHeight, scrollHeight } = e.currentTarget;
-    if (scrollHeight - scrollTop <= clientHeight * 1.5 && !isLoading) {
-      setPage(prev => prev + 1);
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (loaderRef.current) {
+      observer.observe(loaderRef.current);
     }
-  };
+
+    return () => observer.disconnect();
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
+
+  const entries = data?.pages.flat() || [];
 
   const getCategoryIcon = (category: EntryCategory) => {
     switch (category) {
@@ -78,7 +99,7 @@ const Test = () => {
   const categories: EntryCategory[] = ["personal", "work", "social", "interests_and_hobbies", "school"];
 
   return (
-    <div className="min-h-screen bg-black text-white px-2" onScroll={handleScroll}>
+    <div className="min-h-screen bg-black text-white px-2">
       {/* Header */}
       <div className="flex justify-between items-center mb-2">
         <h1 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-medium`}>My Notes</h1>
@@ -132,7 +153,7 @@ const Test = () => {
             </Card>
           ))
         ) : entries?.map((entry) => {
-          const categoryColor = getCategoryColor(entry.category).split(' ')[1]; // Get just the text color class
+          const categoryColor = getCategoryColor(entry.category).split(' ')[1];
           
           return (
             <Card 
@@ -180,6 +201,15 @@ const Test = () => {
             </Card>
           );
         })}
+
+        {/* Loading indicator for infinite scroll */}
+        <div ref={loaderRef} className="col-span-full py-4">
+          {isFetchingNextPage && (
+            <div className="flex justify-center">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white/20"></div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Bottom Navigation */}
