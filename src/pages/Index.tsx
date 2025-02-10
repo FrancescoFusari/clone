@@ -1,7 +1,15 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, FileText } from "lucide-react";
+import { FileText, Search, Home, User } from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
 import { useToast } from "@/components/ui/use-toast";
@@ -16,7 +24,6 @@ type Entry = {
   content: string;
   created_at: string;
   tags: string[];
-  category?: "personal" | "work" | "social" | "interests_and_hobbies" | "school";
   research_data?: {
     insights?: string;
     questions?: string[];
@@ -39,6 +46,7 @@ const Index = () => {
         return [];
       }
 
+      console.log("Fetching entries for user:", session.user.id);
       const { data, error } = await supabase
         .from("entries")
         .select("*")
@@ -55,14 +63,15 @@ const Index = () => {
         throw error;
       }
 
+      console.log("Fetched entries:", data);
       return data as Entry[];
     },
     enabled: !!session?.user,
   });
 
   const filteredEntries = entries?.filter(entry => 
-    entry.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    entry.content?.toLowerCase().includes(searchQuery.toLowerCase())
+    entry.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    entry.content.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   if (isLoading) {
@@ -85,60 +94,101 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#0D111A] text-white">
+    <div className="min-h-screen bg-[#FEF7CD]/30">
       <div className="container mx-auto px-4 py-8">
-        <div className="space-y-8">
+        <div className="space-y-6">
           {/* Header */}
-          <div className="space-y-3">
-            <div className="flex items-center gap-3">
-              <FileText className="h-6 w-6 text-primary" />
-              <h1 className="text-3xl font-bold">Your Entries</h1>
+          <div className="space-y-4">
+            <h1 className="text-4xl font-bold tracking-tight">Explore</h1>
+            
+            {/* Search Bar */}
+            <div className="relative max-w-xl">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search entries..."
+                className="pl-9 bg-white/80 border-none"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
             </div>
-            <p className="text-gray-400">
-              Browse and manage all your entries in one place. Use filters and search to find specific content.
-            </p>
-          </div>
 
-          {/* Search Bar */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-            <Input
-              placeholder="Search entries..."
-              className="w-full pl-10 py-6 bg-[#161B22] border-none rounded-xl text-white placeholder:text-gray-400"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+            {/* Categories */}
+            <div className="flex gap-2 overflow-x-auto pb-2">
+              <Badge 
+                variant="secondary" 
+                className="bg-black text-white hover:bg-black/90 px-4 py-2 rounded-full"
+              >
+                For you {entries?.length ?? 0}
+              </Badge>
+              <Badge 
+                variant="secondary" 
+                className="bg-white/80 text-black hover:bg-white/90 px-4 py-2 rounded-full"
+              >
+                Recent
+              </Badge>
+              <Badge 
+                variant="secondary" 
+                className="bg-white/80 text-black hover:bg-white/90 px-4 py-2 rounded-full"
+              >
+                Favorites
+              </Badge>
+            </div>
           </div>
 
           {/* Entries Grid */}
           {filteredEntries && filteredEntries.length > 0 ? (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {filteredEntries.map((entry) => (
-                <div
-                  key={entry.id}
-                  className="bg-[#161B22] rounded-xl p-6 space-y-4 cursor-pointer hover:bg-[#1C2128] transition-colors"
+                <Card 
+                  key={entry.id} 
+                  className="border-none bg-white/80 hover:bg-white transition-colors rounded-3xl cursor-pointer"
                   onClick={() => navigate(`/entries/${entry.id}`)}
                 >
-                  <h2 className="text-xl font-semibold line-clamp-2">
-                    {entry.title || "Untitled Entry"}
-                  </h2>
-                  <p className="text-gray-400 text-sm line-clamp-3">
-                    {entry.content}
-                  </p>
-                  <div className="flex justify-between items-center text-sm text-gray-400">
-                    <span className="capitalize">{entry.category || "Personal"}</span>
-                    <span>{format(new Date(entry.created_at), "MMM d, yyyy")}</span>
-                  </div>
-                </div>
+                  <CardHeader>
+                    <CardTitle className="text-lg font-medium">
+                      {entry.title || "Untitled Entry"}
+                    </CardTitle>
+                    <CardDescription>
+                      {format(new Date(entry.created_at), "PPp")}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground line-clamp-3 mb-4">
+                      {entry.content}
+                    </p>
+                    {entry.tags && entry.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {entry.tags.map((tag: string) => (
+                          <Badge 
+                            key={tag} 
+                            variant="secondary"
+                            className="bg-[#FDE1D3] text-black hover:bg-[#FDE1D3]/80 rounded-full"
+                          >
+                            {tag}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
               ))}
             </div>
           ) : (
-            <div className="bg-[#161B22] rounded-xl p-8 text-center">
-              <p className="text-gray-400">
+            <Card className="border-none bg-white/80 p-6 rounded-3xl text-center">
+              <p className="text-muted-foreground">
                 {searchQuery ? "No entries found matching your search" : "No entries found. Create your first entry to get started!"}
               </p>
-            </div>
+            </Card>
           )}
+        </div>
+
+        {/* Navigation */}
+        <div className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-sm p-4">
+          <div className="container mx-auto flex justify-center gap-12">
+            <Search className="h-6 w-6" />
+            <Home className="h-6 w-6" />
+            <User className="h-6 w-6" />
+          </div>
         </div>
       </div>
     </div>
