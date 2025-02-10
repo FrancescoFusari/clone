@@ -15,7 +15,6 @@ import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
-import { CenteredLayout } from "@/components/layouts/CenteredLayout";
 import { useAuth } from "@/components/AuthProvider";
 
 type Entry = {
@@ -92,12 +91,10 @@ const Index = () => {
 
   if (!session?.user) {
     return (
-      <CenteredLayout>
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4 text-white/90">Please Sign In</h1>
-          <p className="text-white/60">You need to be signed in to view your entries.</p>
-        </div>
-      </CenteredLayout>
+      <div className="flex flex-col items-center justify-center min-h-screen">
+        <h1 className="text-2xl font-bold mb-4 text-white/90">Please Sign In</h1>
+        <p className="text-white/60">You need to be signed in to view your entries.</p>
+      </div>
     );
   }
 
@@ -191,4 +188,3 @@ const Index = () => {
 };
 
 export default Index;
-
