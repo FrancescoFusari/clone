@@ -1,6 +1,6 @@
 
 import { Link, useLocation } from "react-router-dom";
-import { Home, PlusCircle, Clock, FolderTree, Network } from "lucide-react";
+import { Home, PlusCircle, Clock, FolderTree, Network, AlertOctagon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,8 +15,8 @@ export const Navigation = () => {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 p-4 z-40 pointer-events-none">
-      <nav className="max-w-screen-sm mx-auto glass-morphism rounded-full p-2 pointer-events-auto">
+    <div className="fixed bottom-0 left-0 right-0 p-4 z-40">
+      <nav className="max-w-screen-sm mx-auto rounded-full p-2 bg-background/80 backdrop-blur-sm border border-border">
         <div className="flex justify-center items-center gap-2">
           <Tooltip>
             <TooltipTrigger asChild>
@@ -116,6 +116,26 @@ export const Navigation = () => {
               </Button>
             </TooltipTrigger>
             <TooltipContent>Mind Map</TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                className={cn(
+                  "flex-1 max-w-[120px] gap-2 transition-colors",
+                  isActive("/test") &&
+                    "bg-primary/20 text-primary hover:bg-primary/30 hover:text-primary"
+                )}
+                asChild
+              >
+                <Link to="/test">
+                  <AlertOctagon className="h-5 w-5" />
+                  <span className="sr-only">Test Page</span>
+                </Link>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Test Page</TooltipContent>
           </Tooltip>
         </div>
       </nav>

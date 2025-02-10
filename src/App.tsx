@@ -21,6 +21,7 @@ const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Categories = lazy(() => import("./pages/Categories"));
 const CategoryGraph = lazy(() => import("./pages/CategoryGraph"));
 const UnifiedGraph = lazy(() => import("./pages/UnifiedGraph"));
+const Test = lazy(() => import("./pages/Test"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -127,6 +128,14 @@ const AppRoutes = () => {
           element={
             <ProtectedRoute>
               <UnifiedGraph />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/test"
+          element={
+            <ProtectedRoute>
+              <Test />
             </ProtectedRoute>
           }
         />
