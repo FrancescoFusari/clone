@@ -43,10 +43,10 @@ const Test = () => {
       </div>
 
       {/* Cards Grid */}
-      <div className="grid gap-3">
+      <div className="grid grid-cols-2 gap-3">
         {isLoading ? (
           // Loading skeleton
-          Array.from({ length: 3 }).map((_, index) => (
+          Array.from({ length: 4 }).map((_, index) => (
             <Card key={index} className="bg-zinc-800/50 rounded-3xl p-5 animate-pulse">
               <div className="h-6 bg-zinc-700/50 rounded-full w-2/3 mb-4"></div>
               <div className="h-4 bg-zinc-700/50 rounded-full w-full mb-2"></div>
