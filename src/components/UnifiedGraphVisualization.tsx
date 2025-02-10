@@ -99,15 +99,13 @@ export const UnifiedGraphVisualization = () => {
       id: profile.id,
       name: profile.username || "User",
       type: "user",
-      val: 300 // Triple the size of category nodes
+      val: 300
     });
 
-    // Track unique categories, subcategories and tags
     const categories = new Set<EntryCategory>();
     const subcategories = new Set<string>();
     const tags = new Set<string>();
 
-    // Process entries
     entries.forEach(entry => {
       categories.add(entry.category);
       
@@ -118,7 +116,6 @@ export const UnifiedGraphVisualization = () => {
         val: 20
       });
 
-      // Link entry to category
       graphData.links.push({
         source: entry.category,
         target: entry.id,
@@ -144,7 +141,6 @@ export const UnifiedGraphVisualization = () => {
       });
     });
 
-    // Add category nodes
     categories.forEach(cat => {
       graphData.nodes.push({
         id: cat,
@@ -152,7 +148,6 @@ export const UnifiedGraphVisualization = () => {
         type: "category",
         val: 100
       });
-      // Link categories to user
       graphData.links.push({
         source: profile.id,
         target: cat,
@@ -160,7 +155,6 @@ export const UnifiedGraphVisualization = () => {
       });
     });
 
-    // Add subcategory nodes
     subcategories.forEach(sub => {
       graphData.nodes.push({
         id: sub,
@@ -170,17 +164,16 @@ export const UnifiedGraphVisualization = () => {
       });
     });
 
-    // Add tag nodes
     tags.forEach(tag => {
       graphData.nodes.push({
         id: tag,
         name: tag,
         type: "tag",
-        val: 5  // Updated from 15 to 5
+        val: 5
       });
     });
 
-    const Graph = new ForceGraph3D()(graphRef.current)
+    const Graph = ForceGraph3D()(graphRef.current)
       .graphData(graphData)
       .nodeLabel("name")
       .nodeColor(node => {
@@ -228,17 +221,14 @@ export const UnifiedGraphVisualization = () => {
         );
       });
 
-    // Handle window resize
     const handleResize = () => {
       Graph.width(window.innerWidth)
           .height(window.innerHeight);
     };
     window.addEventListener('resize', handleResize);
 
-    // Set camera position
     Graph.cameraPosition({ x: 500, y: 500, z: 800 });
 
-    // Center the user node
     const userNode = graphData.nodes.find(node => node.type === "user");
     if (userNode) {
       Graph.d3Force('center', null);
