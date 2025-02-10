@@ -135,7 +135,9 @@ const AppRoutes = () => {
           path="/test"
           element={
             <ProtectedRoute>
-              <Test />
+              <div className="mt-0">
+                <Test />
+              </div>
             </ProtectedRoute>
           }
         />
