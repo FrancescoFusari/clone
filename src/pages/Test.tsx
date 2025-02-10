@@ -142,7 +142,7 @@ const Test = () => {
         ))}
       </div>
 
-      <div className={`columns-${isMobile ? '1' : '2'} gap-2 space-y-2`}>
+      <div className={`columns-${isMobile ? '1' : '2'} gap-2`}>
         {isLoading ? (
           Array.from({ length: 4 }).map((_, index) => (
             <Card key={index} className="bg-zinc-800/50 rounded-xl p-3 animate-pulse break-inside-avoid mb-2">
@@ -151,19 +151,10 @@ const Test = () => {
               <div className="h-2.5 bg-zinc-700/50 rounded-full w-3/4"></div>
             </Card>
           ))
-        ) : entries?.map((entry: Entry) => {
-          const categoryColor = getCategoryColor(entry.category).split(' ')[1];
-          
-          return (
-            <ResizablePanelGroup 
-              key={entry.id}
-              direction="vertical"
-              className="break-inside-avoid mb-2"
-            >
-              <ResizablePanel 
-                minSize={15}
-                defaultSize={20}
-              >
+        ) : entries?.map((entry: Entry) => (
+          <div key={entry.id} className="break-inside-avoid mb-2">
+            <ResizablePanelGroup direction="vertical">
+              <ResizablePanel defaultSize={20} minSize={15}>
                 <Card className={`rounded-xl ${isMobile ? 'p-3' : 'p-4'} bg-zinc-800/50 backdrop-blur-sm border border-white/5`}>
                   <div className="flex justify-between items-start">
                     <div>
@@ -171,7 +162,7 @@ const Test = () => {
                         {entry.title}
                       </h2>
                       <div className="flex items-center gap-1.5 mt-1">
-                        <span className={`flex items-center gap-1 text-[10px] ${categoryColor}`}>
+                        <span className={`flex items-center gap-1 text-[10px] ${getCategoryColor(entry.category).split(' ')[1]}`}>
                           {getCategoryIcon(entry.category)}
                           {entry.category.split('_').map(word => 
                             word.charAt(0).toUpperCase() + word.slice(1)
@@ -212,8 +203,8 @@ const Test = () => {
                 </Card>
               </ResizablePanel>
             </ResizablePanelGroup>
-          );
-        })}
+          </div>
+        ))}
 
         {isFetchingNextPage && (
           <div ref={loaderRef} className="col-span-full py-4">
