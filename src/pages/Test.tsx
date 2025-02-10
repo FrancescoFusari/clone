@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { User, Briefcase, Users, Palette, GraduationCap, MoreVertical } from "lucide-react";
+import { User, Briefcase, Users, Palette, GraduationCap, MoreVertical, ChevronDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useIsMobile } from "@/hooks/use-mobile";
 import type { Database } from "@/integrations/supabase/types";
@@ -16,11 +16,11 @@ const Test = () => {
   const [expandedEntryId, setExpandedEntryId] = useState<string | null>(null);
 
   // Temporary mock data for demonstration
-  const mockEntries: Entry[] = [
+  const mockEntries: Partial<Entry>[] = [
     {
       id: '1',
       title: 'First Entry',
-      content: 'This is a sample entry with some content that will be revealed when expanded.',
+      content: 'This is a sample entry with some content that will be revealed when expanded. It contains more text to demonstrate the expansion behavior. When you drag the handle down or click the expand button, you will see all of this content.',
       category: 'personal',
       created_at: new Date().toISOString(),
       folder: 'default',
@@ -29,7 +29,7 @@ const Test = () => {
     {
       id: '2',
       title: 'Work Project Update',
-      content: 'Progress update on the current project with details about implementation and next steps.',
+      content: 'Progress update on the current project with details about implementation and next steps. This is a longer entry that contains multiple paragraphs to show how the content expands smoothly when the card is expanded. You can see more details about the project here.',
       category: 'work',
       created_at: new Date().toISOString(),
       folder: 'default',
@@ -57,6 +57,10 @@ const Test = () => {
   const filteredEntries = selectedCategory
     ? mockEntries.filter(entry => entry.category === selectedCategory)
     : mockEntries;
+
+  const toggleExpanded = (entryId: string) => {
+    setExpandedEntryId(expandedEntryId === entryId ? null : entryId);
+  };
 
   return (
     <div className="min-h-screen bg-black text-white px-4">
@@ -91,9 +95,7 @@ const Test = () => {
             }`}
           >
             {getCategoryIcon(category)}
-            <span>{category.split('_').map(word => 
-              word.charAt(0).toUpperCase() + word.slice(1)
-            ).join(' ')}</span>
+            <span>{category.charAt(0).toUpperCase() + category.slice(1)}</span>
           </button>
         ))}
       </div>
@@ -108,30 +110,33 @@ const Test = () => {
               direction="vertical"
               className="min-h-[100px]"
             >
-              <ResizablePanel
-                defaultSize={100}
-                minSize={30}
-                maxSize={100}
-                onCollapse={() => setExpandedEntryId(null)}
-                onExpand={() => setExpandedEntryId(entry.id)}
-                className="transition-all duration-300"
-              >
+              <ResizablePanel defaultSize={100}>
                 <div className="p-4">
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="text-lg font-medium">{entry.title}</h3>
-                    {getCategoryIcon(entry.category)}
-                  </div>
-                  <p className="text-white/70 line-clamp-2">
-                    {entry.content}
-                  </p>
-                  {expandedEntryId === entry.id && (
-                    <div className="mt-4 pt-4 border-t border-white/10">
-                      <p className="text-white/90">{entry.content}</p>
+                    <div className="flex items-center gap-3">
+                      {entry.category && getCategoryIcon(entry.category)}
+                      <button
+                        onClick={() => toggleExpanded(entry.id!)}
+                        className={`p-1 rounded-full hover:bg-white/5 transition-transform ${
+                          expandedEntryId === entry.id ? 'rotate-180' : ''
+                        }`}
+                      >
+                        <ChevronDown className="w-4 h-4" />
+                      </button>
                     </div>
-                  )}
+                  </div>
+                  <div className={`transition-all duration-300 ${
+                    expandedEntryId === entry.id ? '' : 'line-clamp-2'
+                  }`}>
+                    <p className="text-white/70">{entry.content}</p>
+                  </div>
                 </div>
               </ResizablePanel>
-              <ResizableHandle className="bg-white/10 hover:bg-white/20 transition-colors" />
+              <ResizableHandle 
+                className="bg-white/10 hover:bg-white/20 transition-colors"
+                onDoubleClick={() => toggleExpanded(entry.id!)}
+              />
             </ResizablePanelGroup>
           </Card>
         ))}
