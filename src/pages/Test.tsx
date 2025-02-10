@@ -1,9 +1,11 @@
 
-import React, { useState } from 'react';
-import { User, Briefcase, Users, Palette, GraduationCap, MoreVertical } from "lucide-react";
+import React, { useState, useEffect } from 'react';
+import { User, Briefcase, Users, Palette, GraduationCap, MoreVertical, ThumbsUp, Bookmark, Share2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { format } from "date-fns";
 import type { Database } from "@/integrations/supabase/types";
+import { motion, AnimatePresence } from "framer-motion";
 
 type EntryCategory = Database["public"]["Enums"]["entry_category"];
 type Entry = Database["public"]["Tables"]["entries"]["Row"];
@@ -11,6 +13,31 @@ type Entry = Database["public"]["Tables"]["entries"]["Row"];
 const Test = () => {
   const isMobile = useIsMobile();
   const [selectedCategory, setSelectedCategory] = useState<EntryCategory | null>(null);
+  const [entries, setEntries] = useState<Entry[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchEntries = async () => {
+      setIsLoading(true);
+      let query = supabase.from('entries').select('*').order('created_at', { ascending: false });
+      
+      if (selectedCategory) {
+        query = query.eq('category', selectedCategory);
+      }
+      
+      const { data, error } = await query;
+      
+      if (error) {
+        console.error('Error fetching entries:', error);
+        return;
+      }
+      
+      setEntries(data || []);
+      setIsLoading(false);
+    };
+
+    fetchEntries();
+  }, [selectedCategory]);
 
   const getCategoryIcon = (category: EntryCategory) => {
     switch (category) {
@@ -62,12 +89,83 @@ const Test = () => {
             }`}
           >
             {getCategoryIcon(category)}
-            <span>{category.split('_').map(word => 
-              word.charAt(0).toUpperCase() + word.slice(1)
-            ).join(' ')}</span>
+            <span>{category.charAt(0).toUpperCase() + category.slice(1)}</span>
           </button>
         ))}
       </div>
+
+      {isLoading ? (
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-pulse text-white/50">Loading entries...</div>
+        </div>
+      ) : entries.length === 0 ? (
+        <div className="flex justify-center items-center h-64">
+          <div className="text-white/50">No entries found</div>
+        </div>
+      ) : (
+        <div className="relative h-[600px] overflow-hidden perspective">
+          <AnimatePresence>
+            {entries.map((entry, index) => (
+              <motion.div
+                key={entry.id}
+                className="absolute w-full"
+                initial={{ 
+                  scale: 0.8,
+                  y: 60 * (index + 1),
+                  rotateX: 10,
+                  opacity: 0 
+                }}
+                animate={{ 
+                  scale: 1 - (index * 0.05),
+                  y: 30 * index,
+                  rotateX: 5 * index,
+                  opacity: 1 - (index * 0.2),
+                  zIndex: entries.length - index
+                }}
+                exit={{ scale: 0.8, opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                style={{
+                  transformStyle: 'preserve-3d',
+                  transformOrigin: 'top center'
+                }}
+              >
+                <div className="bg-gradient-to-br from-zinc-800/90 to-zinc-900/90 backdrop-blur-xl rounded-3xl p-6 border border-white/10 shadow-xl">
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <h3 className="text-xl font-semibold mb-1">{entry.title}</h3>
+                      <p className="text-sm text-white/60">
+                        {format(new Date(entry.created_at), "MMM d, yyyy")}
+                      </p>
+                    </div>
+                    <span className="flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-sm">
+                      {getCategoryIcon(entry.category)}
+                      {entry.category.charAt(0).toUpperCase() + entry.category.slice(1)}
+                    </span>
+                  </div>
+                  
+                  <p className="text-white/80 line-clamp-3 mb-4">
+                    {entry.content}
+                  </p>
+
+                  <div className="flex justify-between items-center pt-4 border-t border-white/10">
+                    <div className="flex gap-6">
+                      <button className="flex items-center gap-2 text-white/60 hover:text-white transition-colors">
+                        <ThumbsUp className="w-4 h-4" />
+                      </button>
+                      <button className="flex items-center gap-2 text-white/60 hover:text-white transition-colors">
+                        <Bookmark className="w-4 h-4" />
+                      </button>
+                      <button className="flex items-center gap-2 text-white/60 hover:text-white transition-colors">
+                        <Share2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </div>
+      )}
     </div>
   );
 };

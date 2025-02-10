@@ -72,4 +72,8 @@
   .card-hover {
     @apply hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 hover:scale-[1.02] hover:bg-secondary/40;
   }
+
+  .perspective {
+    perspective: 1000px;
+  }
 }
