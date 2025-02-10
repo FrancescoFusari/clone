@@ -1,9 +1,10 @@
+
 import { Suspense, lazy } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { Navigation } from "./components/Navigation";
 import { TopBar } from "./components/TopBar";
 import { AuthProvider, useAuth } from "./components/AuthProvider";
@@ -59,9 +60,13 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
 const AppRoutes = () => {
   const { session } = useAuth();
+  const location = useLocation();
+
+  const showTopBar = location.pathname !== '/test';
 
   return (
     <Suspense fallback={<LoadingFallback />}>
+      {showTopBar && <TopBar />}
       <Routes>
         <Route
           path="/auth"
@@ -156,7 +161,6 @@ const App = () => (
             <Toaster />
             <Sonner />
             <BrowserRouter>
-              <TopBar />
               <AppRoutes />
               <Navigation />
             </BrowserRouter>
