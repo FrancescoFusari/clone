@@ -1,7 +1,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { FileText, Tag, Calendar } from "lucide-react";
+import { FileText, Tag, Calendar, Link, Image as ImageIcon } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -15,6 +15,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
 import { CenteredLayout } from "@/components/layouts/CenteredLayout";
 import { useAuth } from "@/components/AuthProvider";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 type Entry = {
   id: string;
@@ -22,6 +23,7 @@ type Entry = {
   content: string;
   created_at: string;
   tags: string[];
+  type?: 'url' | 'image' | 'text';
   research_data?: {
     insights?: string;
     questions?: string[];
@@ -34,6 +36,7 @@ const Index = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { session } = useAuth();
+  const isMobile = useIsMobile();
   
   const { data: entries, isLoading } = useQuery({
     queryKey: ["entries", session?.user?.id],
@@ -85,20 +88,46 @@ const Index = () => {
     );
   }
 
+  const getCardSize = (entry: Entry) => {
+    // Determine if entry has more content to show larger card
+    const hasLongContent = entry.content?.length > 200;
+    const hasMultipleTags = entry.tags?.length > 2;
+    
+    if (hasLongContent || hasMultipleTags) {
+      return "row-span-2";
+    }
+    return "";
+  };
+
+  const getEntryIcon = (entry: Entry) => {
+    switch (entry.type) {
+      case 'url':
+        return <Link className="h-5 w-5" />;
+      case 'image':
+        return <ImageIcon className="h-5 w-5" />;
+      default:
+        return <FileText className="h-5 w-5" />;
+    }
+  };
+
   return (
     <CenteredLayout>
       <h1 className="text-3xl font-bold mb-8 text-white/90">Your Entries</h1>
       {entries && entries.length > 0 ? (
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 auto-rows-auto gap-3">
           {entries.map((entry) => (
             <Card 
               key={entry.id} 
-              className="hover:shadow-lg transition-all duration-300 cursor-pointer backdrop-blur-lg bg-white/5 border border-white/10 rounded-2xl hover:scale-[1.02]"
+              className={`
+                hover:shadow-lg transition-all duration-300 cursor-pointer
+                backdrop-blur-lg bg-[#F5F5DC]/20 rounded-2xl hover:scale-[1.02]
+                ${getCardSize(entry)}
+              `}
               onClick={() => navigate(`/entries/${entry.id}`)}
             >
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-white/90">
-                  <FileText className="h-5 w-5" />
+                  {getEntryIcon(entry)}
                   {entry.title || "Untitled Entry"}
                 </CardTitle>
                 <CardDescription className="flex items-center gap-2 text-white/60">
@@ -107,7 +136,9 @@ const Index = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-white/80 mb-4 line-clamp-3">{entry.content}</p>
+                <p className={`text-sm text-white/80 mb-4 ${getCardSize(entry) ? 'line-clamp-4' : 'line-clamp-2'}`}>
+                  {entry.content}
+                </p>
                 {entry.tags && entry.tags.length > 0 && (
                   <div className="flex items-center gap-2 flex-wrap">
                     <Tag className="h-4 w-4 text-white/60" />
