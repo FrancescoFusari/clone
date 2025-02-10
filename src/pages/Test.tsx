@@ -10,6 +10,21 @@ import { Card, CardHeader, CardContent } from "@/components/ui/card";
 type EntryCategory = Database["public"]["Enums"]["entry_category"];
 type Entry = Database["public"]["Tables"]["entries"]["Row"];
 
+const getCategoryIcon = (category: EntryCategory) => {
+  switch (category) {
+    case "personal":
+      return <User className="h-4 w-4" />;
+    case "work":
+      return <Briefcase className="h-4 w-4" />;
+    case "social":
+      return <Users className="h-4 w-4" />;
+    case "interests":
+      return <Palette className="h-4 w-4" />;
+    case "school":
+      return <GraduationCap className="h-4 w-4" />;
+  }
+};
+
 interface EntryWindowProps {
   entry: {
     id: string;
@@ -82,21 +97,6 @@ const Test = () => {
       position: { x: 200, y: 300 },
     },
   ]);
-
-  const getCategoryIcon = (category: EntryCategory) => {
-    switch (category) {
-      case "personal":
-        return <User className="h-4 w-4" />;
-      case "work":
-        return <Briefcase className="h-4 w-4" />;
-      case "social":
-        return <Users className="h-4 w-4" />;
-      case "interests":
-        return <Palette className="h-4 w-4" />;
-      case "school":
-        return <GraduationCap className="h-4 w-4" />;
-    }
-  };
 
   const categories: EntryCategory[] = ["personal", "work", "social", "interests", "school"];
 
