@@ -1,11 +1,9 @@
 
 import React, { useState } from 'react';
-import { User, Briefcase, Users, Palette, GraduationCap, MoreVertical, ChevronDown } from "lucide-react";
+import { User, Briefcase, Users, Palette, GraduationCap, MoreVertical } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useIsMobile } from "@/hooks/use-mobile";
 import type { Database } from "@/integrations/supabase/types";
-import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
-import { Card } from "@/components/ui/card";
 
 type EntryCategory = Database["public"]["Enums"]["entry_category"];
 type Entry = Database["public"]["Tables"]["entries"]["Row"];
@@ -13,30 +11,6 @@ type Entry = Database["public"]["Tables"]["entries"]["Row"];
 const Test = () => {
   const isMobile = useIsMobile();
   const [selectedCategory, setSelectedCategory] = useState<EntryCategory | null>(null);
-  const [expandedEntryId, setExpandedEntryId] = useState<string | null>(null);
-  const [panelSizes, setPanelSizes] = useState<{ [key: string]: number[] }>({});
-
-  // Temporary mock data for demonstration
-  const mockEntries: Partial<Entry>[] = [
-    {
-      id: '1',
-      title: 'First Entry',
-      content: 'This is a sample entry with some content that will be revealed when expanded. It contains more text to demonstrate the expansion behavior. When you drag the handle down or click the expand button, you will see all of this content.',
-      category: 'personal',
-      created_at: new Date().toISOString(),
-      folder: 'default',
-      user_id: '1',
-    },
-    {
-      id: '2',
-      title: 'Work Project Update',
-      content: 'Progress update on the current project with details about implementation and next steps. This is a longer entry that contains multiple paragraphs to show how the content expands smoothly when the card is expanded. You can see more details about the project here.',
-      category: 'work',
-      created_at: new Date().toISOString(),
-      folder: 'default',
-      user_id: '1',
-    }
-  ];
 
   const getCategoryIcon = (category: EntryCategory) => {
     switch (category) {
@@ -54,26 +28,6 @@ const Test = () => {
   };
 
   const categories: EntryCategory[] = ["personal", "work", "social", "interests", "school"];
-
-  const filteredEntries = selectedCategory
-    ? mockEntries.filter(entry => entry.category === selectedCategory)
-    : mockEntries;
-
-  const toggleExpanded = (entryId: string) => {
-    setExpandedEntryId(expandedEntryId === entryId ? null : entryId);
-    // Reset panel sizes when toggling
-    setPanelSizes(prev => ({
-      ...prev,
-      [entryId]: [70, 30]
-    }));
-  };
-
-  const handlePanelResize = (entryId: string, sizes: number[]) => {
-    setPanelSizes(prev => ({
-      ...prev,
-      [entryId]: sizes
-    }));
-  };
 
   return (
     <div className="min-h-screen bg-black text-white px-4">
@@ -108,63 +62,10 @@ const Test = () => {
             }`}
           >
             {getCategoryIcon(category)}
-            <span>{category.charAt(0).toUpperCase() + category.slice(1)}</span>
+            <span>{category.split('_').map(word => 
+              word.charAt(0).toUpperCase() + word.slice(1)
+            ).join(' ')}</span>
           </button>
-        ))}
-      </div>
-
-      <div className="space-y-4">
-        {filteredEntries.map((entry) => (
-          <Card 
-            key={entry.id}
-            className="bg-zinc-900/50 border-white/10 overflow-hidden"
-          >
-            <ResizablePanelGroup
-              direction="vertical"
-              className="min-h-[100px]"
-              onLayout={(sizes) => handlePanelResize(entry.id!, sizes)}
-            >
-              <ResizablePanel 
-                defaultSize={70} 
-                minSize={30}
-              >
-                <div className="p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-lg font-medium">{entry.title}</h3>
-                    <div className="flex items-center gap-3">
-                      {entry.category && getCategoryIcon(entry.category)}
-                      <button
-                        onClick={() => toggleExpanded(entry.id!)}
-                        className={`p-1 rounded-full hover:bg-white/5 transition-transform ${
-                          expandedEntryId === entry.id ? 'rotate-180' : ''
-                        }`}
-                      >
-                        <ChevronDown className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                  <div className={`transition-all duration-300 ${
-                    expandedEntryId === entry.id ? '' : 'line-clamp-2'
-                  }`}>
-                    <p className="text-white/70">{entry.content}</p>
-                  </div>
-                </div>
-              </ResizablePanel>
-              {expandedEntryId === entry.id && (
-                <>
-                  <ResizableHandle 
-                    className="bg-white/10 hover:bg-white/20 transition-colors"
-                    onDoubleClick={() => toggleExpanded(entry.id!)}
-                  />
-                  <ResizablePanel defaultSize={30} minSize={20}>
-                    <div className="p-4">
-                      <p className="text-white/70">{entry.content}</p>
-                    </div>
-                  </ResizablePanel>
-                </>
-              )}
-            </ResizablePanelGroup>
-          </Card>
         ))}
       </div>
     </div>
