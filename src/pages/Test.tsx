@@ -1,45 +1,29 @@
 
 import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
-import { Heart, Plus, Mic, Briefcase, User, Users, Palette, GraduationCap, HeartHandshake } from "lucide-react";
+import { Heart, Plus, Mic } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-type CategoryType = "personal" | "work" | "social" | "interests_and_hobbies" | "school" | "all";
-
-const categoryConfig = {
-  personal: { color: "#9b87f5", icon: User, label: "Personal" },
-  work: { color: "#0EA5E9", icon: Briefcase, label: "Work" },
-  social: { color: "#D946EF", icon: Users, label: "Social" },
-  interests_and_hobbies: { color: "#F97316", icon: Palette, label: "Interests" },
-  school: { color: "#8B5CF6", icon: GraduationCap, label: "School" }
-};
-
 const Test = () => {
   const isMobile = useIsMobile();
   const [page, setPage] = useState(1);
-  const [selectedCategory, setSelectedCategory] = useState<CategoryType>("all");
   const pageSize = 10;
 
-  const { data: entries, isLoading } = useQuery({
-    queryKey: ["entries", page, selectedCategory],
+  const { data: entries, isLoading, fetchNextPage, hasNextPage } = useQuery({
+    queryKey: ["entries", page],
     queryFn: async () => {
       const from = (page - 1) * pageSize;
       const to = from + pageSize - 1;
       
-      let query = supabase
+      const { data, error } = await supabase
         .from("entries")
         .select("*")
         .order("created_at", { ascending: false })
         .range(from, to);
 
-      if (selectedCategory !== "all") {
-        query = query.eq("category", selectedCategory);
-      }
-
-      const { data, error } = await query;
       if (error) throw error;
       return data;
     },
@@ -47,7 +31,7 @@ const Test = () => {
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const { scrollTop, clientHeight, scrollHeight } = e.currentTarget;
-    if (scrollHeight - scrollTop <= clientHeight * 1.5 && !isLoading) {
+    if (scrollHeight - scrollTop <= clientHeight * 1.5 && !isLoading && hasNextPage) {
       setPage(prev => prev + 1);
     }
   };
@@ -64,35 +48,14 @@ const Test = () => {
         </button>
       </div>
 
-      {/* Category Filters */}
+      {/* Filter Pills */}
       <div className="flex gap-1.5 mb-3 overflow-x-auto scrollbar-none py-1">
-        <button 
-          onClick={() => setSelectedCategory("all")}
-          className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-full 
-            ${selectedCategory === "all" ? 'bg-zinc-800 text-white' : 'bg-zinc-800/50 text-white/70'} 
-            ${isMobile ? 'text-xs' : 'text-sm'}`}
-        >
-          <HeartHandshake size={isMobile ? 14 : 16} />
+        <button className={`flex items-center px-2.5 py-1 rounded-full bg-zinc-800 text-white ${isMobile ? 'text-xs' : 'text-sm'}`}>
           <span>All</span>
           <span className="ml-1.5 opacity-60">{entries?.length || 0}</span>
         </button>
-
-        {Object.entries(categoryConfig).map(([key, { color, icon: Icon, label }]) => (
-          <button
-            key={key}
-            onClick={() => setSelectedCategory(key as CategoryType)}
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-full transition-colors
-              ${selectedCategory === key ? 'bg-opacity-20' : 'bg-opacity-10 hover:bg-opacity-15'} 
-              ${isMobile ? 'text-xs' : 'text-sm'}`}
-            style={{ 
-              backgroundColor: color,
-              color: selectedCategory === key ? color : `${color}CC`
-            }}
-          >
-            <Icon size={isMobile ? 14 : 16} />
-            <span>{label}</span>
-          </button>
-        ))}
+        <button className={`px-2.5 py-1 rounded-full bg-zinc-800/50 text-white/70 ${isMobile ? 'text-xs' : 'text-sm'}`}>Important</button>
+        <button className={`px-2.5 py-1 rounded-full bg-zinc-800/50 text-white/70 ${isMobile ? 'text-xs' : 'text-sm'}`}>To-do</button>
       </div>
 
       {/* Cards Grid */}
@@ -107,26 +70,27 @@ const Test = () => {
             </Card>
           ))
         ) : entries?.map((entry, index) => {
-          const categoryColor = entry.category ? categoryConfig[entry.category].color : '#FEC6A1';
+          const bgColors = ['#FEC6A1', '#FEF7CD', '#F5E6D3'];
+          const bgColor = bgColors[index % bgColors.length];
           
           return (
             <Card 
               key={entry.id} 
               className={`rounded-xl ${isMobile ? 'p-3' : 'p-4'} break-inside-avoid mb-2`}
-              style={{ backgroundColor: `${categoryColor}1A` }} // Using 10% opacity version of category color
+              style={{ backgroundColor: bgColor }}
             >
               <div className="flex justify-between items-start mb-1.5">
                 <div>
-                  <h2 className={`text-white ${isMobile ? 'text-base' : 'text-lg'} font-medium leading-tight`}>
+                  <h2 className={`text-black ${isMobile ? 'text-base' : 'text-lg'} font-medium leading-tight`}>
                     {entry.title}
                   </h2>
-                  <p className="text-white/60 text-[10px] mt-0.5">
+                  <p className="text-black/60 text-[10px] mt-0.5">
                     {format(new Date(entry.created_at), 'MMM d, yyyy')}
                   </p>
                 </div>
-                <Heart className="text-white/70" size={isMobile ? 16 : 18} />
+                <Heart className="text-black/70" size={isMobile ? 16 : 18} />
               </div>
-              <div className="text-white/80">
+              <div className="text-black/80">
                 <p className={`${isMobile ? 'text-xs' : 'text-sm'} leading-snug line-clamp-3`}>
                   {entry.content}
                 </p>
@@ -136,7 +100,7 @@ const Test = () => {
                   {entry.tags.map((tag: string) => (
                     <span 
                       key={tag} 
-                      className={`px-1.5 py-0.5 rounded-full bg-white/10 text-white/70 ${isMobile ? 'text-[10px]' : 'text-xs'}`}
+                      className={`px-1.5 py-0.5 rounded-full bg-black/10 text-black/70 ${isMobile ? 'text-[10px]' : 'text-xs'}`}
                     >
                       {tag}
                     </span>
