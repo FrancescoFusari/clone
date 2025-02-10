@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { User, Briefcase, Users, Palette, GraduationCap, MoreVertical, ThumbsUp, Bookmark, Share2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,9 +10,10 @@ import { motion, AnimatePresence } from "framer-motion";
 type EntryCategory = Database["public"]["Enums"]["entry_category"];
 type Entry = Database["public"]["Tables"]["entries"]["Row"];
 
-const SCROLL_COOLDOWN = 200; // Increased cooldown to prevent rapid scrolling
-const MIN_THRESHOLD = 25;
-const MAX_THRESHOLD = 45;
+const SCROLL_COOLDOWN = 250; // Increased cooldown for smoother transitions
+const MIN_THRESHOLD = 30;
+const MAX_THRESHOLD = 50;
+const MAX_VISIBLE_CARDS = 3; // Limit number of visible cards for better performance
 
 const Test = () => {
   const isMobile = useIsMobile();
@@ -91,20 +93,18 @@ const Test = () => {
 
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
     e.preventDefault();
-    
     if (!touchStartY || !lastTouchY) return;
     
     const currentY = e.touches[0].clientY;
     const deltaY = currentY - lastTouchY;
     const totalDeltaY = currentY - touchStartY;
 
-    if (Math.abs(totalDeltaY) > 10) {
+    if (Math.abs(totalDeltaY) > 15) {
       setIsScrolling(true);
     }
 
     if (isScrolling) {
-      const sensitivity = 30; // Fixed sensitivity for more consistent scrolling
-      
+      const sensitivity = 35;
       if (Math.abs(deltaY) > sensitivity) {
         handleScroll(deltaY < 0 ? 'down' : 'up');
         setLastTouchY(currentY);
@@ -126,33 +126,42 @@ const Test = () => {
 
   const cardVariants = useMemo(() => ({
     initial: { 
-      scale: 0.95,
-      y: 50,
-      rotateX: 5,
-      opacity: 0 
+      scale: 0.98,
+      y: 40,
+      opacity: 0,
+      rotateX: 2
     },
     animate: (distance: number) => ({ 
-      scale: 1 - (Math.abs(distance) * 0.03),
-      y: distance * 25,
-      rotateX: distance * 3,
-      opacity: 1 - (Math.abs(distance) * 0.15),
-      zIndex: entries.length - Math.abs(distance)
+      scale: 1 - (Math.abs(distance) * 0.02),
+      y: distance * 20,
+      rotateX: distance * 2,
+      opacity: 1 - (Math.abs(distance) * 0.2),
+      zIndex: 10 - Math.abs(distance)
     }),
     exit: { 
-      scale: 0.95,
-      y: -50,
-      rotateX: -5,
-      opacity: 0
+      scale: 0.98,
+      y: -40,
+      opacity: 0,
+      rotateX: -2
     }
-  }), [entries.length]);
+  }), []);
 
   const springConfig = useMemo(() => ({
     type: "spring" as const,
-    stiffness: 250,
-    damping: 25,
-    mass: 0.7,
-    restDelta: 0.0001
+    stiffness: 200,
+    damping: 20,
+    mass: 0.6,
+    restDelta: 0.001
   }), []);
+
+  const visibleEntries = useMemo(() => {
+    const result = [];
+    for (let i = 0; i < Math.min(MAX_VISIBLE_CARDS, entries.length); i++) {
+      const index = getWrappedIndex(activeIndex - Math.floor(MAX_VISIBLE_CARDS / 2) + i);
+      result.push(entries[index]);
+    }
+    return result;
+  }, [entries, activeIndex, getWrappedIndex]);
 
   return (
     <div className="min-h-screen bg-black text-white px-4">
@@ -208,27 +217,28 @@ const Test = () => {
         </div>
       ) : (
         <div 
-          className="relative h-[600px] overflow-hidden perspective touch-none select-none will-change-transform"
+          className="relative h-[600px] overflow-hidden touch-none select-none will-change-transform"
+          style={{ perspective: '1200px' }}
           onWheel={handleWheel}
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
         >
           <AnimatePresence mode="popLayout" initial={false}>
-            {entries.map((entry, index) => {
-              const isActive = index === activeIndex;
-              const distance = ((index - activeIndex + entries.length) % entries.length) - Math.floor(entries.length / 2);
-              const adjustedDistance = distance > entries.length / 2 ? distance - entries.length : distance;
+            {visibleEntries.map((entry, index) => {
+              const realIndex = getWrappedIndex(activeIndex - Math.floor(MAX_VISIBLE_CARDS / 2) + index);
+              const isActive = realIndex === activeIndex;
+              const distance = index - Math.floor(MAX_VISIBLE_CARDS / 2);
               
               return (
                 <motion.div
                   key={entry.id}
-                  className="absolute w-full backface-hidden"
+                  className="absolute w-full"
                   initial="initial"
                   animate="animate"
                   exit="exit"
                   variants={cardVariants}
-                  custom={adjustedDistance}
+                  custom={distance}
                   transition={springConfig}
                   style={{
                     transformStyle: 'preserve-3d',
