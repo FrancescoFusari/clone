@@ -21,7 +21,7 @@ const Test = () => {
   });
 
   return (
-    <div className="min-h-screen bg-black text-white p-4">
+    <div className="min-h-screen bg-black text-white px-2">
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">My Notes</h1>
@@ -99,3 +99,4 @@ const Test = () => {
 };
 
 export default Test;
+
