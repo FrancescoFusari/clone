@@ -2,7 +2,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Brain, ArrowRight, RefreshCw, Tag, Lightbulb, Connection } from "lucide-react";
+import { Brain, ArrowRight, RefreshCw, Tag, Lightbulb, Network } from "lucide-react";
 import { useAuth } from "@/components/AuthProvider";
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
@@ -45,7 +45,11 @@ export const CategoryAIInsights = ({ category }: CategoryAIInsightsProps) => {
 
       if (!data?.insights) return null;
 
-      return JSON.parse(data.insights) as CategoryInsight;
+      try {
+        return JSON.parse(data.insights as string) as CategoryInsight;
+      } catch {
+        return null;
+      }
     },
     enabled: !!session?.user.id,
   });
@@ -174,7 +178,7 @@ export const CategoryAIInsights = ({ category }: CategoryAIInsightsProps) => {
             {insights.connections && insights.connections.length > 0 && (
               <div className="space-y-2">
                 <h3 className="font-medium text-sm text-muted-foreground flex items-center gap-2">
-                  <Connection className="h-4 w-4" />
+                  <Network className="h-4 w-4" />
                   Connections
                 </h3>
                 <ul className="space-y-2">
