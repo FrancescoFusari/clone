@@ -89,14 +89,25 @@ const Index = () => {
   }
 
   const getCardSize = (entry: Entry) => {
-    // Determine if entry has more content to show larger card
-    const hasLongContent = entry.content?.length > 200;
+    // Dynamic sizing based on entry type and content
+    if (entry.type === 'image') {
+      return 'row-span-2 col-span-2';
+    }
+    
+    if (entry.type === 'text' && entry.content?.length > 200) {
+      return 'row-span-2 col-span-2';
+    }
+
+    // Check for long content or multiple tags for text entries
+    const hasLongContent = entry.content?.length > 150;
     const hasMultipleTags = entry.tags?.length > 2;
     
     if (hasLongContent || hasMultipleTags) {
-      return "row-span-2";
+      return isMobile ? 'col-span-2' : 'row-span-2';
     }
-    return "";
+
+    // For URL entries or short content
+    return isMobile ? 'col-span-1' : '';
   };
 
   const getEntryIcon = (entry: Entry) => {
@@ -114,39 +125,41 @@ const Index = () => {
     <CenteredLayout>
       <h1 className="text-3xl font-bold mb-8 text-white/90">Your Entries</h1>
       {entries && entries.length > 0 ? (
-        <div className="grid grid-cols-2 auto-rows-auto gap-3">
+        <div className={`grid ${isMobile ? 'grid-cols-2 gap-2' : 'grid-cols-2 gap-3'} auto-rows-auto`}>
           {entries.map((entry) => (
             <Card 
               key={entry.id} 
               className={`
-                hover:shadow-lg transition-all duration-300 cursor-pointer
-                backdrop-blur-lg bg-[#F5F5DC]/20 rounded-2xl hover:scale-[1.02]
+                transition-all duration-300 cursor-pointer
+                hover:scale-[1.02]
+                border-0 shadow-none
+                bg-[#F5F5DC]
                 ${getCardSize(entry)}
               `}
               onClick={() => navigate(`/entries/${entry.id}`)}
             >
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-white/90">
+              <CardHeader className="p-4">
+                <CardTitle className="flex items-center gap-2 text-black/80">
                   {getEntryIcon(entry)}
                   {entry.title || "Untitled Entry"}
                 </CardTitle>
-                <CardDescription className="flex items-center gap-2 text-white/60">
+                <CardDescription className="flex items-center gap-2 text-black/60">
                   <Calendar className="h-4 w-4" />
                   {format(new Date(entry.created_at), "PPp")}
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                <p className={`text-sm text-white/80 mb-4 ${getCardSize(entry) ? 'line-clamp-4' : 'line-clamp-2'}`}>
+              <CardContent className="p-4 pt-0">
+                <p className={`text-sm text-black/70 mb-4 ${getCardSize(entry).includes('row-span-2') ? 'line-clamp-4' : 'line-clamp-2'}`}>
                   {entry.content}
                 </p>
                 {entry.tags && entry.tags.length > 0 && (
                   <div className="flex items-center gap-2 flex-wrap">
-                    <Tag className="h-4 w-4 text-white/60" />
+                    <Tag className="h-4 w-4 text-black/60" />
                     {entry.tags.map((tag: string) => (
                       <Badge 
                         key={tag} 
                         variant="secondary"
-                        className="bg-white/10 text-white/80 hover:bg-white/20 rounded-full"
+                        className="bg-black/10 text-black/70 hover:bg-black/20"
                       >
                         {tag}
                       </Badge>
