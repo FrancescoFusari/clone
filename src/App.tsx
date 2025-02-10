@@ -62,11 +62,11 @@ const AppRoutes = () => {
   const { session } = useAuth();
   const location = useLocation();
 
-  const showTopBar = location.pathname !== '/test';
+  const showBars = location.pathname !== '/test';
 
   return (
     <Suspense fallback={<LoadingFallback />}>
-      {showTopBar && <TopBar />}
+      {showBars && <TopBar />}
       <Routes>
         <Route
           path="/auth"
@@ -148,6 +148,7 @@ const AppRoutes = () => {
         />
         <Route path="*" element={<NotFound />} />
       </Routes>
+      {showBars && <Navigation />}
     </Suspense>
   );
 };
@@ -162,7 +163,6 @@ const App = () => (
             <Sonner />
             <BrowserRouter>
               <AppRoutes />
-              <Navigation />
             </BrowserRouter>
           </div>
         </TooltipProvider>
