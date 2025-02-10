@@ -59,7 +59,8 @@ const NewEntry = () => {
           body: { 
             content: publicUrl,
             user_id: session.user.id,
-            type: "image"
+            type: "image",
+            folder: "default" // Add default folder value
           }
         });
 
@@ -78,7 +79,8 @@ const NewEntry = () => {
             body: { 
               [type === "url" ? "url" : "content"]: content,
               user_id: session.user.id,
-              type
+              type,
+              folder: "default" // Add default folder value
             }
           }
         );

@@ -230,7 +230,7 @@ serve(async (req) => {
   }
 
   try {
-    const { content, user_id, type = "text" } = await req.json();
+    const { content, user_id, type = "text", folder = "default" } = await req.json();
     console.log(`Processing ${type} entry:`, 
       typeof content === 'string' ? content.substring(0, 100) + "..." : "File content");
 
@@ -405,7 +405,8 @@ serve(async (req) => {
         tags: processedData.tags,
         summary: processedData.summary,
         has_attachments: processedData.has_attachments,
-        attachments: processedData.attachments
+        attachments: processedData.attachments,
+        folder: folder // Include the folder field
       }])
       .select()
       .single();
