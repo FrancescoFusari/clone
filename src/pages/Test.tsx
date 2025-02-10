@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useIsMobile } from "@/hooks/use-mobile";
 import type { Database } from "@/integrations/supabase/types";
 import { format } from "date-fns";
-import { Card, CardHeader, CardContent } from "@/components/ui/card";
+import { Card, CardHeader } from "@/components/ui/card";
 
 type EntryCategory = Database["public"]["Enums"]["entry_category"];
 type Entry = Database["public"]["Tables"]["entries"]["Row"];
@@ -104,7 +104,7 @@ const Test = () => {
         ) : entries.length === 0 ? (
           <div className="text-white/50 text-center">No entries found</div>
         ) : (
-          <div className="space-y-4 max-w-2xl mx-auto">
+          <div className="space-y-4">
             {entries.map(entry => (
               <Card key={entry.id} className="bg-zinc-900/50 border-white/10">
                 <CardHeader className="p-4">
