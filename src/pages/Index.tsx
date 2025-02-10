@@ -89,7 +89,7 @@ const Index = () => {
     <CenteredLayout>
       <h1 className="text-3xl font-bold mb-8 text-white/90">Your Entries</h1>
       {entries && entries.length > 0 ? (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-2 gap-3">
           {entries.map((entry) => (
             <Card 
               key={entry.id} 
