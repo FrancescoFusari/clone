@@ -1,12 +1,13 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
-import { Heart, Plus, Mic, User, Briefcase, Users, Palette, GraduationCap, MoreVertical } from "lucide-react";
+import { Heart, Plus, Mic, User, Briefcase, Users, Palette, GraduationCap, MoreVertical, GripHorizontal } from "lucide-react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { useIsMobile } from "@/hooks/use-mobile";
 import type { Database } from "@/integrations/supabase/types";
+import { ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 
 type EntryCategory = Database["public"]["Enums"]["entry_category"];
 type Entry = Database["public"]["Tables"]["entries"]["Row"];
@@ -154,49 +155,59 @@ const Test = () => {
           const categoryColor = getCategoryColor(entry.category).split(' ')[1];
           
           return (
-            <Card 
-              key={entry.id} 
-              className={`rounded-xl ${isMobile ? 'p-3' : 'p-4'} break-inside-avoid mb-2 bg-zinc-800/50 backdrop-blur-sm border border-white/5`}
+            <ResizablePanel 
+              key={entry.id}
+              minSize={15}
+              defaultSize={20}
+              className="break-inside-avoid mb-2"
             >
-              <div className="flex justify-between items-start mb-1.5">
-                <div>
-                  <h2 className={`text-white ${isMobile ? 'text-base' : 'text-lg'} font-medium leading-tight`}>
-                    {entry.title}
-                  </h2>
-                  <div className="flex items-center gap-1.5 mt-1">
-                    <span className={`flex items-center gap-1 text-[10px] ${categoryColor}`}>
-                      {getCategoryIcon(entry.category)}
-                      {entry.category.split('_').map(word => 
-                        word.charAt(0).toUpperCase() + word.slice(1)
-                      ).join(' ')}
-                    </span>
-                    <span className="text-white/40 text-[10px]">•</span>
-                    <span className="text-white/40 text-[10px]">
-                      {format(new Date(entry.created_at), 'MMM d, yyyy')}
-                    </span>
+              <Card className={`rounded-xl ${isMobile ? 'p-3' : 'p-4'} bg-zinc-800/50 backdrop-blur-sm border border-white/5`}>
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h2 className={`text-white ${isMobile ? 'text-base' : 'text-lg'} font-medium leading-tight`}>
+                      {entry.title}
+                    </h2>
+                    <div className="flex items-center gap-1.5 mt-1">
+                      <span className={`flex items-center gap-1 text-[10px] ${categoryColor}`}>
+                        {getCategoryIcon(entry.category)}
+                        {entry.category.split('_').map(word => 
+                          word.charAt(0).toUpperCase() + word.slice(1)
+                        ).join(' ')}
+                      </span>
+                      <span className="text-white/40 text-[10px]">•</span>
+                      <span className="text-white/40 text-[10px]">
+                        {format(new Date(entry.created_at), 'MMM d, yyyy')}
+                      </span>
+                    </div>
                   </div>
+                  <Heart className="text-white/40 hover:text-pink-500 transition-colors cursor-pointer" 
+                         size={isMobile ? 16 : 18} />
                 </div>
-                <Heart className="text-white/40 hover:text-pink-500 transition-colors cursor-pointer" 
-                       size={isMobile ? 16 : 18} />
-              </div>
-              <div className="text-white/80">
-                <p className={`${isMobile ? 'text-xs' : 'text-sm'} leading-snug line-clamp-3`}>
-                  {entry.content}
-                </p>
-              </div>
-              {entry.tags && entry.tags.length > 0 && (
-                <div className="flex gap-1 mt-2 flex-wrap">
-                  {entry.tags.map((tag: string) => (
-                    <span 
-                      key={tag} 
-                      className={`px-1.5 py-0.5 rounded-full bg-white/5 text-white/60 ${isMobile ? 'text-[10px]' : 'text-xs'}`}
-                    >
-                      {tag}
-                    </span>
-                  ))}
+
+                <div className="text-white/80 mt-2 transition-all duration-300">
+                  <p className={`${isMobile ? 'text-xs' : 'text-sm'} leading-snug`}>
+                    {entry.content}
+                  </p>
                 </div>
-              )}
-            </Card>
+
+                {entry.tags && entry.tags.length > 0 && (
+                  <div className="flex gap-1 mt-2 flex-wrap">
+                    {entry.tags.map((tag: string) => (
+                      <span 
+                        key={tag} 
+                        className={`px-1.5 py-0.5 rounded-full bg-white/5 text-white/60 ${isMobile ? 'text-[10px]' : 'text-xs'}`}
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                <ResizableHandle className="w-full h-6 hover:bg-white/5 rounded-b-xl flex items-center justify-center cursor-ns-resize mt-2 group">
+                  <GripHorizontal className="w-4 h-4 text-white/20 group-hover:text-white/40 transition-colors" />
+                </ResizableHandle>
+              </Card>
+            </ResizablePanel>
           );
         })}
 
