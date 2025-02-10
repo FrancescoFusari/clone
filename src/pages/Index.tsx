@@ -133,7 +133,7 @@ const Index = () => {
                 transition-all duration-300 cursor-pointer
                 hover:scale-[1.02]
                 border-0 shadow-none
-                bg-[#F5F5DC]
+                bg-[#FDE1D3]
                 ${getCardSize(entry)}
               `}
               onClick={() => navigate(`/entries/${entry.id}`)}
