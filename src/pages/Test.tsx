@@ -15,6 +15,7 @@ const Test = () => {
   const [selectedCategory, setSelectedCategory] = useState<EntryCategory | null>(null);
   const [entries, setEntries] = useState<Entry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [activeIndex, setActiveIndex] = useState(0);
 
   useEffect(() => {
     const fetchEntries = async () => {
@@ -54,6 +55,38 @@ const Test = () => {
     }
   };
 
+  const handleWheel = (e: React.WheelEvent) => {
+    if (e.deltaY > 0 && activeIndex < entries.length - 1) {
+      setActiveIndex(prev => prev + 1);
+    } else if (e.deltaY < 0 && activeIndex > 0) {
+      setActiveIndex(prev => prev - 1);
+    }
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    const startY = touch.clientY;
+
+    const handleTouchMove = (e: TouchEvent) => {
+      const touch = e.touches[0];
+      const deltaY = touch.clientY - startY;
+
+      if (Math.abs(deltaY) > 50) { // threshold for swipe
+        if (deltaY < 0 && activeIndex < entries.length - 1) {
+          setActiveIndex(prev => prev + 1);
+        } else if (deltaY > 0 && activeIndex > 0) {
+          setActiveIndex(prev => prev - 1);
+        }
+        document.removeEventListener('touchmove', handleTouchMove);
+      }
+    };
+
+    document.addEventListener('touchmove', handleTouchMove, { passive: true });
+    document.addEventListener('touchend', () => {
+      document.removeEventListener('touchmove', handleTouchMove);
+    }, { once: true });
+  };
+
   const categories: EntryCategory[] = ["personal", "work", "social", "interests", "school"];
 
   return (
@@ -69,7 +102,10 @@ const Test = () => {
 
       <div className="flex gap-2 mb-6 overflow-x-auto scrollbar-none py-1">
         <button
-          onClick={() => setSelectedCategory(null)}
+          onClick={() => {
+            setSelectedCategory(null);
+            setActiveIndex(0);
+          }}
           className={`flex items-center px-4 py-1.5 rounded-full text-base transition-colors border border-white/10 ${
             selectedCategory === null 
               ? 'bg-white/10 text-white font-medium' 
@@ -81,7 +117,10 @@ const Test = () => {
         {categories.map((category) => (
           <button
             key={category}
-            onClick={() => setSelectedCategory(category)}
+            onClick={() => {
+              setSelectedCategory(category);
+              setActiveIndex(0);
+            }}
             className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-base transition-colors border border-white/10 ${
               selectedCategory === category
                 ? 'bg-white/10 text-white font-medium'
@@ -103,66 +142,85 @@ const Test = () => {
           <div className="text-white/50">No entries found</div>
         </div>
       ) : (
-        <div className="relative h-[600px] overflow-hidden perspective">
+        <div 
+          className="relative h-[600px] overflow-hidden perspective"
+          onWheel={handleWheel}
+          onTouchStart={handleTouchStart}
+        >
           <AnimatePresence>
-            {entries.map((entry, index) => (
-              <motion.div
-                key={entry.id}
-                className="absolute w-full"
-                initial={{ 
-                  scale: 0.8,
-                  y: 60 * (index + 1),
-                  rotateX: 10,
-                  opacity: 0 
-                }}
-                animate={{ 
-                  scale: 1 - (index * 0.05),
-                  y: 30 * index,
-                  rotateX: 5 * index,
-                  opacity: 1 - (index * 0.2),
-                  zIndex: entries.length - index
-                }}
-                exit={{ scale: 0.8, opacity: 0 }}
-                transition={{ duration: 0.3 }}
-                style={{
-                  transformStyle: 'preserve-3d',
-                  transformOrigin: 'top center'
-                }}
-              >
-                <div className="bg-gradient-to-br from-zinc-800/90 to-zinc-900/90 backdrop-blur-xl rounded-3xl p-6 border border-white/10 shadow-xl">
-                  <div className="flex justify-between items-start mb-4">
-                    <div>
-                      <h3 className="text-xl font-semibold mb-1">{entry.title}</h3>
-                      <p className="text-sm text-white/60">
-                        {format(new Date(entry.created_at), "MMM d, yyyy")}
-                      </p>
+            {entries.map((entry, index) => {
+              const isActive = index === activeIndex;
+              const distance = index - activeIndex;
+              
+              return (
+                <motion.div
+                  key={entry.id}
+                  className="absolute w-full cursor-grab active:cursor-grabbing"
+                  initial={{ 
+                    scale: 0.9,
+                    y: 60,
+                    rotateX: 10,
+                    opacity: 0 
+                  }}
+                  animate={{ 
+                    scale: 1 - (Math.abs(distance) * 0.05),
+                    y: distance * 30,
+                    rotateX: distance * 5,
+                    opacity: 1 - (Math.abs(distance) * 0.2),
+                    zIndex: entries.length - Math.abs(distance)
+                  }}
+                  exit={{ 
+                    scale: 0.9,
+                    opacity: 0,
+                    transition: { duration: 0.2 }
+                  }}
+                  transition={{
+                    type: "spring",
+                    stiffness: 300,
+                    damping: 30
+                  }}
+                  style={{
+                    transformStyle: 'preserve-3d',
+                    transformOrigin: 'top center'
+                  }}
+                >
+                  <div className={`bg-gradient-to-br from-zinc-800/90 to-zinc-900/90 backdrop-blur-xl rounded-3xl p-6 border transition-all duration-300 ${
+                    isActive ? 'border-white/20 shadow-lg' : 'border-white/10'
+                  }`}>
+                    <div className="flex justify-between items-start mb-4">
+                      <div>
+                        <h3 className="text-xl font-semibold mb-1">{entry.title}</h3>
+                        <p className="text-sm text-white/60">
+                          {format(new Date(entry.created_at), "MMM d, yyyy")}
+                        </p>
+                      </div>
+                      <span className="flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-sm">
+                        {getCategoryIcon(entry.category)}
+                        {entry.category.charAt(0).toUpperCase() + entry.category.slice(1)}
+                      </span>
                     </div>
-                    <span className="flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-sm">
-                      {getCategoryIcon(entry.category)}
-                      {entry.category.charAt(0).toUpperCase() + entry.category.slice(1)}
-                    </span>
-                  </div>
-                  
-                  <p className="text-white/80 line-clamp-3 mb-4">
-                    {entry.content}
-                  </p>
+                    
+                    <p className="text-white/80 line-clamp-3 mb-4">
+                      {entry.content}
+                    </p>
 
-                  <div className="flex justify-between items-center pt-4 border-t border-white/10">
-                    <div className="flex gap-6">
-                      <button className="flex items-center gap-2 text-white/60 hover:text-white transition-colors">
-                        <ThumbsUp className="w-4 h-4" />
-                      </button>
-                      <button className="flex items-center gap-2 text-white/60 hover:text-white transition-colors">
-                        <Bookmark className="w-4 h-4" />
-                      </button>
-                      <button className="flex items-center gap-2 text-white/60 hover:text-white transition-colors">
-                        <Share2 className="w-4 h-4" />
-                      </button>
+                    <div className="flex justify-between items-center pt-4 border-t border-white/10">
+                      <div className="flex gap-6">
+                        <button className="flex items-center gap-2 text-white/60 hover:text-white transition-colors">
+                          <ThumbsUp className="w-4 h-4" />
+                        </button>
+                        <button className="flex items-center gap-2 text-white/60 hover:text-white transition-colors">
+                          <Bookmark className="w-4 h-4" />
+                        </button>
+                        <button className="flex items-center gap-2 text-white/60 hover:text-white transition-colors">
+                          <Share2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </motion.div>
-            ))}
+                </motion.div>
+              );
+            })}
           </AnimatePresence>
         </div>
       )}
