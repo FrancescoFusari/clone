@@ -1,7 +1,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { FileText, Tag, Calendar } from "lucide-react";
+import { FileText, Tag, Calendar, Heart } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -28,6 +28,14 @@ type Entry = {
     key_concepts?: string[];
     related_topics?: string[];
   } | null;
+};
+
+const categoryColors = {
+  personal: "from-[#FEC6A1] to-[#FEC6A1]/80",
+  work: "from-[#E5DEFF] to-[#E5DEFF]/80",
+  social: "from-[#FEF7CD] to-[#FEF7CD]/80",
+  interests_and_hobbies: "from-[#F2FCE2] to-[#F2FCE2]/80",
+  school: "from-[#D3E4FD] to-[#D3E4FD]/80",
 };
 
 const Index = () => {
@@ -87,50 +95,65 @@ const Index = () => {
 
   return (
     <CenteredLayout>
-      <h1 className="text-3xl font-bold mb-8 text-white/90">Your Entries</h1>
-      {entries && entries.length > 0 ? (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {entries.map((entry) => (
-            <Card 
-              key={entry.id} 
-              className="hover:shadow-lg transition-all duration-300 cursor-pointer backdrop-blur-lg bg-white/5 border border-white/10 rounded-2xl hover:scale-[1.02]"
-              onClick={() => navigate(`/entries/${entry.id}`)}
-            >
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-white/90">
-                  <FileText className="h-5 w-5" />
-                  {entry.title || "Untitled Entry"}
-                </CardTitle>
-                <CardDescription className="flex items-center gap-2 text-white/60">
-                  <Calendar className="h-4 w-4" />
-                  {format(new Date(entry.created_at), "PPp")}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-white/80 mb-4 line-clamp-3">{entry.content}</p>
-                {entry.tags && entry.tags.length > 0 && (
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <Tag className="h-4 w-4 text-white/60" />
-                    {entry.tags.map((tag: string) => (
-                      <Badge 
-                        key={tag} 
-                        variant="secondary"
-                        className="bg-white/10 text-white/80 hover:bg-white/20 rounded-full"
-                      >
-                        {tag}
-                      </Badge>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      ) : (
-        <div className="text-center">
-          <p className="text-white/60">No entries found. Create your first entry to get started!</p>
-        </div>
-      )}
+      <div className="max-w-7xl mx-auto px-4">
+        <h1 className="text-4xl font-bold mb-8 text-gradient-white">Your Notes</h1>
+        
+        {entries && entries.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {entries.map((entry, index) => (
+              <Card 
+                key={entry.id} 
+                className={`group relative overflow-hidden cursor-pointer rounded-3xl border-0 transition-all duration-300 hover:scale-[1.02] bg-gradient-to-br ${categoryColors[entry.category as keyof typeof categoryColors] || 'from-[#FFDEE2] to-[#FFDEE2]/80'}`}
+                onClick={() => navigate(`/entries/${entry.id}`)}
+              >
+                <div className="absolute top-4 right-4">
+                  <Heart className="h-6 w-6 text-black/20 hover:text-black/40 transition-colors" />
+                </div>
+                
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-xl font-bold text-black/80 line-clamp-1">
+                    {entry.title || "Untitled Entry"}
+                  </CardTitle>
+                  <CardDescription className="flex items-center gap-2 text-black/60">
+                    <Calendar className="h-4 w-4" />
+                    {format(new Date(entry.created_at), "MMM d")}
+                  </CardDescription>
+                </CardHeader>
+                
+                <CardContent>
+                  <p className="text-sm text-black/70 mb-4 line-clamp-2">{entry.content}</p>
+                  
+                  {entry.tags && entry.tags.length > 0 && (
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {entry.tags.slice(0, 3).map((tag: string) => (
+                        <Badge 
+                          key={tag} 
+                          variant="secondary"
+                          className="bg-black/10 hover:bg-black/20 text-black/70 rounded-full border-0"
+                        >
+                          {tag}
+                        </Badge>
+                      ))}
+                      {entry.tags.length > 3 && (
+                        <Badge 
+                          variant="secondary"
+                          className="bg-black/10 hover:bg-black/20 text-black/70 rounded-full border-0"
+                        >
+                          +{entry.tags.length - 3}
+                        </Badge>
+                      )}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center">
+            <p className="text-white/60">No entries found. Create your first entry to get started!</p>
+          </div>
+        )}
+      </div>
     </CenteredLayout>
   );
 };
