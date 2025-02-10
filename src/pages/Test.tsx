@@ -16,6 +16,9 @@ const Test = () => {
   const [entries, setEntries] = useState<Entry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [touchStartY, setTouchStartY] = useState<number | null>(null);
+  const [lastTouchY, setLastTouchY] = useState<number | null>(null);
+  const [isScrolling, setIsScrolling] = useState(false);
 
   useEffect(() => {
     const fetchEntries = async () => {
@@ -64,27 +67,47 @@ const Test = () => {
   };
 
   const handleTouchStart = (e: React.TouchEvent) => {
-    const touch = e.touches[0];
-    const startY = touch.clientY;
+    setTouchStartY(e.touches[0].clientY);
+    setLastTouchY(e.touches[0].clientY);
+    setIsScrolling(false);
+  };
 
-    const handleTouchMove = (e: TouchEvent) => {
-      const touch = e.touches[0];
-      const deltaY = touch.clientY - startY;
+  const handleTouchMove = (e: React.TouchEvent) => {
+    e.preventDefault(); // Prevent default scrolling behavior
+    
+    if (!touchStartY || !lastTouchY) return;
+    
+    const currentY = e.touches[0].clientY;
+    const deltaY = currentY - lastTouchY;
+    const totalDeltaY = currentY - touchStartY;
 
-      if (Math.abs(deltaY) > 50) { // threshold for swipe
+    // Only start scrolling if we've moved more than 10px vertically
+    if (Math.abs(totalDeltaY) > 10) {
+      setIsScrolling(true);
+    }
+
+    if (isScrolling) {
+      // Adjust sensitivity - larger number means more movement needed to change cards
+      const sensitivity = 30;
+      
+      if (Math.abs(deltaY) > sensitivity) {
         if (deltaY < 0 && activeIndex < entries.length - 1) {
           setActiveIndex(prev => prev + 1);
+          setLastTouchY(currentY);
         } else if (deltaY > 0 && activeIndex > 0) {
           setActiveIndex(prev => prev - 1);
+          setLastTouchY(currentY);
         }
-        document.removeEventListener('touchmove', handleTouchMove);
       }
-    };
+    }
+    
+    setLastTouchY(currentY);
+  };
 
-    document.addEventListener('touchmove', handleTouchMove, { passive: true });
-    document.addEventListener('touchend', () => {
-      document.removeEventListener('touchmove', handleTouchMove);
-    }, { once: true });
+  const handleTouchEnd = () => {
+    setTouchStartY(null);
+    setLastTouchY(null);
+    setIsScrolling(false);
   };
 
   const categories: EntryCategory[] = ["personal", "work", "social", "interests", "school"];
@@ -143,9 +166,11 @@ const Test = () => {
         </div>
       ) : (
         <div 
-          className="relative h-[600px] overflow-hidden perspective"
+          className="relative h-[600px] overflow-hidden perspective touch-none"
           onWheel={handleWheel}
           onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
         >
           <AnimatePresence>
             {entries.map((entry, index) => {
@@ -155,7 +180,7 @@ const Test = () => {
               return (
                 <motion.div
                   key={entry.id}
-                  className="absolute w-full cursor-grab active:cursor-grabbing"
+                  className="absolute w-full"
                   initial={{ 
                     scale: 0.9,
                     y: 60,
@@ -181,7 +206,8 @@ const Test = () => {
                   }}
                   style={{
                     transformStyle: 'preserve-3d',
-                    transformOrigin: 'top center'
+                    transformOrigin: 'top center',
+                    touchAction: 'none'
                   }}
                 >
                   <div className={`bg-gradient-to-br from-zinc-800/90 to-zinc-900/90 backdrop-blur-xl rounded-3xl p-6 border transition-all duration-300 ${
