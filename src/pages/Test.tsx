@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import { Heart, Plus, Mic, User, Briefcase, Users, Palette, GraduationCap, MoreVertical } from "lucide-react";
@@ -102,7 +103,7 @@ const Test = () => {
   return (
     <div className="min-h-screen bg-black text-white px-4">
       <div className="flex justify-between items-start pt-6 pb-4">
-        <h1 className="text-[3rem] font-medium leading-[0.9]">
+        <h1 className="text-[4rem] font-medium leading-[1.1]">
           My<br />Entries
         </h1>
         <button className="rounded-full bg-zinc-800/80 p-2.5 hover:bg-zinc-700/80 transition-colors">
