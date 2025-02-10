@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { User, Briefcase, Users, Palette, GraduationCap, MoreVertical, ThumbsUp, Bookmark, Share2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,9 +9,9 @@ import { motion, AnimatePresence } from "framer-motion";
 type EntryCategory = Database["public"]["Enums"]["entry_category"];
 type Entry = Database["public"]["Tables"]["entries"]["Row"];
 
-const SCROLL_COOLDOWN = 150; // Reduced cooldown for more responsive scrolling
-const MIN_THRESHOLD = 20; // Lower threshold for easier scrolling
-const MAX_THRESHOLD = 40;
+const SCROLL_COOLDOWN = 200; // Increased cooldown to prevent rapid scrolling
+const MIN_THRESHOLD = 25;
+const MAX_THRESHOLD = 45;
 
 const Test = () => {
   const isMobile = useIsMobile();
@@ -65,10 +64,7 @@ const Test = () => {
 
   const getWrappedIndex = useCallback((index: number) => {
     if (entries.length === 0) return 0;
-    // Wrap around to the other end when reaching boundaries
-    if (index < 0) return entries.length - 1;
-    if (index >= entries.length) return 0;
-    return index;
+    return ((index % entries.length) + entries.length) % entries.length;
   }, [entries.length]);
 
   const handleScroll = useCallback((direction: 'up' | 'down') => {
@@ -76,15 +72,11 @@ const Test = () => {
     if (now - lastScrollTime < SCROLL_COOLDOWN) return;
     
     setLastScrollTime(now);
-    setActiveIndex(prev => {
-      const newIndex = direction === 'down' ? prev + 1 : prev - 1;
-      return getWrappedIndex(newIndex);
-    });
+    setActiveIndex(prev => getWrappedIndex(direction === 'down' ? prev + 1 : prev - 1));
   }, [lastScrollTime, getWrappedIndex]);
 
   const handleWheel = useCallback((e: React.WheelEvent) => {
     e.preventDefault();
-    
     const threshold = Math.max(MIN_THRESHOLD, Math.min(MAX_THRESHOLD, Math.abs(e.deltaY)));
     if (Math.abs(e.deltaY) >= threshold) {
       handleScroll(e.deltaY > 0 ? 'down' : 'up');
@@ -106,12 +98,12 @@ const Test = () => {
     const deltaY = currentY - lastTouchY;
     const totalDeltaY = currentY - touchStartY;
 
-    if (Math.abs(totalDeltaY) > 5) {
+    if (Math.abs(totalDeltaY) > 10) {
       setIsScrolling(true);
     }
 
     if (isScrolling) {
-      const sensitivity = Math.max(20, Math.min(40, Math.abs(deltaY) * 1.5));
+      const sensitivity = 30; // Fixed sensitivity for more consistent scrolling
       
       if (Math.abs(deltaY) > sensitivity) {
         handleScroll(deltaY < 0 ? 'down' : 'up');
@@ -134,32 +126,32 @@ const Test = () => {
 
   const cardVariants = useMemo(() => ({
     initial: { 
-      scale: 0.9,
-      y: 60,
-      rotateX: 10,
+      scale: 0.95,
+      y: 50,
+      rotateX: 5,
       opacity: 0 
     },
     animate: (distance: number) => ({ 
-      scale: 1 - (Math.abs(distance) * 0.05),
-      y: distance * 30,
-      rotateX: distance * 5,
-      opacity: 1 - (Math.abs(distance) * 0.2),
+      scale: 1 - (Math.abs(distance) * 0.03),
+      y: distance * 25,
+      rotateX: distance * 3,
+      opacity: 1 - (Math.abs(distance) * 0.15),
       zIndex: entries.length - Math.abs(distance)
     }),
     exit: { 
-      scale: 0.9,
-      y: -60,
-      rotateX: -10,
+      scale: 0.95,
+      y: -50,
+      rotateX: -5,
       opacity: 0
     }
   }), [entries.length]);
 
   const springConfig = useMemo(() => ({
     type: "spring" as const,
-    stiffness: 300, // Reduced stiffness for smoother motion
-    damping: 30,
-    mass: 0.8,
-    restDelta: 0.001
+    stiffness: 250,
+    damping: 25,
+    mass: 0.7,
+    restDelta: 0.0001
   }), []);
 
   return (
