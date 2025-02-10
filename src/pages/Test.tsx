@@ -23,7 +23,7 @@ const Test = () => {
   return (
     <div className="min-h-screen bg-black text-white px-2">
       {/* Header */}
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center mb-2">
         <h1 className="text-3xl font-bold">My Notes</h1>
         <button className="rounded-full bg-zinc-900 p-2">
           <svg width="24" height="24" viewBox="0 0 24 24">
@@ -33,7 +33,7 @@ const Test = () => {
       </div>
 
       {/* Filter Pills */}
-      <div className="flex gap-2 mb-6 overflow-x-auto scrollbar-none">
+      <div className="flex gap-2 mb-2 overflow-x-auto scrollbar-none">
         <button className="flex items-center px-4 py-2 rounded-full bg-zinc-800 text-white">
           <span className="text-base">All</span>
           <span className="ml-2 text-sm opacity-60">{entries?.length || 0}</span>
@@ -43,7 +43,7 @@ const Test = () => {
       </div>
 
       {/* Cards Grid */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-2">
         {isLoading ? (
           // Loading skeleton
           Array.from({ length: 4 }).map((_, index) => (
@@ -99,4 +99,3 @@ const Test = () => {
 };
 
 export default Test;
-
