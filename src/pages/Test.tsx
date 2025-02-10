@@ -14,6 +14,7 @@ const Test = () => {
   const isMobile = useIsMobile();
   const [selectedCategory, setSelectedCategory] = useState<EntryCategory | null>(null);
   const [expandedEntryId, setExpandedEntryId] = useState<string | null>(null);
+  const [panelSizes, setPanelSizes] = useState<{ [key: string]: number[] }>({});
 
   // Temporary mock data for demonstration
   const mockEntries: Partial<Entry>[] = [
@@ -60,6 +61,18 @@ const Test = () => {
 
   const toggleExpanded = (entryId: string) => {
     setExpandedEntryId(expandedEntryId === entryId ? null : entryId);
+    // Reset panel sizes when toggling
+    setPanelSizes(prev => ({
+      ...prev,
+      [entryId]: [70, 30]
+    }));
+  };
+
+  const handlePanelResize = (entryId: string, sizes: number[]) => {
+    setPanelSizes(prev => ({
+      ...prev,
+      [entryId]: sizes
+    }));
   };
 
   return (
@@ -109,8 +122,12 @@ const Test = () => {
             <ResizablePanelGroup
               direction="vertical"
               className="min-h-[100px]"
+              onLayout={(sizes) => handlePanelResize(entry.id!, sizes)}
             >
-              <ResizablePanel defaultSize={100}>
+              <ResizablePanel 
+                defaultSize={70} 
+                minSize={30}
+              >
                 <div className="p-4">
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="text-lg font-medium">{entry.title}</h3>
@@ -133,10 +150,19 @@ const Test = () => {
                   </div>
                 </div>
               </ResizablePanel>
-              <ResizableHandle 
-                className="bg-white/10 hover:bg-white/20 transition-colors"
-                onDoubleClick={() => toggleExpanded(entry.id!)}
-              />
+              {expandedEntryId === entry.id && (
+                <>
+                  <ResizableHandle 
+                    className="bg-white/10 hover:bg-white/20 transition-colors"
+                    onDoubleClick={() => toggleExpanded(entry.id!)}
+                  />
+                  <ResizablePanel defaultSize={30} minSize={20}>
+                    <div className="p-4">
+                      <p className="text-white/70">{entry.content}</p>
+                    </div>
+                  </ResizablePanel>
+                </>
+              )}
             </ResizablePanelGroup>
           </Card>
         ))}
