@@ -146,7 +146,9 @@ const App = () => (
             <Sonner />
             <BrowserRouter>
               <TopBar />
-              <AppRoutes />
+              <div className="pb-20">
+                <AppRoutes />
+              </div>
               <Navigation />
             </BrowserRouter>
           </div>
