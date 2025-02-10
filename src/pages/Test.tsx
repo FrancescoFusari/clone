@@ -103,8 +103,10 @@ const Test = () => {
   return (
     <div className="min-h-screen bg-black text-white px-4">
       {/* Header */}
-      <div className="flex justify-between items-center pt-6 pb-4">
-        <h1 className="text-[2.5rem] font-medium leading-none">My Notes</h1>
+      <div className="flex justify-between items-start pt-6 pb-4">
+        <h1 className="text-[3rem] font-medium leading-[0.9]">
+          My<br />Entries
+        </h1>
         <button className="rounded-full bg-zinc-800/80 p-2.5 hover:bg-zinc-700/80 transition-colors">
           <MoreVertical className="w-5 h-5" />
         </button>
@@ -114,10 +116,10 @@ const Test = () => {
       <div className="flex gap-2 mb-6 overflow-x-auto scrollbar-none py-1">
         <button
           onClick={() => setSelectedCategory(null)}
-          className={`flex items-center px-4 py-2 rounded-full text-base transition-colors ${
+          className={`flex items-center px-4 py-1.5 rounded-full text-base transition-colors border border-white/10 ${
             selectedCategory === null 
-              ? 'bg-white text-black font-medium' 
-              : 'bg-zinc-800/80 text-white/70 hover:bg-zinc-700/80'
+              ? 'bg-white/10 text-white font-medium' 
+              : 'bg-transparent text-white/70 hover:bg-white/5'
           }`}
         >
           <span>All</span>
@@ -127,10 +129,10 @@ const Test = () => {
           <button
             key={category}
             onClick={() => setSelectedCategory(category)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-full text-base transition-colors ${
+            className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-base transition-colors border border-white/10 ${
               selectedCategory === category
-                ? 'bg-white text-black font-medium'
-                : 'bg-zinc-800/80 text-white/70 hover:bg-zinc-700/80'
+                ? 'bg-white/10 text-white font-medium'
+                : 'bg-transparent text-white/70 hover:bg-white/5'
             }`}
           >
             {getCategoryIcon(category)}
