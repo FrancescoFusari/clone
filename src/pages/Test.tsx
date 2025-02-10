@@ -10,9 +10,9 @@ import { motion, AnimatePresence } from "framer-motion";
 type EntryCategory = Database["public"]["Enums"]["entry_category"];
 type Entry = Database["public"]["Tables"]["entries"]["Row"];
 
-const SCROLL_COOLDOWN = 200; // ms
-const MIN_THRESHOLD = 30;
-const MAX_THRESHOLD = 60;
+const SCROLL_COOLDOWN = 150; // Reduced cooldown for more responsive scrolling
+const MIN_THRESHOLD = 20; // Lower threshold for easier scrolling
+const MAX_THRESHOLD = 40;
 
 const Test = () => {
   const isMobile = useIsMobile();
@@ -156,9 +156,9 @@ const Test = () => {
 
   const springConfig = useMemo(() => ({
     type: "spring" as const,
-    stiffness: 400,
-    damping: 40,
-    mass: 1,
+    stiffness: 300, // Reduced stiffness for smoother motion
+    damping: 30,
+    mass: 0.8,
     restDelta: 0.001
   }), []);
 
@@ -168,7 +168,7 @@ const Test = () => {
         <h1 className="text-[4rem] font-light leading-[1.1]">
           My<br />Entries
         </h1>
-        <button className="rounded-full bg-zinc-800/80 p-2.5 hover:bg-zinc-700/80 transition-colors">
+        <button className="rounded-full bg-zinc-800 p-2.5 hover:bg-zinc-700 transition-colors">
           <MoreVertical className="w-5 h-5" />
         </button>
       </div>
@@ -179,10 +179,10 @@ const Test = () => {
             setSelectedCategory(null);
             setActiveIndex(0);
           }}
-          className={`flex items-center px-4 py-1.5 rounded-full text-base transition-colors border border-white/10 ${
+          className={`flex items-center px-4 py-1.5 rounded-full text-base transition-colors ${
             selectedCategory === null 
-              ? 'bg-white/10 text-white font-medium' 
-              : 'bg-transparent text-white/70 hover:bg-white/5'
+              ? 'bg-[#1A1F2C] text-white font-medium' 
+              : 'bg-[#222222] text-white/70 hover:bg-[#2A2A2A]'
           }`}
         >
           <span>All</span>
@@ -194,10 +194,10 @@ const Test = () => {
               setSelectedCategory(category);
               setActiveIndex(0);
             }}
-            className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-base transition-colors border border-white/10 ${
+            className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-base transition-colors ${
               selectedCategory === category
-                ? 'bg-white/10 text-white font-medium'
-                : 'bg-transparent text-white/70 hover:bg-white/5'
+                ? 'bg-[#1A1F2C] text-white font-medium'
+                : 'bg-[#222222] text-white/70 hover:bg-[#2A2A2A]'
             }`}
           >
             {getCategoryIcon(category)}
@@ -246,8 +246,8 @@ const Test = () => {
                     willChange: 'transform, opacity'
                   }}
                 >
-                  <div className={`bg-gradient-to-br from-zinc-800/90 to-zinc-900/90 backdrop-blur-xl rounded-3xl p-6 border transition-all duration-300 ${
-                    isActive ? 'border-white/20 shadow-lg' : 'border-white/10'
+                  <div className={`bg-[#1A1F2C] rounded-3xl p-6 transition-all duration-300 ${
+                    isActive ? 'shadow-lg shadow-black/20' : ''
                   }`}>
                     <div className="flex justify-between items-start mb-4">
                       <div>
@@ -256,7 +256,7 @@ const Test = () => {
                           {format(new Date(entry.created_at), "MMM d, yyyy")}
                         </p>
                       </div>
-                      <span className="flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-sm">
+                      <span className="flex items-center gap-2 px-3 py-1 rounded-full bg-[#222222] text-sm">
                         {getCategoryIcon(entry.category)}
                         {entry.category.charAt(0).toUpperCase() + entry.category.slice(1)}
                       </span>
