@@ -179,7 +179,7 @@ async function formatTextAndGenerateComments(content: string, type: "text" | "ur
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4-vision-preview', // Changed from gpt-4o-mini to gpt-4-vision-preview
+        model: 'gpt-4o',  // Using the more powerful model that supports vision
         messages,
         max_tokens: 1000,
         temperature: 0.3,
@@ -190,7 +190,7 @@ async function formatTextAndGenerateComments(content: string, type: "text" | "ur
     if (!response.ok) {
       const error = await response.json();
       console.error('OpenAI API error:', error);
-      throw new Error('Failed to process content with OpenAI');
+      throw new Error(`OpenAI API error: ${error.error?.message || 'Unknown error'}`);
     }
 
     const data = await response.json();
@@ -220,7 +220,7 @@ async function formatTextAndGenerateComments(content: string, type: "text" | "ur
     }
   } catch (error) {
     console.error('Error in OpenAI request:', error);
-    throw new Error('Failed to process content with OpenAI');
+    throw error; // Re-throw the error with the original message for better debugging
   }
 }
 
@@ -259,13 +259,13 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4o', // Using consistent model
         messages: [
           {
             role: 'system',
             content: `You are an AI that analyzes ${type === "image" ? "image descriptions" : "journal entries"}. You must respond with a valid JSON object containing exactly these fields:
             {
-              "category": "personal" | "work" | "social" | "interests_and_hobbies" | "school",
+              "category": "personal" | "work" | "social" | "interests" | "school",
               "subcategory": "string describing specific topic within the category",
               "tags": ["array of 1-5 relevant keywords"],
               "summary": "1-2 sentence summary"
@@ -297,7 +297,7 @@ serve(async (req) => {
             - "online_social" - for entries about social media, online communities
             - "networking" - for entries about professional connections
 
-            interests_and_hobbies:
+            interests:
             - "arts_and_creativity" - for entries about art, music, writing, crafts
             - "sports_and_fitness" - for entries about athletics, exercise
             - "technology" - for entries about gadgets, programming, digital interests
