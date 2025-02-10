@@ -5,25 +5,25 @@
 
 @layer base {
   :root {
-    --background: 162 47% 11%;
-    --foreground: 0 0% 98%;
-    --card: 162 47% 15%;
-    --card-foreground: 0 0% 98%;
-    --popover: 162 47% 11%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 157 100% 65%;
-    --primary-foreground: 162 47% 11%;
-    --secondary: 162 40% 20%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 162 40% 20%;
-    --muted-foreground: 162 10% 65%;
-    --accent: 162 40% 20%;
-    --accent-foreground: 0 0% 98%;
+    --background: 222 47% 11%;
+    --foreground: 210 40% 98%;
+    --card: 222 47% 11%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222 47% 11%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 142 69% 58%;
+    --primary-foreground: 222 47% 11%;
+    --secondary: 217 19% 27%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217 19% 27%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217 19% 27%;
+    --accent-foreground: 210 40% 98%;
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 162 40% 20%;
-    --input: 162 40% 20%;
-    --ring: 157 100% 65%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217 19% 27%;
+    --input: 217 19% 27%;
+    --ring: 142 69% 58%;
     --radius: 1.5rem;
   }
 }
@@ -54,7 +54,7 @@
   }
 
   .glass-morphism {
-    @apply backdrop-blur-xl bg-secondary/30 border border-white/10 shadow-[0_8px_32px_rgba(77,255,165,0.1)] hover:shadow-[0_8px_32px_rgba(77,255,165,0.2)] hover:bg-secondary/40 transition-all duration-300;
+    @apply backdrop-blur-xl bg-secondary/30 border border-white/10 shadow-[0_8px_16px_-4px_rgba(0,0,0,0.3)] hover:bg-secondary/40 transition-colors;
   }
   
   .neo-blur {
@@ -71,22 +71,5 @@
 
   .card-hover {
     @apply hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 hover:scale-[1.02] hover:bg-secondary/40;
-  }
-
-  .glow-effect {
-    @apply relative after:absolute after:inset-0 after:rounded-[inherit] after:shadow-[0_0_40px_rgba(77,255,165,0.2)] after:opacity-0 hover:after:opacity-100 after:transition-opacity;
-  }
-
-  .sparkle-button {
-    @apply relative overflow-hidden before:absolute before:inset-0 before:bg-gradient-to-r before:from-primary/20 before:to-transparent before:animate-shimmer;
-  }
-}
-
-@keyframes shimmer {
-  from {
-    transform: translateX(-100%);
-  }
-  to {
-    transform: translateX(100%);
   }
 }
