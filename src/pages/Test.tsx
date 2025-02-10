@@ -1,7 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
-import { Heart, Plus, Mic, User, Briefcase, Users, Palette, GraduationCap } from "lucide-react";
+import { Heart, Plus, Mic, User, Briefcase, Users, Palette, GraduationCap, MoreVertical } from "lucide-react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
@@ -9,6 +9,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import type { Database } from "@/integrations/supabase/types";
 
 type EntryCategory = Database["public"]["Enums"]["entry_category"];
+type Entry = Database["public"]["Tables"]["entries"]["Row"];
 
 const Test = () => {
   const isMobile = useIsMobile();
@@ -25,7 +26,7 @@ const Test = () => {
   } = useInfiniteQuery({
     queryKey: ["infinite-entries", selectedCategory],
     queryFn: async ({ pageParam = 0 }) => {
-      const from = pageParam * pageSize;
+      const from = Number(pageParam) * pageSize;
       const to = from + pageSize - 1;
       
       let query = supabase
@@ -43,8 +44,9 @@ const Test = () => {
       return data;
     },
     getNextPageParam: (lastPage, allPages) => {
-      return lastPage?.length === pageSize ? allPages.length : undefined;
+      return lastPage && lastPage.length === pageSize ? allPages.length : undefined;
     },
+    initialPageParam: 0
   });
 
   useEffect(() => {
@@ -99,39 +101,37 @@ const Test = () => {
   const categories: EntryCategory[] = ["personal", "work", "social", "interests_and_hobbies", "school"];
 
   return (
-    <div className="min-h-screen bg-black text-white px-2">
+    <div className="min-h-screen bg-black text-white px-4">
       {/* Header */}
-      <div className="flex justify-between items-center mb-2">
-        <h1 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-medium`}>My Notes</h1>
-        <button className="rounded-full bg-zinc-900 p-1.5">
-          <svg width="20" height="20" viewBox="0 0 24 24">
-            <path fill="currentColor" d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/>
-          </svg>
+      <div className="flex justify-between items-center pt-6 pb-4">
+        <h1 className="text-[2.5rem] font-medium leading-none">My Notes</h1>
+        <button className="rounded-full bg-zinc-800/80 p-2.5 hover:bg-zinc-700/80 transition-colors">
+          <MoreVertical className="w-5 h-5" />
         </button>
       </div>
 
       {/* Category Filters */}
-      <div className="flex gap-1.5 mb-3 overflow-x-auto scrollbar-none py-1">
+      <div className="flex gap-2 mb-6 overflow-x-auto scrollbar-none py-1">
         <button
           onClick={() => setSelectedCategory(null)}
-          className={`flex items-center px-2.5 py-1 rounded-full ${
+          className={`flex items-center px-4 py-2 rounded-full text-base transition-colors ${
             selectedCategory === null 
-              ? 'bg-white/20 text-white' 
-              : 'bg-zinc-800/50 text-white/70'
-          } ${isMobile ? 'text-xs' : 'text-sm'}`}
+              ? 'bg-white text-black font-medium' 
+              : 'bg-zinc-800/80 text-white/70 hover:bg-zinc-700/80'
+          }`}
         >
           <span>All</span>
-          <span className="ml-1.5 opacity-60">{entries?.length || 0}</span>
+          <span className="ml-2 opacity-60">{entries?.length || 0}</span>
         </button>
         {categories.map((category) => (
           <button
             key={category}
             onClick={() => setSelectedCategory(category)}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full transition-colors ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-full text-base transition-colors ${
               selectedCategory === category
-                ? getCategoryColor(category)
-                : 'bg-zinc-800/50 text-white/70'
-            } ${isMobile ? 'text-xs' : 'text-sm'}`}
+                ? 'bg-white text-black font-medium'
+                : 'bg-zinc-800/80 text-white/70 hover:bg-zinc-700/80'
+            }`}
           >
             {getCategoryIcon(category)}
             <span>{category.split('_').map(word => 
@@ -152,7 +152,7 @@ const Test = () => {
               <div className="h-2.5 bg-zinc-700/50 rounded-full w-3/4"></div>
             </Card>
           ))
-        ) : entries?.map((entry) => {
+        ) : entries?.map((entry: Entry) => {
           const categoryColor = getCategoryColor(entry.category).split(' ')[1];
           
           return (
