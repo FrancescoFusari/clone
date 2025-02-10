@@ -1,12 +1,12 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileText, Image, Link, Loader2, MessageCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { ChatInterface } from "./chat/ChatInterface";
+import { RichTextEditor } from "./RichTextEditor";
 
 interface EntryFormProps {
   onSubmit: (content: string | File, type: "text" | "url" | "image") => Promise<void>;
@@ -122,12 +122,10 @@ export const EntryForm = ({ onSubmit }: EntryFormProps) => {
         </TabsList>
         
         <TabsContent value="text" className="mt-6">
-          <Textarea
+          <RichTextEditor
             value={content}
-            onChange={(e) => setContent(e.target.value)}
+            onChange={setContent}
             placeholder="Write your entry here..."
-            className="min-h-[250px] text-base resize-none bg-black/20 border-white/10 text-white/90 placeholder:text-white/40 focus-visible:ring-primary/30"
-            style={{ whiteSpace: 'pre-wrap' }}
           />
         </TabsContent>
         
