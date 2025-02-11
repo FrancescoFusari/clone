@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { User, Briefcase, Users, Palette, GraduationCap, List } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -92,14 +93,14 @@ const Test = () => {
         <List className="w-6 h-6 text-zinc-400" />
       </div>
 
-      <div className="flex gap-2 mb-6 overflow-x-auto scrollbar-none py-1">
+      <div className="flex gap-2 mb-6 overflow-x-auto scrollbar-none py-1 -mx-4 px-4 no-scrollbar touch-pan-x">
         <button
           onClick={() => {
             setSelectedCategory(null);
             setPage(0);
             setEntries([]);
           }}
-          className={`flex items-center px-4 py-1.5 rounded-full text-base transition-colors ${
+          className={`flex items-center px-4 py-1.5 rounded-full text-base transition-colors shrink-0 ${
             selectedCategory === null 
               ? 'bg-white text-black font-medium' 
               : 'bg-zinc-800 text-white/70 hover:bg-zinc-700'
@@ -115,7 +116,7 @@ const Test = () => {
               setPage(0);
               setEntries([]);
             }}
-            className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-base transition-colors ${
+            className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-base transition-colors shrink-0 ${
               selectedCategory === category
                 ? 'bg-white text-black font-medium'
                 : 'bg-zinc-800 text-white/70 hover:bg-zinc-700'
