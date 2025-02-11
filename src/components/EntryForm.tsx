@@ -27,6 +27,11 @@ export const EntryForm = ({ onSubmit }: EntryFormProps) => {
         placeholder: 'Write your entry here...',
       }),
     ],
+    editorProps: {
+      attributes: {
+        class: 'min-h-[300px] h-full outline-none',
+      },
+    },
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -235,10 +240,12 @@ export const EntryForm = ({ onSubmit }: EntryFormProps) => {
                 </Button>
               </div>
             </div>
-            <EditorContent 
-              editor={editor}
-              className="min-h-[300px] p-4 bg-zinc-900/50 border border-zinc-700/50 rounded-b-xl text-zinc-100 focus-within:border-zinc-600 transition-colors prose prose-invert max-w-none prose-sm"
-            />
+            <div className="h-[300px]">
+              <EditorContent 
+                editor={editor}
+                className="h-full p-4 bg-zinc-900/50 border border-zinc-700/50 rounded-b-xl text-zinc-100 focus-within:border-zinc-600 transition-colors prose prose-invert max-w-none prose-sm"
+              />
+            </div>
           </div>
         )}
         
@@ -310,3 +317,4 @@ export const EntryForm = ({ onSubmit }: EntryFormProps) => {
     </form>
   );
 };
+
