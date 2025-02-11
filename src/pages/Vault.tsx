@@ -81,34 +81,17 @@ const Test = () => {
   const getCategoryAccentColor = (category: EntryCategory) => {
     switch (category) {
       case "personal":
-        return "text-purple-400/60";
+        return "text-purple-400";
       case "work":
-        return "text-blue-400/60";
+        return "text-blue-400";
       case "social":
-        return "text-pink-400/60";
+        return "text-pink-400";
       case "interests":
-        return "text-green-400/60";
+        return "text-green-400";
       case "school":
-        return "text-orange-400/60";
+        return "text-orange-400";
       default:
         return "text-zinc-400";
-    }
-  };
-
-  const getCategoryBorderAccent = (category: EntryCategory) => {
-    switch (category) {
-      case "personal":
-        return "border-l-purple-500/20";
-      case "work":
-        return "border-l-blue-500/20";
-      case "social":
-        return "border-l-pink-500/20";
-      case "interests":
-        return "border-l-green-500/20";
-      case "school":
-        return "border-l-orange-500/20";
-      default:
-        return "border-l-zinc-700";
     }
   };
 
@@ -172,11 +155,11 @@ const Test = () => {
               <div
                 key={entry.id}
                 ref={index === entries.length - 1 ? lastEntryElementRef : undefined}
-                className={`bg-zinc-900/50 backdrop-blur-sm border border-zinc-800/50 border-l-4 ${getCategoryBorderAccent(entry.category)} rounded-lg p-6 hover:bg-zinc-800/30 transition-all duration-200`}
+                className="bg-zinc-800/40 border border-zinc-700/50 rounded-lg p-6 hover:bg-zinc-800/60 transition-colors"
               >
                 <div className="flex justify-between items-start mb-4">
                   <div className="space-y-1">
-                    <h3 className={`text-xl font-medium ${getCategoryAccentColor(entry.category)}`}>
+                    <h3 className="text-xl font-medium text-zinc-100">
                       {entry.title}
                     </h3>
                     <p className="text-sm text-zinc-500">
@@ -189,11 +172,11 @@ const Test = () => {
                   {truncateContent(entry.content)}
                 </p>
 
-                <div className="flex flex-col gap-3 pt-4 border-t border-zinc-800/50">
+                <div className="flex flex-col gap-3 pt-4 border-t border-zinc-700/50">
                   <div className="flex items-center justify-between">
                     <span className={`flex items-center gap-2 text-sm ${getCategoryAccentColor(entry.category)}`}>
                       {getCategoryIcon(entry.category)}
-                      <span className="capitalize">{entry.category.replace(/_/g, " ")}</span>
+                      <span>{entry.category.charAt(0).toUpperCase() + entry.category.slice(1)}</span>
                     </span>
                     {entry.subcategory && (
                       <span className="text-sm text-zinc-500">
@@ -207,7 +190,7 @@ const Test = () => {
                       {entry.tags.map((tag, i) => (
                         <span
                           key={i}
-                          className={`px-2 py-1 rounded-md text-xs bg-zinc-800/80 ${getCategoryAccentColor(entry.category)} border border-zinc-700/50`}
+                          className="px-2 py-1 rounded-md text-xs bg-zinc-800/80 text-zinc-400 border border-zinc-700/50"
                         >
                           {tag}
                         </span>
