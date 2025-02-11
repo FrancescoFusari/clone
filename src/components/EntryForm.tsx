@@ -1,13 +1,12 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FileText, Image, Link, Loader2, MessageCircle, Bold, Italic, List, ListOrdered, Quote, Undo, Redo } from "lucide-react";
-import { ChatInterface } from "./chat/ChatInterface";
 import { cn } from "@/lib/utils";
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
+import { useNavigate } from "react-router-dom";
 
 interface EntryFormProps {
   onSubmit: (content: string | File, type: "text" | "url" | "image") => Promise<void>;
@@ -18,7 +17,7 @@ export const EntryForm = ({ onSubmit }: EntryFormProps) => {
   const [image, setImage] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [activeInput, setActiveInput] = useState<"text" | "url" | "image">("text");
-  const [showChat, setShowChat] = useState(false);
+  const navigate = useNavigate();
 
   const editor = useEditor({
     extensions: [
@@ -42,7 +41,6 @@ export const EntryForm = ({ onSubmit }: EntryFormProps) => {
         class: 'outline-none min-h-[200px]',
       },
       handlePaste: (view, event) => {
-        // Allow default paste behavior which preserves formatting
         return false;
       },
     },
@@ -92,22 +90,6 @@ export const EntryForm = ({ onSubmit }: EntryFormProps) => {
     }
   };
 
-  if (showChat) {
-    return (
-      <ChatInterface 
-        onClose={() => setShowChat(false)} 
-        onSaveEntry={async (chatContent) => {
-          setLoading(true);
-          try {
-            await onSubmit(chatContent, "text");
-          } finally {
-            setLoading(false);
-          }
-        }}
-      />
-    );
-  }
-
   const inputTypes = [
     {
       id: "text" as const,
@@ -134,7 +116,7 @@ export const EntryForm = ({ onSubmit }: EntryFormProps) => {
       <div className="flex justify-end">
         <Button
           type="button"
-          onClick={() => setShowChat(true)}
+          onClick={() => navigate('/chat')}
           variant="outline"
           className="bg-zinc-800/50 hover:bg-zinc-700/50 text-zinc-100 border-zinc-700/50"
         >
@@ -331,4 +313,3 @@ export const EntryForm = ({ onSubmit }: EntryFormProps) => {
     </form>
   );
 };
-

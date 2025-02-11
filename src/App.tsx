@@ -1,4 +1,3 @@
-
 import { Suspense, lazy } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -20,6 +19,7 @@ const Categories = lazy(() => import("./pages/Categories"));
 const CategoryGraph = lazy(() => import("./pages/CategoryGraph"));
 const UnifiedGraph = lazy(() => import("./pages/UnifiedGraph"));
 const Vault = lazy(() => import("./pages/Vault"));
+const Chat = lazy(() => import("./pages/Chat"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -89,6 +89,14 @@ const AppRoutes = () => {
           element={
             <ProtectedRoute>
               <NewEntry />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/chat"
+          element={
+            <ProtectedRoute>
+              <Chat />
             </ProtectedRoute>
           }
         />
