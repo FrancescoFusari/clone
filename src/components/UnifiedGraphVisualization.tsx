@@ -1,3 +1,4 @@
+
 import { useEffect, useRef } from "react";
 import ForceGraph3D from "3d-force-graph";
 import { useQuery } from "@tanstack/react-query";
@@ -116,28 +117,36 @@ export const UnifiedGraphVisualization = () => {
         val: 20
       });
 
-      graphData.links.push({
-        source: entry.category,
-        target: entry.id,
-        color: getCategoryColor(entry.category).link
-      });
+      // Get category color before using it
+      const categoryColor = getCategoryColor(entry.category);
+      if (categoryColor) {
+        graphData.links.push({
+          source: entry.category,
+          target: entry.id,
+          color: categoryColor.link
+        });
+      }
 
       if (entry.subcategory) {
         subcategories.add(entry.subcategory);
-        graphData.links.push({
-          source: entry.id,
-          target: entry.subcategory,
-          color: getCategoryColor(entry.category).link
-        });
+        if (categoryColor) {
+          graphData.links.push({
+            source: entry.id,
+            target: entry.subcategory,
+            color: categoryColor.link
+          });
+        }
       }
 
       entry.tags?.forEach(tag => {
         tags.add(tag);
-        graphData.links.push({
-          source: entry.id,
-          target: tag,
-          color: getCategoryColor(entry.category).link
-        });
+        if (categoryColor) {
+          graphData.links.push({
+            source: entry.id,
+            target: tag,
+            color: categoryColor.link
+          });
+        }
       });
     });
 
@@ -148,11 +157,14 @@ export const UnifiedGraphVisualization = () => {
         type: "category",
         val: 100
       });
-      graphData.links.push({
-        source: profile.id,
-        target: cat,
-        color: getCategoryColor(cat).link
-      });
+      const categoryColor = getCategoryColor(cat);
+      if (categoryColor) {
+        graphData.links.push({
+          source: profile.id,
+          target: cat,
+          color: categoryColor.link
+        });
+      }
     });
 
     subcategories.forEach(sub => {
@@ -173,7 +185,8 @@ export const UnifiedGraphVisualization = () => {
       });
     });
 
-    const Graph = ForceGraph3D()(graphRef.current)
+    const Graph = ForceGraph3D();
+    const graphInstance = Graph(graphRef.current)
       .graphData(graphData)
       .nodeLabel("name")
       .nodeColor(node => {
@@ -182,13 +195,17 @@ export const UnifiedGraphVisualization = () => {
           case "user":
             return "#9b87f5";
           case "category":
-            return getCategoryColor(n.id as EntryCategory).primary;
+            const catColor = getCategoryColor(n.id as EntryCategory);
+            return catColor ? catColor.primary : "#F5F3F2";
           case "subcategory":
-            return getCategoryColor(getNodeCategory(n.id, graphData) as EntryCategory).secondary;
+            const subCatColor = getCategoryColor(getNodeCategory(n.id, graphData) as EntryCategory);
+            return subCatColor ? subCatColor.secondary : "#F5F3F2";
           case "entry":
-            return getCategoryColor(getNodeCategory(n.id, graphData) as EntryCategory).tertiary;
+            const entryColor = getCategoryColor(getNodeCategory(n.id, graphData) as EntryCategory);
+            return entryColor ? entryColor.tertiary : "#F5F3F2";
           case "tag":
-            return getCategoryColor(getNodeCategory(n.id, graphData) as EntryCategory).soft;
+            const tagColor = getCategoryColor(getNodeCategory(n.id, graphData) as EntryCategory);
+            return tagColor ? tagColor.soft : "#F5F3F2";
           default:
             return "#F5F3F2";
         }
@@ -210,7 +227,7 @@ export const UnifiedGraphVisualization = () => {
         const distance = 150;
         const distRatio = 1 + distance/Math.hypot(node.x || 0, node.y || 0, node.z || 0);
 
-        Graph.cameraPosition(
+        graphInstance.cameraPosition(
           { 
             x: (node.x || 0) * distRatio, 
             y: (node.y || 0) * distRatio, 
@@ -222,18 +239,19 @@ export const UnifiedGraphVisualization = () => {
       });
 
     const handleResize = () => {
-      Graph.width(window.innerWidth)
-          .height(window.innerHeight);
+      graphInstance
+        .width(window.innerWidth)
+        .height(window.innerHeight);
     };
     window.addEventListener('resize', handleResize);
 
-    Graph.cameraPosition({ x: 500, y: 500, z: 800 });
+    graphInstance.cameraPosition({ x: 500, y: 500, z: 800 });
 
     const userNode = graphData.nodes.find(node => node.type === "user");
     if (userNode) {
-      Graph.d3Force('center', null);
-      Graph.d3Force('charge')?.strength(-150);
-      Graph.d3Force('link')?.distance(200);
+      graphInstance.d3Force('center', null);
+      graphInstance.d3Force('charge')?.strength(-150);
+      graphInstance.d3Force('link')?.distance(200);
       userNode.fx = 0;
       userNode.fy = 0;
       userNode.fz = 0;
@@ -291,7 +309,7 @@ const getCategoryColor = (category: EntryCategory) => {
       soft: "#fce7f3",       // Soft pink
       link: "rgba(252, 231, 243, 0.5)" // Pink with 0.5 opacity
     },
-    interests_and_hobbies: {
+    interests: {
       primary: "#4ade80",    // Primary green
       secondary: "#22c55e",  // Secondary green
       tertiary: "#16a34a",   // Tertiary green
@@ -307,7 +325,7 @@ const getCategoryColor = (category: EntryCategory) => {
     }
   };
   
-  return palettes[category];
+  return category ? palettes[category] : undefined;
 };
 
 const getNodeCategory = (nodeId: string, graphData: GraphData): EntryCategory | null => {
@@ -336,3 +354,4 @@ const getNodeCategory = (nodeId: string, graphData: GraphData): EntryCategory | 
 
   return findCategory(nodeId);
 };
+
