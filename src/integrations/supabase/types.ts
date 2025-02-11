@@ -151,6 +151,7 @@ export type Database = {
           created_at: string
           custom_subcategory: string | null
           entry_comments: Json | null
+          entry_type: string | null
           folder: string
           formatted_content: string | null
           has_attachments: boolean | null
@@ -178,6 +179,7 @@ export type Database = {
           created_at?: string
           custom_subcategory?: string | null
           entry_comments?: Json | null
+          entry_type?: string | null
           folder: string
           formatted_content?: string | null
           has_attachments?: boolean | null
@@ -205,6 +207,7 @@ export type Database = {
           created_at?: string
           custom_subcategory?: string | null
           entry_comments?: Json | null
+          entry_type?: string | null
           folder?: string
           formatted_content?: string | null
           has_attachments?: boolean | null

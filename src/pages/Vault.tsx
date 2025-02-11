@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { User, Briefcase, Users, Palette, GraduationCap, List, Eye } from "lucide-react";
+import { User, Briefcase, Users, Palette, GraduationCap, List, Eye, FileText, Image, Link } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import type { Database } from "@/integrations/supabase/types";
@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/components/AuthProvider";
 import { useToast } from "@/components/ui/use-toast";
+import { cn } from "@/lib/utils";
 
 type EntryCategory = Database["public"]["Enums"]["entry_category"];
 type Entry = Database["public"]["Tables"]["entries"]["Row"];
@@ -123,12 +124,34 @@ const Test = () => {
     }
   };
 
+  const getEntryTypeIcon = (entry: Entry) => {
+    switch (entry.entry_type) {
+      case "image":
+        return <Image className="h-4 w-4 text-purple-400" />;
+      case "url":
+        return <Link className="h-4 w-4 text-blue-400" />;
+      default:
+        return <FileText className="h-4 w-4 text-green-400" />;
+    }
+  };
+
+  const getEntryTypeBorder = (entry: Entry) => {
+    switch (entry.entry_type) {
+      case "image":
+        return "border-l-4 border-l-purple-400/50";
+      case "url":
+        return "border-l-4 border-l-blue-400/50";
+      default:
+        return "border-l-4 border-l-green-400/50";
+    }
+  };
+
   const truncateContent = (content: string) => {
     return content.length > 180 ? content.substring(0, 180) + "..." : content;
   };
 
   if (!session) {
-    return null; // Will redirect in useEffect
+    return null;
   }
 
   return (
@@ -187,7 +210,10 @@ const Test = () => {
               <div
                 key={entry.id}
                 ref={index === entries.length - 1 ? lastEntryElementRef : undefined}
-                className="bg-zinc-800/40 border border-zinc-700/50 rounded-lg p-6 pr-16 hover:bg-zinc-800/60 transition-colors relative"
+                className={cn(
+                  "bg-zinc-800/40 border border-zinc-700/50 rounded-lg p-6 pr-16 hover:bg-zinc-800/60 transition-colors relative",
+                  getEntryTypeBorder(entry)
+                )}
               >
                 <Button
                   variant="ghost"
@@ -204,9 +230,12 @@ const Test = () => {
 
                 <div className="flex justify-between items-start mb-4">
                   <div className="space-y-1">
-                    <h3 className="text-xl font-medium text-zinc-100">
-                      {entry.title}
-                    </h3>
+                    <div className="flex items-center gap-2">
+                      {getEntryTypeIcon(entry)}
+                      <h3 className="text-xl font-medium text-zinc-100">
+                        {entry.title}
+                      </h3>
+                    </div>
                     <p className="text-sm text-zinc-500">
                       {format(new Date(entry.created_at), "MMM d, yyyy")}
                     </p>
