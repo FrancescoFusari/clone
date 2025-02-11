@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -411,7 +412,6 @@ const EntryDetails = () => {
       <Card className="glass-morphism overflow-hidden mb-8">
         <CardHeader className="space-y-2">
           <div className="space-y-2">
-            <h1 className="text-4xl font-bold text-gradient">Entry Details</h1>
             <p className="text-lg text-white/80 leading-relaxed">
               View the complete details of your entry, including AI-generated insights, key concepts, and related topics. Use these insights to explore your thoughts more deeply.
             </p>
@@ -760,3 +760,4 @@ const EntryDetails = () => {
 };
 
 export default EntryDetails;
+
