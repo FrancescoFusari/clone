@@ -19,7 +19,7 @@ const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Categories = lazy(() => import("./pages/Categories"));
 const CategoryGraph = lazy(() => import("./pages/CategoryGraph"));
 const UnifiedGraph = lazy(() => import("./pages/UnifiedGraph"));
-const Vault = lazy(() => import("./pages/Test"));
+const Vault = lazy(() => import("./pages/Vault"));
 
 const queryClient = new QueryClient({
   defaultOptions: {

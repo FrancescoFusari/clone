@@ -1,4 +1,3 @@
-
 import { useEffect, useRef } from "react";
 import ForceGraph3D from "3d-force-graph";
 import { useQuery } from "@tanstack/react-query";
@@ -185,7 +184,7 @@ export const UnifiedGraphVisualization = () => {
       });
     });
 
-    const Graph = ForceGraph3D();
+    const Graph = new ForceGraph3D();
     const graphInstance = Graph(graphRef.current)
       .graphData(graphData)
       .nodeLabel("name")
@@ -354,4 +353,3 @@ const getNodeCategory = (nodeId: string, graphData: GraphData): EntryCategory | 
 
   return findCategory(nodeId);
 };
-

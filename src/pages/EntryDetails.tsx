@@ -154,7 +154,7 @@ const EntryDetails = () => {
   const [editedContent, setEditedContent] = useState("");
   const [editedTags, setEditedTags] = useState("");
   const [editedCategory, setEditedCategory] = useState<EntryCategory>("personal");
-  const [editedSubcategory, setEditedSubcategory] = useState("");
+  const [editedSubcategory, setEditedSubcategory] = useState<string>("");
 
   if (!id) {
     console.log("No entry ID provided, redirecting to entries list");
