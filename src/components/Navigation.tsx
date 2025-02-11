@@ -1,6 +1,6 @@
 
 import { Link, useLocation } from "react-router-dom";
-import { Home, PlusCircle, Clock, FolderTree, Network, AlertOctagon } from "lucide-react";
+import { Home, PlusCircle, FolderTree, Network } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -31,31 +31,11 @@ export const Navigation = () => {
               >
                 <Link to="/">
                   <Home className="h-5 w-5" />
-                  <span className="sr-only">Home</span>
+                  <span className="sr-only">Vault</span>
                 </Link>
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Home</TooltipContent>
-          </Tooltip>
-
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                className={cn(
-                  "flex-1 max-w-[120px] gap-2 transition-colors",
-                  isActive("/timeline") &&
-                    "bg-white text-black hover:bg-white/90 hover:text-black"
-                )}
-                asChild
-              >
-                <Link to="/timeline">
-                  <Clock className="h-5 w-5" />
-                  <span className="sr-only">Timeline</span>
-                </Link>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Timeline</TooltipContent>
+            <TooltipContent>Vault</TooltipContent>
           </Tooltip>
 
           <Tooltip>
@@ -116,26 +96,6 @@ export const Navigation = () => {
               </Button>
             </TooltipTrigger>
             <TooltipContent>Mind Map</TooltipContent>
-          </Tooltip>
-
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                className={cn(
-                  "flex-1 max-w-[120px] gap-2 transition-colors",
-                  isActive("/test") &&
-                    "bg-white text-black hover:bg-white/90 hover:text-black"
-                )}
-                asChild
-              >
-                <Link to="/test">
-                  <AlertOctagon className="h-5 w-5" />
-                  <span className="sr-only">Test Page</span>
-                </Link>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Test Page</TooltipContent>
           </Tooltip>
         </div>
       </nav>

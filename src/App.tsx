@@ -1,4 +1,3 @@
-
 import { Suspense, lazy } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -15,14 +14,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 const NewEntry = lazy(() => import("./components/NewEntry"));
 const Auth = lazy(() => import("./pages/Auth"));
 const NotFound = lazy(() => import("./pages/NotFound"));
-const Entries = lazy(() => import("./pages/Entries"));
 const EntryDetails = lazy(() => import("./pages/EntryDetails"));
-const Timeline = lazy(() => import("./pages/Timeline"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Categories = lazy(() => import("./pages/Categories"));
 const CategoryGraph = lazy(() => import("./pages/CategoryGraph"));
 const UnifiedGraph = lazy(() => import("./pages/UnifiedGraph"));
-const Test = lazy(() => import("./pages/Test"));
+const Vault = lazy(() => import("./pages/Test"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -76,7 +73,7 @@ const AppRoutes = () => {
           path="/"
           element={
             <ProtectedRoute>
-              <Entries />
+              <Vault />
             </ProtectedRoute>
           }
         />
@@ -93,14 +90,6 @@ const AppRoutes = () => {
           element={
             <ProtectedRoute>
               <NewEntry />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/timeline"
-          element={
-            <ProtectedRoute>
-              <Timeline />
             </ProtectedRoute>
           }
         />
@@ -133,16 +122,6 @@ const AppRoutes = () => {
           element={
             <ProtectedRoute>
               <UnifiedGraph />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/test"
-          element={
-            <ProtectedRoute>
-              <div className="mt-0">
-                <Test />
-              </div>
             </ProtectedRoute>
           }
         />

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { User, Briefcase, Users, Palette, GraduationCap, List } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -214,4 +213,3 @@ const Test = () => {
 };
 
 export default Test;
-
