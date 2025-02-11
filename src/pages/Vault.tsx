@@ -159,13 +159,17 @@ const Test = () => {
               <div
                 key={entry.id}
                 ref={index === entries.length - 1 ? lastEntryElementRef : undefined}
-                className="bg-zinc-800/40 border border-zinc-700/50 rounded-lg p-6 hover:bg-zinc-800/60 transition-colors relative"
+                className="bg-zinc-800/40 border border-zinc-700/50 rounded-lg p-6 pr-16 hover:bg-zinc-800/60 transition-colors relative"
               >
                 <Button
                   variant="ghost"
                   size="icon"
                   className="absolute top-4 right-4 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-700/50"
-                  onClick={() => navigate(`/entry/${entry.id}`)}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    navigate(`/entries/${entry.id}`);
+                  }}
                 >
                   <Eye className="h-4 w-4" />
                 </Button>
@@ -227,4 +231,3 @@ const Test = () => {
 };
 
 export default Test;
-
