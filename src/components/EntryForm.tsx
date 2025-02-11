@@ -23,7 +23,10 @@ export const EntryForm = ({ onSubmit }: EntryFormProps) => {
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
-        history: true,
+        history: {
+          depth: 10,
+          newGroupDelay: 500
+        },
         paragraph: {
           HTMLAttributes: {
             class: 'mb-4',
