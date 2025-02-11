@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { User, Briefcase, Users, Palette, GraduationCap, List, ThumbsUp, Bookmark, Share2 } from "lucide-react";
+import { User, Briefcase, Users, Palette, GraduationCap, List } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import type { Database } from "@/integrations/supabase/types";
@@ -147,28 +146,37 @@ const Test = () => {
                     {format(new Date(entry.created_at), "MMM d, yyyy")}
                   </p>
                 </div>
-                <span className="flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-800 text-sm">
-                  {getCategoryIcon(entry.category)}
-                  {entry.category.charAt(0).toUpperCase() + entry.category.slice(1)}
-                </span>
               </div>
               
               <p className="text-white/80 mb-4">
                 {truncateContent(entry.content)}
               </p>
 
-              <div className="flex justify-between items-center pt-4 border-t border-white/10">
-                <div className="flex gap-6">
-                  <button className="flex items-center gap-2 text-white/60 hover:text-white transition-colors">
-                    <ThumbsUp className="w-4 h-4" />
-                  </button>
-                  <button className="flex items-center gap-2 text-white/60 hover:text-white transition-colors">
-                    <Bookmark className="w-4 h-4" />
-                  </button>
-                  <button className="flex items-center gap-2 text-white/60 hover:text-white transition-colors">
-                    <Share2 className="w-4 h-4" />
-                  </button>
+              <div className="flex flex-col gap-3 pt-4 border-t border-white/10">
+                <div className="flex items-center justify-between">
+                  <span className="flex items-center gap-2 text-sm text-white/60">
+                    {getCategoryIcon(entry.category)}
+                    <span className="capitalize">{entry.category.replace(/_/g, " ")}</span>
+                  </span>
+                  {entry.subcategory && (
+                    <span className="text-sm text-white/60">
+                      {entry.subcategory}
+                    </span>
+                  )}
                 </div>
+                
+                {entry.tags && entry.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {entry.tags.map((tag, i) => (
+                      <span
+                        key={i}
+                        className="px-2 py-1 rounded-full bg-zinc-800 text-xs text-white/70"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           ))}
@@ -184,4 +192,3 @@ const Test = () => {
 };
 
 export default Test;
-
