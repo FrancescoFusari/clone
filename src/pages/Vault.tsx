@@ -127,11 +127,11 @@ const Test = () => {
   const getEntryTypeIcon = (entry: Entry) => {
     switch (entry.entry_type) {
       case "image":
-        return <Image className="h-4 w-4 text-purple-400" />;
+        return <Image className="h-4 w-4 text-zinc-400" />;
       case "url":
-        return <Link className="h-4 w-4 text-blue-400" />;
+        return <Link className="h-4 w-4 text-zinc-400" />;
       default:
-        return <FileText className="h-4 w-4 text-green-400" />;
+        return <FileText className="h-4 w-4 text-zinc-400" />;
     }
   };
 
