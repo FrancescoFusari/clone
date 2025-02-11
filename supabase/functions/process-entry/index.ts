@@ -250,7 +250,7 @@ serve(async (req) => {
     }
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // First, get the category, subcategory, tags, and summary
+    // Get category analysis with a modified prompt for concise titles
     console.log('Requesting category analysis from OpenAI...');
     const categoryResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -259,20 +259,28 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o', // Using consistent model
+        model: 'gpt-4o',
         messages: [
           {
             role: 'system',
-            content: `You are an AI that analyzes ${type === "image" ? "image descriptions" : "journal entries"}. You must respond with a valid JSON object containing exactly these fields:
+            content: `You are an AI that analyzes ${type === "image" ? "image descriptions" : "journal entries"}. 
+            You must respond with a valid JSON object containing exactly these fields:
             {
               "category": "personal" | "work" | "social" | "interests" | "school",
               "subcategory": "string describing specific topic within the category",
               "tags": ["array of 1-5 relevant keywords"],
-              "summary": "1-2 sentence summary"
+              "summary": "1-2 sentence summary",
+              "title": "A concise 3-5 word title that captures the main topic"
             }
             
+            The title should be very short but descriptive, like a newspaper headline.
+            For example:
+            - "Team Project Planning" instead of "Discussion about the upcoming team project planning session"
+            - "Morning Workout Goals" instead of "Setting new goals for my morning workout routine"
+            - "Beach Sunset Photo" instead of "A beautiful photograph of the sunset at the beach yesterday evening"
+            
             For subcategories, strictly use these predefined options for each category:
-
+            
             personal:
             - "health_and_wellness" - for entries about physical health, exercise, nutrition
             - "mental_health" - for entries about emotional wellbeing, therapy, stress
@@ -373,7 +381,9 @@ serve(async (req) => {
     processedData.content = formattedContent;
     processedData.formatted_content = formattedContent;
     processedData.entry_comments = comments;
-    processedData.title = processedData.summary
+    
+    // Use the explicitly generated title from GPT-4, or fall back to a truncated summary
+    processedData.title = processedData.title || processedData.summary
       .split('.')[0]
       .replace(/["']/g, '')
       .replace(/\.{3,}$/, '')
@@ -406,7 +416,7 @@ serve(async (req) => {
         summary: processedData.summary,
         has_attachments: processedData.has_attachments,
         attachments: processedData.attachments,
-        folder: folder // Include the folder field
+        folder: folder
       }])
       .select()
       .single();
@@ -431,3 +441,4 @@ serve(async (req) => {
     );
   }
 });
+
