@@ -22,14 +22,25 @@ export const EntryForm = ({ onSubmit }: EntryFormProps) => {
 
   const editor = useEditor({
     extensions: [
-      StarterKit,
+      StarterKit.configure({
+        history: true,
+        paragraph: {
+          HTMLAttributes: {
+            class: 'mb-4',
+          },
+        },
+      }),
       Placeholder.configure({
         placeholder: 'Write your entry here...',
       }),
     ],
     editorProps: {
       attributes: {
-        class: 'min-h-[300px] h-full outline-none',
+        class: 'outline-none min-h-[200px]',
+      },
+      handlePaste: (view, event) => {
+        // Allow default paste behavior which preserves formatting
+        return false;
       },
     },
   });
@@ -240,10 +251,10 @@ export const EntryForm = ({ onSubmit }: EntryFormProps) => {
                 </Button>
               </div>
             </div>
-            <div className="h-[300px]">
+            <div className="min-h-[300px]">
               <EditorContent 
                 editor={editor}
-                className="h-full p-4 bg-zinc-900/50 border border-zinc-700/50 rounded-b-xl text-zinc-100 focus-within:border-zinc-600 transition-colors prose prose-invert max-w-none prose-sm"
+                className="h-full p-4 bg-zinc-900/50 border border-zinc-700/50 rounded-b-xl text-zinc-100 focus-within:border-zinc-600 transition-colors prose prose-invert max-w-none prose-sm overflow-y-auto"
               />
             </div>
           </div>
