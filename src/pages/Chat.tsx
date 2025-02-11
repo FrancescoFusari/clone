@@ -32,8 +32,8 @@ const Chat = ({ onSaveEntry }: ChatPageProps) => {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-900 text-zinc-100 p-4 pb-24">
-      <div className="max-w-4xl mx-auto flex flex-col h-[calc(100vh-2rem)] bg-black/20 rounded-xl border border-white/10">
+    <div className="min-h-screen bg-zinc-900 text-zinc-100 p-4 pb-20">
+      <div className="max-w-4xl mx-auto flex flex-col h-[calc(100vh-7rem)] bg-black/20 rounded-xl border border-white/10">
         <div className="p-4 border-b border-white/10 flex items-center justify-between bg-white/5">
           <div className="flex items-center gap-4">
             <ModelSelector model={model} onModelChange={setModel} />
