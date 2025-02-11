@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { User, Briefcase, Users, Palette, GraduationCap, List } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -79,54 +78,37 @@ const Test = () => {
     }
   };
 
-  const getCategoryGradient = (category: EntryCategory) => {
-    switch (category) {
-      case "personal":
-        return "from-purple-950 to-zinc-900";
-      case "work":
-        return "from-blue-950 to-zinc-900";
-      case "social":
-        return "from-pink-950 to-zinc-900";
-      case "interests":
-        return "from-green-950 to-zinc-900";
-      case "school":
-        return "from-orange-950 to-zinc-900";
-      default:
-        return "from-zinc-900 to-zinc-900";
-    }
-  };
-
   const getCategoryAccentColor = (category: EntryCategory) => {
     switch (category) {
       case "personal":
-        return "text-purple-400/80";
+        return "text-purple-400/60";
       case "work":
-        return "text-blue-400/80";
+        return "text-blue-400/60";
       case "social":
-        return "text-pink-400/80";
+        return "text-pink-400/60";
       case "interests":
-        return "text-green-400/80";
+        return "text-green-400/60";
       case "school":
-        return "text-orange-400/80";
+        return "text-orange-400/60";
       default:
         return "text-zinc-400";
     }
   };
 
-  const getCategoryBorderColor = (category: EntryCategory) => {
+  const getCategoryBorderAccent = (category: EntryCategory) => {
     switch (category) {
       case "personal":
-        return "border-purple-900/30";
+        return "border-l-purple-500/20";
       case "work":
-        return "border-blue-900/30";
+        return "border-l-blue-500/20";
       case "social":
-        return "border-pink-900/30";
+        return "border-l-pink-500/20";
       case "interests":
-        return "border-green-900/30";
+        return "border-l-green-500/20";
       case "school":
-        return "border-orange-900/30";
+        return "border-l-orange-500/20";
       default:
-        return "border-zinc-800/30";
+        return "border-l-zinc-700";
     }
   };
 
@@ -190,11 +172,11 @@ const Test = () => {
               <div
                 key={entry.id}
                 ref={index === entries.length - 1 ? lastEntryElementRef : undefined}
-                className={`bg-gradient-to-br ${getCategoryGradient(entry.category)} rounded-xl p-6 hover:bg-opacity-90 transition-all duration-200 backdrop-blur-sm border ${getCategoryBorderColor(entry.category)}`}
+                className={`bg-zinc-900/50 backdrop-blur-sm border border-zinc-800/50 border-l-4 ${getCategoryBorderAccent(entry.category)} rounded-lg p-6 hover:bg-zinc-800/30 transition-all duration-200`}
               >
                 <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <h3 className={`text-xl font-semibold mb-1 ${getCategoryAccentColor(entry.category)}`}>
+                  <div className="space-y-1">
+                    <h3 className={`text-xl font-medium ${getCategoryAccentColor(entry.category)}`}>
                       {entry.title}
                     </h3>
                     <p className="text-sm text-zinc-500">
@@ -203,11 +185,11 @@ const Test = () => {
                   </div>
                 </div>
                 
-                <p className="text-zinc-300/90 mb-4">
+                <p className="text-zinc-300/80 mb-4 leading-relaxed">
                   {truncateContent(entry.content)}
                 </p>
 
-                <div className={`flex flex-col gap-3 pt-4 border-t ${getCategoryBorderColor(entry.category)}`}>
+                <div className="flex flex-col gap-3 pt-4 border-t border-zinc-800/50">
                   <div className="flex items-center justify-between">
                     <span className={`flex items-center gap-2 text-sm ${getCategoryAccentColor(entry.category)}`}>
                       {getCategoryIcon(entry.category)}
@@ -225,7 +207,7 @@ const Test = () => {
                       {entry.tags.map((tag, i) => (
                         <span
                           key={i}
-                          className={`px-2 py-1 rounded-full bg-zinc-900/60 text-xs ${getCategoryAccentColor(entry.category)} border ${getCategoryBorderColor(entry.category)}`}
+                          className={`px-2 py-1 rounded-md text-xs bg-zinc-800/80 ${getCategoryAccentColor(entry.category)} border border-zinc-700/50`}
                         >
                           {tag}
                         </span>
@@ -249,4 +231,3 @@ const Test = () => {
 };
 
 export default Test;
-
