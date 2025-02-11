@@ -370,7 +370,7 @@ const EntryDetails = () => {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-2 py-8 mb-24 bg-zinc-900">
         <div className="flex items-center space-x-4 mb-6">
           <Button
             variant="outline"
@@ -388,7 +388,7 @@ const EntryDetails = () => {
 
   if (isError || !entry) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-2 py-8 mb-24 bg-zinc-900">
         <Button 
           onClick={() => navigate(-1)}
           variant="outline"
@@ -407,7 +407,7 @@ const EntryDetails = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 mb-24">
+    <div className="container mx-auto px-2 py-8 mb-24 bg-zinc-900">
       <Card className="glass-morphism overflow-hidden mb-8">
         <CardHeader className="space-y-2">
           <div className="space-y-2">
