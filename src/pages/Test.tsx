@@ -4,6 +4,7 @@ import { User, Briefcase, Users, Palette, GraduationCap, List } from "lucide-rea
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import type { Database } from "@/integrations/supabase/types";
+import { Navigation } from "@/components/Navigation";
 
 type EntryCategory = Database["public"]["Enums"]["entry_category"];
 type Entry = Database["public"]["Tables"]["entries"]["Row"];
@@ -84,112 +85,116 @@ const Test = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white px-4 pb-20">
-      <div className="flex justify-between items-start pt-6 pb-4">
-        <div className="space-y-2">
-          <h1 className="text-4xl font-light">My Entries</h1>
-          <p className="text-zinc-400">Browse and manage your entries</p>
+    <>
+      <div className="min-h-screen bg-black text-white px-4 pb-24">
+        <div className="flex justify-between items-start pt-6 pb-4">
+          <div className="space-y-2">
+            <h1 className="text-4xl font-light">My Entries</h1>
+            <p className="text-zinc-400">Browse and manage your entries</p>
+          </div>
+          <List className="w-6 h-6 text-zinc-400" />
         </div>
-        <List className="w-6 h-6 text-zinc-400" />
-      </div>
 
-      <div className="flex gap-2 mb-6 overflow-x-auto scrollbar-none py-1 -mx-4 px-4 no-scrollbar touch-pan-x">
-        <button
-          onClick={() => {
-            setSelectedCategory(null);
-            setPage(0);
-            setEntries([]);
-          }}
-          className={`flex items-center px-4 py-1.5 rounded-full text-base transition-colors shrink-0 ${
-            selectedCategory === null 
-              ? 'bg-white text-black font-medium' 
-              : 'bg-zinc-800 text-white/70 hover:bg-zinc-700'
-          }`}
-        >
-          <span>All</span>
-        </button>
-        {categories.map((category) => (
+        <div className="flex gap-2 mb-6 overflow-x-auto scrollbar-none py-1 -mx-4 px-4 no-scrollbar touch-pan-x">
           <button
-            key={category}
             onClick={() => {
-              setSelectedCategory(category);
+              setSelectedCategory(null);
               setPage(0);
               setEntries([]);
             }}
-            className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-base transition-colors shrink-0 ${
-              selectedCategory === category
-                ? 'bg-white text-black font-medium'
+            className={`flex items-center px-4 py-1.5 rounded-full text-base transition-colors shrink-0 ${
+              selectedCategory === null 
+                ? 'bg-white text-black font-medium' 
                 : 'bg-zinc-800 text-white/70 hover:bg-zinc-700'
             }`}
           >
-            {getCategoryIcon(category)}
-            <span>{category.charAt(0).toUpperCase() + category.slice(1)}</span>
+            <span>All</span>
           </button>
-        ))}
-      </div>
-
-      {entries.length === 0 && !isLoading ? (
-        <div className="flex justify-center items-center h-64">
-          <div className="text-white/50">No entries found</div>
-        </div>
-      ) : (
-        <div className="grid gap-4">
-          {entries.map((entry, index) => (
-            <div
-              key={entry.id}
-              ref={index === entries.length - 1 ? lastEntryElementRef : undefined}
-              className="bg-zinc-900 rounded-xl p-6 hover:bg-zinc-800/80 transition-colors"
+          {categories.map((category) => (
+            <button
+              key={category}
+              onClick={() => {
+                setSelectedCategory(category);
+                setPage(0);
+                setEntries([]);
+              }}
+              className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-base transition-colors shrink-0 ${
+                selectedCategory === category
+                  ? 'bg-white text-black font-medium'
+                  : 'bg-zinc-800 text-white/70 hover:bg-zinc-700'
+              }`}
             >
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <h3 className="text-xl font-semibold mb-1">{entry.title}</h3>
-                  <p className="text-sm text-white/60">
-                    {format(new Date(entry.created_at), "MMM d, yyyy")}
-                  </p>
-                </div>
-              </div>
-              
-              <p className="text-white/80 mb-4">
-                {truncateContent(entry.content)}
-              </p>
+              {getCategoryIcon(category)}
+              <span>{category.charAt(0).toUpperCase() + category.slice(1)}</span>
+            </button>
+          ))}
+        </div>
 
-              <div className="flex flex-col gap-3 pt-4 border-t border-white/10">
-                <div className="flex items-center justify-between">
-                  <span className="flex items-center gap-2 text-sm text-white/60">
-                    {getCategoryIcon(entry.category)}
-                    <span className="capitalize">{entry.category.replace(/_/g, " ")}</span>
-                  </span>
-                  {entry.subcategory && (
-                    <span className="text-sm text-white/60">
-                      {entry.subcategory}
-                    </span>
-                  )}
+        {entries.length === 0 && !isLoading ? (
+          <div className="flex justify-center items-center h-64">
+            <div className="text-white/50">No entries found</div>
+          </div>
+        ) : (
+          <div className="grid gap-4">
+            {entries.map((entry, index) => (
+              <div
+                key={entry.id}
+                ref={index === entries.length - 1 ? lastEntryElementRef : undefined}
+                className="bg-zinc-900 rounded-xl p-6 hover:bg-zinc-800/80 transition-colors"
+              >
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <h3 className="text-xl font-semibold mb-1">{entry.title}</h3>
+                    <p className="text-sm text-white/60">
+                      {format(new Date(entry.created_at), "MMM d, yyyy")}
+                    </p>
+                  </div>
                 </div>
                 
-                {entry.tags && entry.tags.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    {entry.tags.map((tag, i) => (
-                      <span
-                        key={i}
-                        className="px-2 py-1 rounded-full bg-zinc-800 text-xs text-white/70"
-                      >
-                        {tag}
+                <p className="text-white/80 mb-4">
+                  {truncateContent(entry.content)}
+                </p>
+
+                <div className="flex flex-col gap-3 pt-4 border-t border-white/10">
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center gap-2 text-sm text-white/60">
+                      {getCategoryIcon(entry.category)}
+                      <span className="capitalize">{entry.category.replace(/_/g, " ")}</span>
+                    </span>
+                    {entry.subcategory && (
+                      <span className="text-sm text-white/60">
+                        {entry.subcategory}
                       </span>
-                    ))}
+                    )}
                   </div>
-                )}
+                  
+                  {entry.tags && entry.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {entry.tags.map((tag, i) => (
+                        <span
+                          key={i}
+                          className="px-2 py-1 rounded-full bg-zinc-800 text-xs text-white/70"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
-          {isLoading && (
-            <div className="flex justify-center items-center py-4">
-              <div className="animate-pulse text-white/50">Loading more entries...</div>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
+            ))}
+            {isLoading && (
+              <div className="flex justify-center items-center py-4">
+                <div className="animate-pulse text-white/50">Loading more entries...</div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+      <Navigation />
+    </>
   );
 };
 
 export default Test;
+
