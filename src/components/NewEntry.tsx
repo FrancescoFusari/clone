@@ -1,4 +1,3 @@
-
 import { CenteredLayout } from "@/components/layouts/CenteredLayout";
 import { EntryForm } from "@/components/EntryForm";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,7 +5,6 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/components/AuthProvider";
-import { Card, CardContent } from "@/components/ui/card";
 
 const NewEntry = () => {
   const navigate = useNavigate();
@@ -113,12 +111,12 @@ const NewEntry = () => {
 
   return (
     <CenteredLayout>
-      <div className="max-w-3xl mx-auto space-y-6 py-8">
-        <Card className="neo-blur border-primary/20">
-          <CardContent className="pt-6">
+      <div className="w-full max-w-4xl mx-auto min-h-[calc(100vh-8rem)] py-8">
+        <div className="bg-gradient-to-br from-zinc-900/50 to-zinc-800/50 rounded-2xl border border-white/10 backdrop-blur-xl shadow-2xl">
+          <div className="p-8">
             <EntryForm onSubmit={handleSubmit} />
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     </CenteredLayout>
   );

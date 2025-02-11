@@ -1,11 +1,9 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileText, Image, Link, Loader2, MessageCircle } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
 import { ChatInterface } from "./chat/ChatInterface";
 
 interface EntryFormProps {
@@ -80,12 +78,13 @@ export const EntryForm = ({ onSubmit }: EntryFormProps) => {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-8">
       <div className="flex justify-end">
         <Button
           type="button"
           onClick={() => setShowChat(true)}
-          className="bg-primary/20 hover:bg-primary/30 text-primary"
+          variant="outline"
+          className="bg-zinc-800/50 hover:bg-zinc-700/50 text-zinc-100 border-zinc-700/50"
         >
           <MessageCircle className="w-4 h-4 mr-2" />
           Switch to Chat
@@ -97,92 +96,84 @@ export const EntryForm = ({ onSubmit }: EntryFormProps) => {
         onValueChange={(v) => setActiveTab(v as "text" | "url" | "image")} 
         className="w-full"
       >
-        <TabsList className="grid w-full grid-cols-3 bg-white/5 border border-white/10">
+        <TabsList className="grid w-full grid-cols-3 bg-zinc-800/50 border border-zinc-700/50 rounded-xl p-1">
           <TabsTrigger 
             value="text" 
-            className="flex items-center gap-2 data-[state=active]:bg-primary/20 data-[state=active]:text-primary"
+            className="data-[state=active]:bg-zinc-900 data-[state=active]:text-zinc-100 rounded-lg py-3"
           >
-            <FileText className="h-4 w-4" />
+            <FileText className="h-4 w-4 mr-2" />
             Text Entry
           </TabsTrigger>
           <TabsTrigger 
             value="url" 
-            className="flex items-center gap-2 data-[state=active]:bg-primary/20 data-[state=active]:text-primary"
+            className="data-[state=active]:bg-zinc-900 data-[state=active]:text-zinc-100 rounded-lg py-3"
           >
-            <Link className="h-4 w-4" />
+            <Link className="h-4 w-4 mr-2" />
             URL Analysis
           </TabsTrigger>
           <TabsTrigger 
             value="image" 
-            className="flex items-center gap-2 data-[state=active]:bg-primary/20 data-[state=active]:text-primary"
+            className="data-[state=active]:bg-zinc-900 data-[state=active]:text-zinc-100 rounded-lg py-3"
           >
-            <Image className="h-4 w-4" />
+            <Image className="h-4 w-4 mr-2" />
             Image Upload
           </TabsTrigger>
         </TabsList>
         
-        <TabsContent value="text" className="mt-6">
+        <TabsContent value="text" className="mt-8">
           <Textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
             placeholder="Write your entry here..."
-            className="min-h-[250px] text-base resize-none bg-black/20 border-white/10 text-white/90 placeholder:text-white/40 focus-visible:ring-primary/30"
+            className="min-h-[300px] text-base resize-none bg-zinc-900/50 border-zinc-700/50 rounded-xl text-zinc-100 placeholder:text-zinc-500 focus-visible:ring-zinc-700/50"
             style={{ whiteSpace: 'pre-wrap' }}
           />
         </TabsContent>
         
-        <TabsContent value="url" className="mt-6">
-          <Card className="neo-blur border-primary/20">
-            <CardContent className="pt-6">
-              <div className="space-y-3">
-                <p className="text-sm text-white/70">
-                  Enter a URL to analyze its content and save key information.
-                </p>
-                <Input
-                  type="url"
-                  value={url}
-                  onChange={(e) => setUrl(e.target.value)}
-                  placeholder="https://..."
-                  className="bg-black/20 border-white/10 text-white/90 placeholder:text-white/40 focus-visible:ring-primary/30"
-                />
-              </div>
-            </CardContent>
-          </Card>
+        <TabsContent value="url" className="mt-8">
+          <div className="space-y-4 bg-zinc-900/30 p-6 rounded-xl border border-zinc-800/50">
+            <p className="text-sm text-zinc-400">
+              Enter a URL to analyze its content and save key information.
+            </p>
+            <Input
+              type="url"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              placeholder="https://..."
+              className="bg-zinc-900/50 border-zinc-700/50 text-zinc-100 placeholder:text-zinc-500 focus-visible:ring-zinc-700/50"
+            />
+          </div>
         </TabsContent>
 
-        <TabsContent value="image" className="mt-6">
-          <Card className="neo-blur border-primary/20">
-            <CardContent className="pt-6">
-              <div className="space-y-3">
-                <p className="text-sm text-white/70">
-                  Upload an image to analyze its content and extract insights.
-                </p>
-                <div className="flex flex-col items-center p-6 border-2 border-dashed border-white/10 rounded-lg bg-black/20">
-                  <Input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageChange}
-                    className="hidden"
-                    id="image-upload"
-                  />
-                  <label
-                    htmlFor="image-upload"
-                    className="cursor-pointer flex flex-col items-center gap-2"
-                  >
-                    <Image className="w-8 h-8 text-white/60" />
-                    <span className="text-sm text-white/60">
-                      {image ? image.name : "Click to upload an image"}
-                    </span>
-                  </label>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+        <TabsContent value="image" className="mt-8">
+          <div className="space-y-4 bg-zinc-900/30 p-6 rounded-xl border border-zinc-800/50">
+            <p className="text-sm text-zinc-400">
+              Upload an image to analyze its content and extract insights.
+            </p>
+            <div className="flex flex-col items-center p-8 border-2 border-dashed border-zinc-700/50 rounded-xl bg-zinc-900/30 hover:bg-zinc-900/50 transition-colors">
+              <Input
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                className="hidden"
+                id="image-upload"
+              />
+              <label
+                htmlFor="image-upload"
+                className="cursor-pointer flex flex-col items-center gap-3"
+              >
+                <Image className="w-12 h-12 text-zinc-500" />
+                <span className="text-sm text-zinc-400">
+                  {image ? image.name : "Click to upload an image"}
+                </span>
+              </label>
+            </div>
+          </div>
         </TabsContent>
       </Tabs>
       
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-        <p className="text-sm text-white/60 text-center sm:text-left">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4">
+        <p className="text-sm text-zinc-400 text-center sm:text-left">
           Your {activeTab === "text" ? "entry" : activeTab === "url" ? "URL" : "image"} will be processed with AI to extract insights
         </p>
         <Button 
@@ -192,7 +183,7 @@ export const EntryForm = ({ onSubmit }: EntryFormProps) => {
             activeTab === "url" ? !url.trim() : 
             !image
           )}
-          className="w-full sm:w-auto bg-primary/20 hover:bg-primary/30 text-primary disabled:bg-white/5 disabled:text-white/40"
+          className="w-full sm:w-auto bg-zinc-800 hover:bg-zinc-700 text-zinc-100 disabled:bg-zinc-900/50 disabled:text-zinc-500"
         >
           {loading ? (
             <>
