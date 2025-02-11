@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { User, Briefcase, Users, Palette, GraduationCap, List, Eye } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,6 +6,8 @@ import type { Database } from "@/integrations/supabase/types";
 import { Navigation } from "@/components/Navigation";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/components/AuthProvider";
+import { useToast } from "@/components/ui/use-toast";
 
 type EntryCategory = Database["public"]["Enums"]["entry_category"];
 type Entry = Database["public"]["Tables"]["entries"]["Row"];
@@ -15,6 +16,8 @@ const ENTRIES_PER_PAGE = 10;
 
 const Test = () => {
   const navigate = useNavigate();
+  const { session } = useAuth();
+  const { toast } = useToast();
   const categories: EntryCategory[] = ["personal", "work", "social", "interests", "school"];
   const [selectedCategory, setSelectedCategory] = useState<EntryCategory | null>(null);
   const [entries, setEntries] = useState<Entry[]>([]);
@@ -35,37 +38,58 @@ const Test = () => {
   }, [isLoading, hasMore]);
 
   useEffect(() => {
+    if (!session?.user) {
+      navigate('/auth');
+      return;
+    }
+
     const fetchEntries = async () => {
-      setIsLoading(true);
-      let query = supabase
-        .from('entries')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .range(page * ENTRIES_PER_PAGE, (page + 1) * ENTRIES_PER_PAGE - 1);
-      
-      if (selectedCategory) {
-        query = query.eq('category', selectedCategory);
-      }
-      
-      const { data, error } = await query;
-      
-      if (error) {
-        console.error('Error fetching entries:', error);
-        return;
-      }
-      
-      if (data) {
-        setEntries(prevEntries => {
-          if (page === 0) return data;
-          return [...prevEntries, ...data];
+      try {
+        setIsLoading(true);
+        let query = supabase
+          .from('entries')
+          .select('*')
+          .eq('user_id', session.user.id)
+          .order('created_at', { ascending: false })
+          .range(page * ENTRIES_PER_PAGE, (page + 1) * ENTRIES_PER_PAGE - 1);
+        
+        if (selectedCategory) {
+          query = query.eq('category', selectedCategory);
+        }
+        
+        const { data, error } = await query;
+        
+        if (error) {
+          console.error('Error fetching entries:', error);
+          toast({
+            variant: "destructive",
+            title: "Error fetching entries",
+            description: "There was a problem loading your entries. Please try again.",
+          });
+          return;
+        }
+        
+        if (data) {
+          setEntries(prevEntries => {
+            if (page === 0) return data;
+            return [...prevEntries, ...data];
+          });
+          setHasMore(data.length === ENTRIES_PER_PAGE);
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "An unexpected error occurred. Please try again.",
         });
-        setHasMore(data.length === ENTRIES_PER_PAGE);
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
     };
 
     fetchEntries();
-  }, [selectedCategory, page]);
+  }, [selectedCategory, page, session, navigate, toast]);
 
   const getCategoryIcon = (category: EntryCategory) => {
     switch (category) {
@@ -102,6 +126,10 @@ const Test = () => {
   const truncateContent = (content: string) => {
     return content.length > 180 ? content.substring(0, 180) + "..." : content;
   };
+
+  if (!session) {
+    return null; // Will redirect in useEffect
+  }
 
   return (
     <>
