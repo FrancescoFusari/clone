@@ -135,17 +135,6 @@ const Test = () => {
     }
   };
 
-  const getEntryTypeBorder = (entry: Entry) => {
-    switch (entry.entry_type) {
-      case "image":
-        return "border-l-4 border-l-purple-400/50";
-      case "url":
-        return "border-l-4 border-l-blue-400/50";
-      default:
-        return "border-l-4 border-l-green-400/50";
-    }
-  };
-
   const truncateContent = (content: string) => {
     return content.length > 180 ? content.substring(0, 180) + "..." : content;
   };
@@ -210,32 +199,29 @@ const Test = () => {
               <div
                 key={entry.id}
                 ref={index === entries.length - 1 ? lastEntryElementRef : undefined}
-                className={cn(
-                  "bg-zinc-800/40 border border-zinc-700/50 rounded-lg p-6 pr-16 hover:bg-zinc-800/60 transition-colors relative",
-                  getEntryTypeBorder(entry)
-                )}
+                className="bg-zinc-800/40 rounded-lg p-6 pr-16 hover:bg-zinc-800/60 transition-colors relative"
               >
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="absolute top-4 right-4 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-700/50"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    navigate(`/entries/${entry.id}`);
-                  }}
-                >
-                  <Eye className="h-4 w-4" />
-                </Button>
+                <div className="absolute top-4 right-4 flex flex-col items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-zinc-400 hover:text-zinc-100 hover:bg-zinc-700/50"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      navigate(`/entries/${entry.id}`);
+                    }}
+                  >
+                    <Eye className="h-4 w-4" />
+                  </Button>
+                  {getEntryTypeIcon(entry)}
+                </div>
 
                 <div className="flex justify-between items-start mb-4">
                   <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      {getEntryTypeIcon(entry)}
-                      <h3 className="text-xl font-medium text-zinc-100">
-                        {entry.title}
-                      </h3>
-                    </div>
+                    <h3 className="text-xl font-medium text-zinc-100">
+                      {entry.title}
+                    </h3>
                     <p className="text-sm text-zinc-500">
                       {format(new Date(entry.created_at), "MMM d, yyyy")}
                     </p>
