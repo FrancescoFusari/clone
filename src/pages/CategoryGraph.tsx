@@ -17,7 +17,7 @@ const getCategoryIcon = (category: EntryCategory) => {
     personal: Archive,
     work: DatabaseIcon,
     social: Grid,
-    interests_and_hobbies: List,
+    interests: List,
     school: Folder,
   };
   const Icon = icons[category];
@@ -29,7 +29,7 @@ const getCategoryColor = (category: EntryCategory) => {
     personal: "from-purple-500/20 to-purple-600/20",
     work: "from-blue-500/20 to-blue-600/20",
     social: "from-pink-500/20 to-pink-600/20",
-    interests_and_hobbies: "from-green-500/20 to-green-600/20",
+    interests: "from-green-500/20 to-green-600/20",
     school: "from-orange-500/20 to-orange-600/20",
   };
   return colors[category];
@@ -40,7 +40,7 @@ const getCategoryDescription = (category: EntryCategory) => {
     personal: "Explore connections between your personal thoughts and reflections",
     work: "Visualize relationships in your professional projects and goals",
     social: "Map your social interactions and relationships",
-    interests_and_hobbies: "Discover patterns in your interests and activities",
+    interests: "Discover patterns in your interests and activities",
     school: "Connect your academic progress and learning experiences",
   };
   return descriptions[category];
@@ -50,7 +50,7 @@ const CategoryGraphPage = () => {
   const { category } = useParams<{ category: string }>();
 
   const isValidCategory = (cat: string): cat is EntryCategory => {
-    return ["personal", "work", "social", "interests_and_hobbies", "school"].includes(cat);
+    return ["personal", "work", "social", "interests", "school"].includes(cat);
   };
 
   const { data: categoryStats, isLoading: isStatsLoading } = useQuery({

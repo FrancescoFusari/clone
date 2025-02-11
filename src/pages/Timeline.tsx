@@ -68,8 +68,8 @@ const Timeline = () => {
     "personal",
     "work",
     "social",
-    "interests_and_hobbies",
-    "school",
+    "interests",
+    "school"
   ];
 
   if (isLoading) {
@@ -85,7 +85,6 @@ const Timeline = () => {
   return (
     <CenteredLayout>
       <div className="w-full max-w-2xl mx-auto py-6 space-y-8">
-        {/* Header Card */}
         <Card className="glass-morphism overflow-hidden relative">
           <div className="absolute inset-0 bg-gradient-to-br from-[#8E9196]/20 to-[#F1F1F1]/20 opacity-50" />
           <CardHeader className="relative space-y-2">
@@ -101,7 +100,6 @@ const Timeline = () => {
           </CardHeader>
         </Card>
 
-        {/* Content Card */}
         <Card className="glass-morphism">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-white/90">
@@ -132,7 +130,6 @@ const Timeline = () => {
           </CardContent>
         </Card>
 
-        {/* Entries List */}
         <div className="space-y-3">
           {filteredEntries?.map((entry) => (
             <Card
