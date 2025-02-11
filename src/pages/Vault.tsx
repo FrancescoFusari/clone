@@ -1,9 +1,12 @@
+
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { User, Briefcase, Users, Palette, GraduationCap, List } from "lucide-react";
+import { User, Briefcase, Users, Palette, GraduationCap, List, Eye } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import type { Database } from "@/integrations/supabase/types";
 import { Navigation } from "@/components/Navigation";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 
 type EntryCategory = Database["public"]["Enums"]["entry_category"];
 type Entry = Database["public"]["Tables"]["entries"]["Row"];
@@ -11,6 +14,7 @@ type Entry = Database["public"]["Tables"]["entries"]["Row"];
 const ENTRIES_PER_PAGE = 10;
 
 const Test = () => {
+  const navigate = useNavigate();
   const categories: EntryCategory[] = ["personal", "work", "social", "interests", "school"];
   const [selectedCategory, setSelectedCategory] = useState<EntryCategory | null>(null);
   const [entries, setEntries] = useState<Entry[]>([]);
@@ -155,8 +159,17 @@ const Test = () => {
               <div
                 key={entry.id}
                 ref={index === entries.length - 1 ? lastEntryElementRef : undefined}
-                className="bg-zinc-800/40 border border-zinc-700/50 rounded-lg p-6 hover:bg-zinc-800/60 transition-colors"
+                className="bg-zinc-800/40 border border-zinc-700/50 rounded-lg p-6 hover:bg-zinc-800/60 transition-colors relative"
               >
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute top-4 right-4 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-700/50"
+                  onClick={() => navigate(`/entry/${entry.id}`)}
+                >
+                  <Eye className="h-4 w-4" />
+                </Button>
+
                 <div className="flex justify-between items-start mb-4">
                   <div className="space-y-1">
                     <h3 className="text-xl font-medium text-zinc-100">
@@ -214,3 +227,4 @@ const Test = () => {
 };
 
 export default Test;
+
