@@ -81,17 +81,17 @@ const Test = () => {
   const getCategoryGradient = (category: EntryCategory) => {
     switch (category) {
       case "personal":
-        return "from-purple-500/10 to-purple-600/5";
+        return "from-purple-400/20 to-purple-500/10";
       case "work":
-        return "from-blue-500/10 to-blue-600/5";
+        return "from-blue-400/20 to-blue-500/10";
       case "social":
-        return "from-pink-500/10 to-pink-600/5";
+        return "from-pink-400/20 to-pink-500/10";
       case "interests":
-        return "from-green-500/10 to-green-600/5";
+        return "from-green-400/20 to-green-500/10";
       case "school":
-        return "from-orange-500/10 to-orange-600/5";
+        return "from-orange-400/20 to-orange-500/10";
       default:
-        return "from-zinc-800 to-zinc-900";
+        return "from-zinc-700/40 to-zinc-800/30";
     }
   };
 
@@ -103,10 +103,10 @@ const Test = () => {
 
   return (
     <>
-      <div className="min-h-screen bg-black text-white px-4 pb-24">
+      <div className="min-h-screen bg-zinc-900 text-zinc-100 px-4 pb-24">
         <div className="flex justify-between items-start pt-6 pb-4">
           <div className="space-y-2">
-            <h1 className="text-4xl font-light">My Entries</h1>
+            <h1 className="text-4xl font-light text-zinc-50">My Entries</h1>
             <p className="text-zinc-400">Browse and manage your entries</p>
           </div>
           <List className="w-6 h-6 text-zinc-400" />
@@ -121,8 +121,8 @@ const Test = () => {
             }}
             className={`flex items-center px-4 py-1.5 rounded-full text-base transition-colors shrink-0 ${
               selectedCategory === null 
-                ? 'bg-white text-black font-medium' 
-                : 'bg-zinc-800 text-white/70 hover:bg-zinc-700'
+                ? 'bg-zinc-100 text-zinc-900 font-medium' 
+                : 'bg-zinc-800/80 text-zinc-300 hover:bg-zinc-700/80'
             }`}
           >
             <span>All</span>
@@ -137,8 +137,8 @@ const Test = () => {
               }}
               className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-base transition-colors shrink-0 ${
                 selectedCategory === category
-                  ? 'bg-white text-black font-medium'
-                  : 'bg-zinc-800 text-white/70 hover:bg-zinc-700'
+                  ? 'bg-zinc-100 text-zinc-900 font-medium'
+                  : 'bg-zinc-800/80 text-zinc-300 hover:bg-zinc-700/80'
               }`}
             >
               {getCategoryIcon(category)}
@@ -149,7 +149,7 @@ const Test = () => {
 
         {entries.length === 0 && !isLoading ? (
           <div className="flex justify-center items-center h-64">
-            <div className="text-white/50">No entries found</div>
+            <div className="text-zinc-500">No entries found</div>
           </div>
         ) : (
           <div className="grid gap-4">
@@ -157,29 +157,29 @@ const Test = () => {
               <div
                 key={entry.id}
                 ref={index === entries.length - 1 ? lastEntryElementRef : undefined}
-                className={`bg-gradient-to-br ${getCategoryGradient(entry.category)} rounded-xl p-6 hover:bg-zinc-800/80 transition-colors border border-white/5`}
+                className={`bg-gradient-to-br ${getCategoryGradient(entry.category)} rounded-xl p-6 hover:bg-opacity-90 transition-all duration-200 backdrop-blur-sm border border-zinc-700/30`}
               >
                 <div className="flex justify-between items-start mb-4">
                   <div>
-                    <h3 className="text-xl font-semibold mb-1">{entry.title}</h3>
-                    <p className="text-sm text-white/60">
+                    <h3 className="text-xl font-semibold mb-1 text-zinc-100">{entry.title}</h3>
+                    <p className="text-sm text-zinc-400">
                       {format(new Date(entry.created_at), "MMM d, yyyy")}
                     </p>
                   </div>
                 </div>
                 
-                <p className="text-white/80 mb-4">
+                <p className="text-zinc-300 mb-4">
                   {truncateContent(entry.content)}
                 </p>
 
-                <div className="flex flex-col gap-3 pt-4 border-t border-white/10">
+                <div className="flex flex-col gap-3 pt-4 border-t border-zinc-700/30">
                   <div className="flex items-center justify-between">
-                    <span className="flex items-center gap-2 text-sm text-white/60">
+                    <span className="flex items-center gap-2 text-sm text-zinc-400">
                       {getCategoryIcon(entry.category)}
                       <span className="capitalize">{entry.category.replace(/_/g, " ")}</span>
                     </span>
                     {entry.subcategory && (
-                      <span className="text-sm text-white/60">
+                      <span className="text-sm text-zinc-400">
                         {entry.subcategory}
                       </span>
                     )}
@@ -190,7 +190,7 @@ const Test = () => {
                       {entry.tags.map((tag, i) => (
                         <span
                           key={i}
-                          className="px-2 py-1 rounded-full bg-zinc-800 text-xs text-white/70"
+                          className="px-2 py-1 rounded-full bg-zinc-800/60 text-xs text-zinc-300 border border-zinc-700/30"
                         >
                           {tag}
                         </span>
@@ -202,7 +202,7 @@ const Test = () => {
             ))}
             {isLoading && (
               <div className="flex justify-center items-center py-4">
-                <div className="animate-pulse text-white/50">Loading more entries...</div>
+                <div className="animate-pulse text-zinc-500">Loading more entries...</div>
               </div>
             )}
           </div>
