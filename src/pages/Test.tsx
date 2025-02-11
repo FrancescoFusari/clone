@@ -78,6 +78,23 @@ const Test = () => {
     }
   };
 
+  const getCategoryGradient = (category: EntryCategory) => {
+    switch (category) {
+      case "personal":
+        return "from-purple-500/10 to-purple-600/5";
+      case "work":
+        return "from-blue-500/10 to-blue-600/5";
+      case "social":
+        return "from-pink-500/10 to-pink-600/5";
+      case "interests":
+        return "from-green-500/10 to-green-600/5";
+      case "school":
+        return "from-orange-500/10 to-orange-600/5";
+      default:
+        return "from-zinc-800 to-zinc-900";
+    }
+  };
+
   const categories: EntryCategory[] = ["personal", "work", "social", "interests", "school"];
 
   const truncateContent = (content: string) => {
@@ -140,7 +157,7 @@ const Test = () => {
               <div
                 key={entry.id}
                 ref={index === entries.length - 1 ? lastEntryElementRef : undefined}
-                className="bg-zinc-900 rounded-xl p-6 hover:bg-zinc-800/80 transition-colors"
+                className={`bg-gradient-to-br ${getCategoryGradient(entry.category)} rounded-xl p-6 hover:bg-zinc-800/80 transition-colors border border-white/5`}
               >
                 <div className="flex justify-between items-start mb-4">
                   <div>
