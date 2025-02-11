@@ -111,10 +111,10 @@ const NewEntry = () => {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-900 text-zinc-100 px-4 pb-24">
+    <div className="min-h-screen bg-zinc-900 text-zinc-100 px-2 pb-24">
       <div className="w-full max-w-4xl mx-auto min-h-[calc(100vh-8rem)] py-8">
         <div className="bg-gradient-to-br from-zinc-900/50 to-zinc-800/50 rounded-2xl border border-white/10 backdrop-blur-xl shadow-2xl">
-          <div className="p-8">
+          <div className="p-4">
             <EntryForm onSubmit={handleSubmit} />
           </div>
         </div>

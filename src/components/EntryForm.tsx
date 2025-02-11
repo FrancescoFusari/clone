@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -100,7 +99,7 @@ export const EntryForm = ({ onSubmit }: EntryFormProps) => {
   ];
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-8">
+    <form onSubmit={handleSubmit} className="space-y-4">
       <div className="flex justify-end">
         <Button
           type="button"
@@ -113,14 +112,14 @@ export const EntryForm = ({ onSubmit }: EntryFormProps) => {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
         {inputTypes.map((type) => (
           <button
             key={type.id}
             type="button"
             onClick={() => setActiveInput(type.id)}
             className={cn(
-              "p-6 text-left rounded-xl border transition-all duration-200",
+              "p-4 text-left rounded-xl border transition-all duration-200",
               "hover:shadow-lg hover:shadow-primary/5 hover:scale-[1.02]",
               activeInput === type.id
                 ? "bg-primary/10 border-primary/20 shadow-lg shadow-primary/5"
@@ -128,23 +127,23 @@ export const EntryForm = ({ onSubmit }: EntryFormProps) => {
             )}
           >
             <type.icon className={cn(
-              "w-8 h-8 mb-3",
+              "w-6 h-6 mb-2",
               activeInput === type.id ? "text-primary" : "text-zinc-400"
             )} />
             <h3 className={cn(
-              "font-medium mb-2",
+              "font-medium mb-1 text-sm",
               activeInput === type.id ? "text-primary" : "text-zinc-100"
             )}>
               {type.title}
             </h3>
-            <p className="text-sm text-zinc-400">
+            <p className="text-xs text-zinc-400">
               {type.description}
             </p>
           </button>
         ))}
       </div>
       
-      <div className="mt-8">
+      <div className="mt-4">
         {activeInput === "text" && (
           <Textarea
             value={content}
@@ -156,7 +155,7 @@ export const EntryForm = ({ onSubmit }: EntryFormProps) => {
         )}
         
         {activeInput === "url" && (
-          <div className="space-y-4 bg-zinc-900/30 p-6 rounded-xl border border-zinc-800/50">
+          <div className="space-y-2 bg-zinc-900/30 p-4 rounded-xl border border-zinc-800/50">
             <p className="text-sm text-zinc-400">
               Enter a URL to analyze its content and save key information.
             </p>
@@ -171,11 +170,11 @@ export const EntryForm = ({ onSubmit }: EntryFormProps) => {
         )}
 
         {activeInput === "image" && (
-          <div className="space-y-4 bg-zinc-900/30 p-6 rounded-xl border border-zinc-800/50">
+          <div className="space-y-2 bg-zinc-900/30 p-4 rounded-xl border border-zinc-800/50">
             <p className="text-sm text-zinc-400">
               Upload an image to analyze its content and extract insights.
             </p>
-            <div className="flex flex-col items-center p-8 border-2 border-dashed border-zinc-700/50 rounded-xl bg-zinc-900/30 hover:bg-zinc-900/50 transition-colors">
+            <div className="flex flex-col items-center p-6 border-2 border-dashed border-zinc-700/50 rounded-xl bg-zinc-900/30 hover:bg-zinc-900/50 transition-colors">
               <Input
                 type="file"
                 accept="image/*"
@@ -185,9 +184,9 @@ export const EntryForm = ({ onSubmit }: EntryFormProps) => {
               />
               <label
                 htmlFor="image-upload"
-                className="cursor-pointer flex flex-col items-center gap-3"
+                className="cursor-pointer flex flex-col items-center gap-2"
               >
-                <Image className="w-12 h-12 text-zinc-500" />
+                <Image className="w-10 h-10 text-zinc-500" />
                 <span className="text-sm text-zinc-400">
                   {image ? image.name : "Click to upload an image"}
                 </span>
@@ -223,4 +222,3 @@ export const EntryForm = ({ onSubmit }: EntryFormProps) => {
     </form>
   );
 };
-
