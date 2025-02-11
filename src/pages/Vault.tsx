@@ -12,6 +12,7 @@ type Entry = Database["public"]["Tables"]["entries"]["Row"];
 const ENTRIES_PER_PAGE = 10;
 
 const Test = () => {
+  const categories: EntryCategory[] = ["personal", "work", "social", "interests", "school"];
   const [selectedCategory, setSelectedCategory] = useState<EntryCategory | null>(null);
   const [entries, setEntries] = useState<Entry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -248,3 +249,4 @@ const Test = () => {
 };
 
 export default Test;
+
