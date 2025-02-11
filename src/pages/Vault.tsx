@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { User, Briefcase, Users, Palette, GraduationCap, List } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -80,21 +81,53 @@ const Test = () => {
   const getCategoryGradient = (category: EntryCategory) => {
     switch (category) {
       case "personal":
-        return "from-purple-400/20 to-purple-500/10";
+        return "from-purple-950 to-zinc-900";
       case "work":
-        return "from-blue-400/20 to-blue-500/10";
+        return "from-blue-950 to-zinc-900";
       case "social":
-        return "from-pink-400/20 to-pink-500/10";
+        return "from-pink-950 to-zinc-900";
       case "interests":
-        return "from-green-400/20 to-green-500/10";
+        return "from-green-950 to-zinc-900";
       case "school":
-        return "from-orange-400/20 to-orange-500/10";
+        return "from-orange-950 to-zinc-900";
       default:
-        return "from-zinc-700/40 to-zinc-800/30";
+        return "from-zinc-900 to-zinc-900";
     }
   };
 
-  const categories: EntryCategory[] = ["personal", "work", "social", "interests", "school"];
+  const getCategoryAccentColor = (category: EntryCategory) => {
+    switch (category) {
+      case "personal":
+        return "text-purple-400/80";
+      case "work":
+        return "text-blue-400/80";
+      case "social":
+        return "text-pink-400/80";
+      case "interests":
+        return "text-green-400/80";
+      case "school":
+        return "text-orange-400/80";
+      default:
+        return "text-zinc-400";
+    }
+  };
+
+  const getCategoryBorderColor = (category: EntryCategory) => {
+    switch (category) {
+      case "personal":
+        return "border-purple-900/30";
+      case "work":
+        return "border-blue-900/30";
+      case "social":
+        return "border-pink-900/30";
+      case "interests":
+        return "border-green-900/30";
+      case "school":
+        return "border-orange-900/30";
+      default:
+        return "border-zinc-800/30";
+    }
+  };
 
   const truncateContent = (content: string) => {
     return content.length > 180 ? content.substring(0, 180) + "..." : content;
@@ -156,29 +189,31 @@ const Test = () => {
               <div
                 key={entry.id}
                 ref={index === entries.length - 1 ? lastEntryElementRef : undefined}
-                className={`bg-gradient-to-br ${getCategoryGradient(entry.category)} rounded-xl p-6 hover:bg-opacity-90 transition-all duration-200 backdrop-blur-sm border border-zinc-700/30`}
+                className={`bg-gradient-to-br ${getCategoryGradient(entry.category)} rounded-xl p-6 hover:bg-opacity-90 transition-all duration-200 backdrop-blur-sm border ${getCategoryBorderColor(entry.category)}`}
               >
                 <div className="flex justify-between items-start mb-4">
                   <div>
-                    <h3 className="text-xl font-semibold mb-1 text-zinc-100">{entry.title}</h3>
-                    <p className="text-sm text-zinc-400">
+                    <h3 className={`text-xl font-semibold mb-1 ${getCategoryAccentColor(entry.category)}`}>
+                      {entry.title}
+                    </h3>
+                    <p className="text-sm text-zinc-500">
                       {format(new Date(entry.created_at), "MMM d, yyyy")}
                     </p>
                   </div>
                 </div>
                 
-                <p className="text-zinc-300 mb-4">
+                <p className="text-zinc-300/90 mb-4">
                   {truncateContent(entry.content)}
                 </p>
 
-                <div className="flex flex-col gap-3 pt-4 border-t border-zinc-700/30">
+                <div className={`flex flex-col gap-3 pt-4 border-t ${getCategoryBorderColor(entry.category)}`}>
                   <div className="flex items-center justify-between">
-                    <span className="flex items-center gap-2 text-sm text-zinc-400">
+                    <span className={`flex items-center gap-2 text-sm ${getCategoryAccentColor(entry.category)}`}>
                       {getCategoryIcon(entry.category)}
                       <span className="capitalize">{entry.category.replace(/_/g, " ")}</span>
                     </span>
                     {entry.subcategory && (
-                      <span className="text-sm text-zinc-400">
+                      <span className="text-sm text-zinc-500">
                         {entry.subcategory}
                       </span>
                     )}
@@ -189,7 +224,7 @@ const Test = () => {
                       {entry.tags.map((tag, i) => (
                         <span
                           key={i}
-                          className="px-2 py-1 rounded-full bg-zinc-800/60 text-xs text-zinc-300 border border-zinc-700/30"
+                          className={`px-2 py-1 rounded-full bg-zinc-900/60 text-xs ${getCategoryAccentColor(entry.category)} border ${getCategoryBorderColor(entry.category)}`}
                         >
                           {tag}
                         </span>
