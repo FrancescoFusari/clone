@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { User, Briefcase, Users, Palette, GraduationCap, List, Eye, FileText, Image, Link } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -199,7 +200,7 @@ const Test = () => {
               <div
                 key={entry.id}
                 ref={index === entries.length - 1 ? lastEntryElementRef : undefined}
-                className="bg-zinc-800/40 rounded-lg p-6 pr-16 hover:bg-zinc-800/60 transition-colors relative"
+                className="bg-zinc-800/40 rounded-xl p-6 pr-16 hover:bg-zinc-800/60 transition-colors relative"
               >
                 <div className="absolute top-4 right-4 flex flex-col items-center gap-2">
                   <Button
@@ -274,3 +275,4 @@ const Test = () => {
 };
 
 export default Test;
+
