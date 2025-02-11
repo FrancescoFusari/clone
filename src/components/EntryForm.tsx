@@ -1,22 +1,33 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { FileText, Image, Link, Loader2, MessageCircle } from "lucide-react";
+import { FileText, Image, Link, Loader2, MessageCircle, Bold, Italic, List, ListOrdered, Quote, Undo, Redo } from "lucide-react";
 import { ChatInterface } from "./chat/ChatInterface";
 import { cn } from "@/lib/utils";
+import { useEditor, EditorContent } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
+import Placeholder from '@tiptap/extension-placeholder';
 
 interface EntryFormProps {
   onSubmit: (content: string | File, type: "text" | "url" | "image") => Promise<void>;
 }
 
 export const EntryForm = ({ onSubmit }: EntryFormProps) => {
-  const [content, setContent] = useState("");
   const [url, setUrl] = useState("");
   const [image, setImage] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [activeInput, setActiveInput] = useState<"text" | "url" | "image">("text");
   const [showChat, setShowChat] = useState(false);
+
+  const editor = useEditor({
+    extensions: [
+      StarterKit,
+      Placeholder.configure({
+        placeholder: 'Write your entry here...',
+      }),
+    ],
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,7 +35,8 @@ export const EntryForm = ({ onSubmit }: EntryFormProps) => {
     
     switch (activeInput) {
       case "text":
-        submitContent = content;
+        if (!editor?.getHTML()) return;
+        submitContent = editor.getHTML();
         break;
       case "url":
         submitContent = url;
@@ -44,7 +56,7 @@ export const EntryForm = ({ onSubmit }: EntryFormProps) => {
     try {
       await onSubmit(submitContent, activeInput);
       if (activeInput === "text") {
-        setContent("");
+        editor?.commands.clearContent();
       } else if (activeInput === "url") {
         setUrl("");
       } else {
@@ -145,13 +157,89 @@ export const EntryForm = ({ onSubmit }: EntryFormProps) => {
       
       <div className="mt-4">
         {activeInput === "text" && (
-          <Textarea
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            placeholder="Write your entry here..."
-            className="min-h-[300px] text-base resize-none bg-zinc-900/50 border-zinc-700/50 rounded-xl text-zinc-100 placeholder:text-zinc-500 focus-visible:ring-zinc-700/50"
-            style={{ whiteSpace: 'pre-wrap' }}
-          />
+          <div className="space-y-2">
+            <div className="flex items-center gap-1 p-2 bg-zinc-800/50 border border-zinc-700/50 rounded-t-xl">
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                onClick={() => editor?.chain().focus().toggleBold().run()}
+                className={cn("p-2 h-8 w-8", 
+                  editor?.isActive('bold') ? 'bg-zinc-700/50' : ''
+                )}
+              >
+                <Bold className="h-4 w-4" />
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                onClick={() => editor?.chain().focus().toggleItalic().run()}
+                className={cn("p-2 h-8 w-8",
+                  editor?.isActive('italic') ? 'bg-zinc-700/50' : ''
+                )}
+              >
+                <Italic className="h-4 w-4" />
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                onClick={() => editor?.chain().focus().toggleBulletList().run()}
+                className={cn("p-2 h-8 w-8",
+                  editor?.isActive('bulletList') ? 'bg-zinc-700/50' : ''
+                )}
+              >
+                <List className="h-4 w-4" />
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                onClick={() => editor?.chain().focus().toggleOrderedList().run()}
+                className={cn("p-2 h-8 w-8",
+                  editor?.isActive('orderedList') ? 'bg-zinc-700/50' : ''
+                )}
+              >
+                <ListOrdered className="h-4 w-4" />
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                onClick={() => editor?.chain().focus().toggleBlockquote().run()}
+                className={cn("p-2 h-8 w-8",
+                  editor?.isActive('blockquote') ? 'bg-zinc-700/50' : ''
+                )}
+              >
+                <Quote className="h-4 w-4" />
+              </Button>
+              <div className="ml-auto flex items-center gap-1">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => editor?.chain().focus().undo().run()}
+                  className="p-2 h-8 w-8"
+                >
+                  <Undo className="h-4 w-4" />
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => editor?.chain().focus().redo().run()}
+                  className="p-2 h-8 w-8"
+                >
+                  <Redo className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+            <EditorContent 
+              editor={editor}
+              className="min-h-[300px] p-4 bg-zinc-900/50 border border-zinc-700/50 rounded-b-xl text-zinc-100 focus-within:border-zinc-600 transition-colors prose prose-invert max-w-none prose-sm"
+            />
+          </div>
         )}
         
         {activeInput === "url" && (
@@ -203,7 +291,7 @@ export const EntryForm = ({ onSubmit }: EntryFormProps) => {
         <Button 
           type="submit" 
           disabled={loading || (
-            activeInput === "text" ? !content.trim() : 
+            activeInput === "text" ? !editor?.getHTML() : 
             activeInput === "url" ? !url.trim() : 
             !image
           )}
