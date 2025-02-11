@@ -16,7 +16,7 @@ export const Navigation = () => {
 
   return (
     <div className="fixed bottom-0 left-0 right-0 p-4 z-40">
-      <nav className="max-w-screen-sm mx-auto rounded-full p-2 bg-zinc-900/80 backdrop-blur-sm border border-white/10">
+      <nav className="max-w-screen-sm mx-auto rounded-full p-2 bg-zinc-900/40 backdrop-blur-md border border-white/5">
         <div className="flex justify-center items-center gap-2">
           <Tooltip>
             <TooltipTrigger asChild>
