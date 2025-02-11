@@ -16,7 +16,7 @@ export const Navigation = () => {
 
   return (
     <div className="fixed bottom-0 left-0 right-0 p-4 z-40">
-      <nav className="max-w-screen-sm mx-auto rounded-full p-2 bg-background/80 backdrop-blur-sm border border-border">
+      <nav className="max-w-screen-sm mx-auto rounded-full p-2 bg-zinc-900/80 backdrop-blur-sm border border-white/10">
         <div className="flex justify-center items-center gap-2">
           <Tooltip>
             <TooltipTrigger asChild>
@@ -25,7 +25,7 @@ export const Navigation = () => {
                 className={cn(
                   "flex-1 max-w-[120px] gap-2 transition-colors",
                   isActive("/") &&
-                    "bg-primary/20 text-primary hover:bg-primary/30 hover:text-primary"
+                    "bg-white text-black hover:bg-white/90 hover:text-black"
                 )}
                 asChild
               >
@@ -45,7 +45,7 @@ export const Navigation = () => {
                 className={cn(
                   "flex-1 max-w-[120px] gap-2 transition-colors",
                   isActive("/timeline") &&
-                    "bg-primary/20 text-primary hover:bg-primary/30 hover:text-primary"
+                    "bg-white text-black hover:bg-white/90 hover:text-black"
                 )}
                 asChild
               >
@@ -65,7 +65,7 @@ export const Navigation = () => {
                 className={cn(
                   "flex-1 max-w-[120px] gap-2 transition-colors",
                   isActive("/new") &&
-                    "bg-primary/20 text-primary hover:bg-primary/30 hover:text-primary"
+                    "bg-white text-black hover:bg-white/90 hover:text-black"
                 )}
                 asChild
               >
@@ -85,7 +85,7 @@ export const Navigation = () => {
                 className={cn(
                   "flex-1 max-w-[120px] gap-2 transition-colors",
                   isActive("/categories") &&
-                    "bg-primary/20 text-primary hover:bg-primary/30 hover:text-primary"
+                    "bg-white text-black hover:bg-white/90 hover:text-black"
                 )}
                 asChild
               >
@@ -105,7 +105,7 @@ export const Navigation = () => {
                 className={cn(
                   "flex-1 max-w-[120px] gap-2 transition-colors",
                   isActive("/mind-map") &&
-                    "bg-primary/20 text-primary hover:bg-primary/30 hover:text-primary"
+                    "bg-white text-black hover:bg-white/90 hover:text-black"
                 )}
                 asChild
               >
@@ -125,7 +125,7 @@ export const Navigation = () => {
                 className={cn(
                   "flex-1 max-w-[120px] gap-2 transition-colors",
                   isActive("/test") &&
-                    "bg-primary/20 text-primary hover:bg-primary/30 hover:text-primary"
+                    "bg-white text-black hover:bg-white/90 hover:text-black"
                 )}
                 asChild
               >
