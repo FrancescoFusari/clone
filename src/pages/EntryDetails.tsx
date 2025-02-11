@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -409,16 +408,6 @@ const EntryDetails = () => {
 
   return (
     <div className="container mx-auto px-2 py-8 mb-24 bg-zinc-900">
-      <Card className="glass-morphism overflow-hidden mb-8">
-        <CardHeader className="space-y-2">
-          <div className="space-y-2">
-            <p className="text-lg text-white/80 leading-relaxed">
-              View the complete details of your entry, including AI-generated insights, key concepts, and related topics. Use these insights to explore your thoughts more deeply.
-            </p>
-          </div>
-        </CardHeader>
-      </Card>
-
       <div className="flex items-center gap-4 mb-6">
         <Button
           variant="outline"
@@ -760,4 +749,3 @@ const EntryDetails = () => {
 };
 
 export default EntryDetails;
-
