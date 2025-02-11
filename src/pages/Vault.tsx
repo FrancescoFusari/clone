@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { User, Briefcase, Users, Palette, GraduationCap, List, Eye, FileText, Image, Link } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -145,7 +146,7 @@ const Test = () => {
 
   return (
     <>
-      <div className="min-h-screen bg-zinc-900 text-zinc-100 px-4 pb-24">
+      <div className="min-h-screen bg-zinc-900 text-zinc-100 px-2 pb-24">
         <div className="flex justify-between items-start pt-6 pb-4">
           <div className="space-y-2">
             <h1 className="text-4xl font-light text-zinc-50">My Entries</h1>
