@@ -6,8 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/components/AuthProvider";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Sparkles } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 
 const NewEntry = () => {
   const navigate = useNavigate();
@@ -60,7 +59,7 @@ const NewEntry = () => {
             content: publicUrl,
             user_id: session.user.id,
             type: "image",
-            folder: "default" // Add default folder value
+            folder: "default"
           }
         });
 
@@ -80,7 +79,7 @@ const NewEntry = () => {
               [type === "url" ? "url" : "content"]: content,
               user_id: session.user.id,
               type,
-              folder: "default" // Add default folder value
+              folder: "default"
             }
           }
         );
@@ -115,22 +114,6 @@ const NewEntry = () => {
   return (
     <CenteredLayout>
       <div className="max-w-3xl mx-auto space-y-6 py-8">
-        <Card className="neo-blur border-primary/20 overflow-hidden">
-          <CardHeader className="space-y-4 pb-8">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-full bg-primary/20">
-                <Sparkles className="w-6 h-6 text-primary" />
-              </div>
-              <h1 className="text-4xl font-bold text-gradient">
-                Create New Entry
-              </h1>
-            </div>
-            <p className="text-lg text-white/80 leading-relaxed max-w-2xl">
-              Transform your thoughts into organized insights. Share your ideas, analyze content from around the web, or upload images - our AI assistant will help structure and enhance your entries.
-            </p>
-          </CardHeader>
-        </Card>
-
         <Card className="neo-blur border-primary/20">
           <CardContent className="pt-6">
             <EntryForm onSubmit={handleSubmit} />
