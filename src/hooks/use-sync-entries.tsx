@@ -4,65 +4,101 @@ import { useAuth } from '@/components/AuthProvider';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
-import { getUnsyncedEntries, markEntrySynced, deleteOfflineEntry } from '@/lib/db';
+import { 
+  getNextSyncItem, 
+  incrementSyncRetries, 
+  removeSyncQueueItem, 
+  markEntrySynced,
+  deleteOfflineEntry,
+  getSyncQueue
+} from '@/lib/db';
 
 export const useSyncEntries = () => {
   const { session } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isSyncing, setIsSyncing] = useState(false);
+  const [queueSize, setQueueSize] = useState(0);
+
+  const updateQueueSize = async () => {
+    const queue = await getSyncQueue();
+    setQueueSize(queue.length);
+  };
+
+  const processSyncItem = async () => {
+    const item = await getNextSyncItem();
+    if (!item || !session?.user) return false;
+
+    try {
+      switch (item.operation) {
+        case 'create':
+        case 'update':
+          const { error } = await supabase.functions.invoke('process-entry', {
+            body: {
+              content: item.data.content,
+              user_id: session.user.id,
+              type: "text",
+              folder: item.data.folder
+            }
+          });
+
+          if (error) throw error;
+          
+          await markEntrySynced(item.data.id);
+          await removeSyncQueueItem(item.id);
+          break;
+
+        case 'delete':
+          // Handle delete operation if needed
+          await removeSyncQueueItem(item.id);
+          break;
+      }
+      return true;
+    } catch (error) {
+      console.error('Error processing sync item:', error);
+      await incrementSyncRetries(item.id);
+      return false;
+    }
+  };
 
   const syncEntries = async () => {
     if (!session?.user || isSyncing) return;
 
     setIsSyncing(true);
     try {
-      const unsyncedEntries = await getUnsyncedEntries();
-      if (unsyncedEntries.length === 0) return;
+      let successCount = 0;
+      let hasMore = true;
 
-      let syncedCount = 0;
-      for (const entry of unsyncedEntries) {
-        try {
-          const { data, error } = await supabase.functions.invoke('process-entry', {
-            body: {
-              content: entry.content,
-              user_id: session.user.id,
-              type: "text",
-              folder: entry.folder
-            }
-          });
-
-          if (error) {
-            console.error('Error syncing entry:', error);
-            continue;
-          }
-
-          await markEntrySynced(entry.id);
-          await deleteOfflineEntry(entry.id);
-          syncedCount++;
-        } catch (error) {
-          console.error('Error processing entry:', error);
-        }
+      while (hasMore) {
+        hasMore = await processSyncItem();
+        if (hasMore) successCount++;
       }
 
-      if (syncedCount > 0) {
+      if (successCount > 0) {
         await queryClient.invalidateQueries({ queryKey: ['entries'] });
         toast({
           title: "Entries synchronized",
-          description: `Successfully synced ${syncedCount} offline ${syncedCount === 1 ? 'entry' : 'entries'}.`,
+          description: `Successfully synced ${successCount} ${successCount === 1 ? 'entry' : 'entries'}.`,
         });
       }
+
+      await updateQueueSize();
     } catch (error) {
       console.error('Error during sync:', error);
       toast({
         variant: "destructive",
         title: "Sync failed",
-        description: "There was a problem syncing your offline entries.",
+        description: "There was a problem syncing your entries.",
       });
     } finally {
       setIsSyncing(false);
     }
   };
+
+  // Update queue size when component mounts
+  useEffect(() => {
+    updateQueueSize();
+  }, []);
 
   // Sync when user logs in
   useEffect(() => {
@@ -83,5 +119,5 @@ export const useSyncEntries = () => {
     return () => window.removeEventListener('online', handleOnline);
   }, [session?.user?.id]);
 
-  return { isSyncing, syncEntries };
+  return { isSyncing, syncEntries, queueSize };
 };
