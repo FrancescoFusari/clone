@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { Archive, Search } from "lucide-react";
@@ -97,16 +98,18 @@ const Entries = () => {
             filteredEntries?.map((entry) => (
               <Card
                 key={entry.id}
-                className="glass-morphism card-hover cursor-pointer"
+                className="glass-morphism card-hover cursor-pointer overflow-hidden"
                 onClick={() => navigate(`/entries/${entry.id}`)}
               >
                 <CardContent className="p-6">
                   <div className="space-y-3">
                     <h3 className="font-semibold line-clamp-1">{entry.title}</h3>
-                    <div 
-                      className="text-sm text-muted-foreground line-clamp-2 prose prose-invert prose-sm max-w-none [&_p]:m-0 [&_ul]:m-0 [&_ol]:m-0 [&_blockquote]:m-0"
-                      dangerouslySetInnerHTML={sanitizeHTML(entry.formatted_content || entry.content)}
-                    />
+                    <div className="prose prose-invert prose-sm max-w-none line-clamp-2">
+                      <div
+                        dangerouslySetInnerHTML={sanitizeHTML(entry.formatted_content || entry.content)}
+                        className="[&>*:first-child]:mt-0 [&>*:last-child]:mb-0 [&_p]:m-0 [&_ul]:m-0 [&_ol]:m-0 [&_blockquote]:m-0"
+                      />
+                    </div>
                     <div className="flex items-center justify-between text-xs text-muted-foreground">
                       <span className="capitalize">{entry.category.replace(/_/g, " ")}</span>
                       <span>{format(new Date(entry.created_at), "MMM d, yyyy")}</span>
