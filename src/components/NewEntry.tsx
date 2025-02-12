@@ -1,3 +1,4 @@
+
 import { CenteredLayout } from "@/components/layouts/CenteredLayout";
 import { EntryForm } from "@/components/EntryForm";
 import { supabase } from "@/integrations/supabase/client";
