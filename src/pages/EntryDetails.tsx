@@ -38,12 +38,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { createDOMPurify } from 'dompurify';
-import { JSDOM } from 'jsdom';
-
-// Initialize DOMPurify
-const window = new JSDOM('').window;
-const DOMPurify = createDOMPurify(window);
+import DOMPurify from "dompurify";
 
 type ResearchData = {
   insights: string;

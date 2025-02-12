@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { Archive, Search } from "lucide-react";
@@ -8,12 +7,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { format } from "date-fns";
-import { createDOMPurify } from 'dompurify';
-import { JSDOM } from 'jsdom';
-
-// Initialize DOMPurify
-const window = new JSDOM('').window;
-const DOMPurify = createDOMPurify(window);
+import DOMPurify from "dompurify";
 
 const Entries = () => {
   const navigate = useNavigate();
@@ -57,7 +51,6 @@ const Entries = () => {
   return (
     <CenteredLayout>
       <div className="max-w-6xl mx-auto space-y-8 py-4">
-        {/* Header Card */}
         <Card className="glass-morphism overflow-hidden relative">
           <div className="absolute inset-0 bg-gradient-to-br from-[#9F9EA1]/20 to-[#F6F6F7]/20 opacity-50" />
           <CardHeader className="relative space-y-2">
