@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { Archive, Search } from "lucide-react";
@@ -8,7 +7,6 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { format } from "date-fns";
-import DOMPurify from "dompurify";
 
 const Entries = () => {
   const navigate = useNavigate();
@@ -32,31 +30,10 @@ const Entries = () => {
     entry.content.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const sanitizeHTML = (html: string) => {
-    if (!html) return { __html: '' };
-    
-    try {
-      const sanitized = DOMPurify.sanitize(html, {
-        USE_PROFILES: { html: true },
-        ALLOWED_TAGS: ['p', 'b', 'i', 'em', 'strong', 'a', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'blockquote'],
-        ALLOWED_ATTR: ['href', 'target', 'rel']
-      });
-      
-      // Ensure content is wrapped in a paragraph if it doesn't start with a block element
-      if (!sanitized.startsWith('<p>') && !sanitized.startsWith('<h') && !sanitized.startsWith('<ul') && !sanitized.startsWith('<ol') && !sanitized.startsWith('<blockquote')) {
-        return { __html: `<p>${sanitized}</p>` };
-      }
-      
-      return { __html: sanitized };
-    } catch (error) {
-      console.error('Error sanitizing HTML:', error);
-      return { __html: `<p>${html}</p>` }; // Fallback to raw HTML if sanitization fails, wrapped in paragraph
-    }
-  };
-
   return (
     <CenteredLayout>
       <div className="max-w-6xl mx-auto space-y-8 py-4">
+        {/* Header Card */}
         <Card className="glass-morphism overflow-hidden relative">
           <div className="absolute inset-0 bg-gradient-to-br from-[#9F9EA1]/20 to-[#F6F6F7]/20 opacity-50" />
           <CardHeader className="relative space-y-2">
@@ -103,18 +80,15 @@ const Entries = () => {
             filteredEntries?.map((entry) => (
               <Card
                 key={entry.id}
-                className="glass-morphism card-hover cursor-pointer overflow-hidden"
+                className="glass-morphism card-hover cursor-pointer"
                 onClick={() => navigate(`/entries/${entry.id}`)}
               >
                 <CardContent className="p-6">
                   <div className="space-y-3">
                     <h3 className="font-semibold line-clamp-1">{entry.title}</h3>
-                    <div className="text-sm text-muted-foreground overflow-hidden line-clamp-2">
-                      <div 
-                        dangerouslySetInnerHTML={sanitizeHTML(entry.formatted_content || entry.content)}
-                        className="prose prose-invert prose-sm max-w-none [&>*:first-child]:mt-0 [&>*:last-child]:mb-0 [&_p]:my-0 [&_ul]:my-0 [&_ol]:my-0 [&_blockquote]:my-0"
-                      />
-                    </div>
+                    <p className="text-sm text-muted-foreground line-clamp-2">
+                      {entry.content}
+                    </p>
                     <div className="flex items-center justify-between text-xs text-muted-foreground">
                       <span className="capitalize">{entry.category.replace(/_/g, " ")}</span>
                       <span>{format(new Date(entry.created_at), "MMM d, yyyy")}</span>

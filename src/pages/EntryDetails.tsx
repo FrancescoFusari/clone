@@ -38,7 +38,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import DOMPurify from "dompurify";
 
 type ResearchData = {
   insights: string;
@@ -210,23 +209,6 @@ const EntryDetails = () => {
       setEditedSubcategory(entry.subcategory || "");
     }
   }, [entry]);
-
-  const sanitizeHTML = (html: string) => {
-    if (!html) return { __html: '' };
-    
-    try {
-      return {
-        __html: DOMPurify.sanitize(html, {
-          USE_PROFILES: { html: true },
-          ALLOWED_TAGS: ['p', 'b', 'i', 'em', 'strong', 'a', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'blockquote'],
-          ALLOWED_ATTR: ['href', 'target', 'rel']
-        })
-      };
-    } catch (error) {
-      console.error('Error sanitizing HTML:', error);
-      return { __html: html }; // Fallback to raw HTML if sanitization fails
-    }
-  };
 
   const researchMutation = useMutation({
     mutationFn: async () => {
@@ -602,10 +584,9 @@ const EntryDetails = () => {
             </div>
           ) : (
             <>
-              <div 
-                className="prose max-w-none mb-6 dark:prose-invert text-white/80"
-                dangerouslySetInnerHTML={sanitizeHTML(entry.formatted_content || entry.content)}
-              />
+              <div className="prose max-w-none mb-6 dark:prose-invert text-white/80">
+                {formatContent(entry.formatted_content || entry.content)}
+              </div>
 
               {Array.isArray(entry.entry_comments) && entry.entry_comments.length > 0 && (
                 <div className="mb-6 space-y-4">
