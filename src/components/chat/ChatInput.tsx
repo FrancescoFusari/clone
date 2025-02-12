@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 
 interface ChatInputProps {
-  model: string;
+  model: 'o3-mini';
   onMessageSent?: (message: { role: 'user' | 'assistant', content: string }) => void;
 }
 
