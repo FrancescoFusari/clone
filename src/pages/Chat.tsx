@@ -6,6 +6,8 @@ import { Loader2, X } from "lucide-react";
 import { ChatMessages } from "@/components/chat/ChatMessages";
 import { ChatInput } from "@/components/chat/ChatInput";
 import { ModelSelector } from "@/components/chat/ModelSelector";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
 
 interface Message {
   role: 'user' | 'assistant';
@@ -21,20 +23,45 @@ const Chat = ({ onSaveEntry }: ChatPageProps) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [model, setModel] = useState<'gpt-4o-mini' | 'gpt-4o'>('gpt-4o-mini');
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   const handleClose = () => {
     navigate('/new');
   };
 
   const handleSaveEntry = async () => {
-    if (!onSaveEntry || !messages.length) return;
+    if (!messages.length) return;
     setLoading(true);
     try {
+      // Format the chat into a coherent text entry
       const chatContent = messages
         .map(msg => `${msg.role === 'user' ? 'You' : 'AI'}: ${msg.content}`)
         .join('\n\n');
-      await onSaveEntry(chatContent);
-      handleClose();
+
+      // Process the chat content as an entry
+      const { data, error } = await supabase.functions.invoke('process-entry', {
+        body: { 
+          content: chatContent,
+          type: "text",
+          folder: "default"
+        }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Chat saved as an entry",
+      });
+      
+      navigate('/');
+    } catch (error) {
+      console.error('Error saving chat as entry:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to save chat as entry",
+      });
     } finally {
       setLoading(false);
     }
