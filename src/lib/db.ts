@@ -8,14 +8,14 @@ export interface OfflineEntry {
   content: string;
   category: 'personal' | 'work' | 'social' | 'interests' | 'school';
   created_at: string;
-  updated_at: string; // Add updated_at for conflict detection
-  synced: number;
+  updated_at: string;
+  synced: number; // 0 = not synced, 1 = synced
   user_id: string | null;
   entry_type?: string;
   tags?: string[];
   folder: string;
-  version?: number; // Add version for conflict resolution
-  conflict_with?: string; // Reference to conflicting entry
+  version?: number;
+  conflict_with?: string;
 }
 
 export interface SyncQueue {
@@ -24,7 +24,7 @@ export interface SyncQueue {
   data: OfflineEntry;
   timestamp: string;
   retries: number;
-  has_conflict?: boolean;
+  has_conflict: number; // 0 = no conflict, 1 = has conflict
   server_version?: number;
 }
 
@@ -108,7 +108,7 @@ export const markEntryConflict = async (id: string, serverVersion: number) => {
   const queueItem = await db.syncQueue.get(id);
   if (queueItem) {
     await db.syncQueue.update(id, {
-      has_conflict: true,
+      has_conflict: 1,
       server_version: serverVersion
     });
   }
@@ -141,7 +141,7 @@ export const addToSyncQueue = async (operation: 'create' | 'update' | 'delete', 
     data,
     timestamp: new Date().toISOString(),
     retries: 0,
-    has_conflict: false
+    has_conflict: 0
   };
   
   await db.syncQueue.put(queueItem);
@@ -150,14 +150,14 @@ export const addToSyncQueue = async (operation: 'create' | 'update' | 'delete', 
 export const getNextSyncItem = async () => {
   return await db.syncQueue
     .orderBy('timestamp')
-    .filter(item => item.retries < 3 && !item.has_conflict)
+    .filter(item => item.retries < 3 && item.has_conflict === 0)
     .first();
 };
 
 export const getConflictedItems = async () => {
   return await db.syncQueue
     .where('has_conflict')
-    .equals(true)
+    .equals(1)
     .toArray();
 };
 
