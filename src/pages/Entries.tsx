@@ -104,10 +104,10 @@ const Entries = () => {
                 <CardContent className="p-6">
                   <div className="space-y-3">
                     <h3 className="font-semibold line-clamp-1">{entry.title}</h3>
-                    <div className="prose prose-invert prose-sm max-w-none line-clamp-2">
+                    <div className="text-sm text-muted-foreground line-clamp-2">
                       <div
                         dangerouslySetInnerHTML={sanitizeHTML(entry.formatted_content || entry.content)}
-                        className="[&>*:first-child]:mt-0 [&>*:last-child]:mb-0 [&_p]:m-0 [&_ul]:m-0 [&_ol]:m-0 [&_blockquote]:m-0"
+                        className="prose prose-invert prose-sm max-w-none [&>*:first-child]:mt-0 [&>*:last-child]:mb-0 [&_p]:m-0 [&_ul]:m-0 [&_ol]:m-0 [&_blockquote]:m-0"
                       />
                     </div>
                     <div className="flex items-center justify-between text-xs text-muted-foreground">
