@@ -38,7 +38,12 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import DOMPurify from "dompurify";
+import { createDOMPurify } from 'dompurify';
+import { JSDOM } from 'jsdom';
+
+// Initialize DOMPurify
+const window = new JSDOM('').window;
+const DOMPurify = createDOMPurify(window);
 
 type ResearchData = {
   insights: string;
@@ -212,13 +217,20 @@ const EntryDetails = () => {
   }, [entry]);
 
   const sanitizeHTML = (html: string) => {
-    return {
-      __html: DOMPurify.sanitize(html, {
-        USE_PROFILES: { html: true },
-        ALLOWED_TAGS: ['p', 'b', 'i', 'em', 'strong', 'a', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'blockquote'],
-        ALLOWED_ATTR: ['href', 'target', 'rel']
-      })
-    };
+    if (!html) return { __html: '' };
+    
+    try {
+      return {
+        __html: DOMPurify.sanitize(html, {
+          USE_PROFILES: { html: true },
+          ALLOWED_TAGS: ['p', 'b', 'i', 'em', 'strong', 'a', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'blockquote'],
+          ALLOWED_ATTR: ['href', 'target', 'rel']
+        })
+      };
+    } catch (error) {
+      console.error('Error sanitizing HTML:', error);
+      return { __html: html }; // Fallback to raw HTML if sanitization fails
+    }
   };
 
   const researchMutation = useMutation({
