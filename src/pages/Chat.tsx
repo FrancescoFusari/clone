@@ -8,6 +8,7 @@ import { ChatInput } from "@/components/chat/ChatInput";
 import { ModelSelector } from "@/components/chat/ModelSelector";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
+import { useAuth } from "@/components/AuthProvider";
 
 interface Message {
   role: 'user' | 'assistant';
@@ -24,6 +25,7 @@ const Chat = ({ onSaveEntry }: ChatPageProps) => {
   const [model, setModel] = useState<'gpt-4o-mini' | 'gpt-4o'>('gpt-4o-mini');
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { session } = useAuth();
 
   const handleClose = () => {
     navigate('/new');
@@ -31,6 +33,15 @@ const Chat = ({ onSaveEntry }: ChatPageProps) => {
 
   const handleSaveEntry = async () => {
     if (!messages.length) return;
+    if (!session?.user) {
+      toast({
+        variant: "destructive",
+        title: "Authentication required",
+        description: "Please sign in to save entries",
+      });
+      return;
+    }
+
     setLoading(true);
     try {
       // Format the chat into a coherent text entry
@@ -42,6 +53,7 @@ const Chat = ({ onSaveEntry }: ChatPageProps) => {
       const { data, error } = await supabase.functions.invoke('process-entry', {
         body: { 
           content: chatContent,
+          user_id: session.user.id,
           type: "text",
           folder: "default"
         }
