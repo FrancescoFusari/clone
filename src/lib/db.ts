@@ -53,3 +53,7 @@ export const markEntrySynced = async (id: string) => {
 export const getUnsyncedEntries = async () => {
   return await db.entries.where('synced').equals(0).toArray();
 };
+
+export const deleteOfflineEntry = async (id: string) => {
+  await db.entries.delete(id);
+};

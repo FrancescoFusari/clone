@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { User, Briefcase, Users, Palette, GraduationCap, List, Eye, FileText, Image, Link } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/components/AuthProvider";
 import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
+import { useSyncEntries } from "@/components/EntrySync";
 
 type EntryCategory = Database["public"]["Enums"]["entry_category"];
 type Entry = Database["public"]["Tables"]["entries"]["Row"];
@@ -20,6 +20,7 @@ const Test = () => {
   const navigate = useNavigate();
   const { session } = useAuth();
   const { toast } = useToast();
+  const { isSyncing } = useSyncEntries();
   const categories: EntryCategory[] = ["personal", "work", "social", "interests", "school"];
   const [selectedCategory, setSelectedCategory] = useState<EntryCategory | null>(null);
   const [entries, setEntries] = useState<Entry[]>([]);
@@ -151,6 +152,9 @@ const Test = () => {
           <div className="space-y-2">
             <h1 className="text-4xl font-light text-zinc-50">My Entries</h1>
             <p className="text-zinc-400">Browse and manage your entries</p>
+            {isSyncing && (
+              <p className="text-sm text-yellow-400">Syncing offline entries...</p>
+            )}
           </div>
           <List className="w-6 h-6 text-zinc-400" />
         </div>
