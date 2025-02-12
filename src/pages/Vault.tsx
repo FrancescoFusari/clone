@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { User, Briefcase, Users, Palette, GraduationCap, List, Eye, FileText, Image, Link } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/components/AuthProvider";
 import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
-import { useSyncEntries } from "@/components/EntrySync";
+import { useSyncEntries } from "@/hooks/use-sync-entries";
 
 type EntryCategory = Database["public"]["Enums"]["entry_category"];
 type Entry = Database["public"]["Tables"]["entries"]["Row"];
