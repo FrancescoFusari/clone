@@ -36,16 +36,21 @@ const Entries = () => {
     if (!html) return { __html: '' };
     
     try {
-      return {
-        __html: DOMPurify.sanitize(html, {
-          USE_PROFILES: { html: true },
-          ALLOWED_TAGS: ['p', 'b', 'i', 'em', 'strong', 'a', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'blockquote'],
-          ALLOWED_ATTR: ['href', 'target', 'rel']
-        })
-      };
+      const sanitized = DOMPurify.sanitize(html, {
+        USE_PROFILES: { html: true },
+        ALLOWED_TAGS: ['p', 'b', 'i', 'em', 'strong', 'a', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'blockquote'],
+        ALLOWED_ATTR: ['href', 'target', 'rel']
+      });
+      
+      // Ensure content is wrapped in a paragraph if it doesn't start with a block element
+      if (!sanitized.startsWith('<p>') && !sanitized.startsWith('<h') && !sanitized.startsWith('<ul') && !sanitized.startsWith('<ol') && !sanitized.startsWith('<blockquote')) {
+        return { __html: `<p>${sanitized}</p>` };
+      }
+      
+      return { __html: sanitized };
     } catch (error) {
       console.error('Error sanitizing HTML:', error);
-      return { __html: html }; // Fallback to raw HTML if sanitization fails
+      return { __html: `<p>${html}</p>` }; // Fallback to raw HTML if sanitization fails, wrapped in paragraph
     }
   };
 
@@ -104,9 +109,10 @@ const Entries = () => {
                 <CardContent className="p-6">
                   <div className="space-y-3">
                     <h3 className="font-semibold line-clamp-1">{entry.title}</h3>
-                    <div className="text-sm text-muted-foreground line-clamp-2 prose prose-invert prose-sm max-w-none [&>*:first-child]:mt-0 [&>*:last-child]:mb-0 [&_p]:m-0 [&_ul]:m-0 [&_ol]:m-0 [&_blockquote]:m-0">
-                      <div
+                    <div className="text-sm text-muted-foreground overflow-hidden line-clamp-2">
+                      <div 
                         dangerouslySetInnerHTML={sanitizeHTML(entry.formatted_content || entry.content)}
+                        className="prose prose-invert prose-sm max-w-none [&>*:first-child]:mt-0 [&>*:last-child]:mb-0 [&_p]:my-0 [&_ul]:my-0 [&_ol]:my-0 [&_blockquote]:my-0"
                       />
                     </div>
                     <div className="flex items-center justify-between text-xs text-muted-foreground">
