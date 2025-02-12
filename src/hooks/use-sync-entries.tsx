@@ -9,7 +9,9 @@ import {
   incrementSyncRetries, 
   removeSyncQueueItem, 
   markEntrySynced,
-  deleteOfflineEntry,
+  markEntryConflict,
+  getConflictedItems,
+  type SyncQueue,
   getSyncQueue
 } from '@/lib/db';
 
@@ -19,10 +21,13 @@ export const useSyncEntries = () => {
   const queryClient = useQueryClient();
   const [isSyncing, setIsSyncing] = useState(false);
   const [queueSize, setQueueSize] = useState(0);
+  const [conflicts, setConflicts] = useState<SyncQueue[]>([]);
 
   const updateQueueSize = async () => {
     const queue = await getSyncQueue();
     setQueueSize(queue.length);
+    const conflictedItems = await getConflictedItems();
+    setConflicts(conflictedItems);
   };
 
   const processSyncItem = async () => {
@@ -32,24 +37,36 @@ export const useSyncEntries = () => {
     try {
       switch (item.operation) {
         case 'create':
-        case 'update':
-          const { error } = await supabase.functions.invoke('process-entry', {
+        case 'update': {
+          const { data, error } = await supabase.functions.invoke('process-entry', {
             body: {
               content: item.data.content,
               user_id: session.user.id,
               type: "text",
-              folder: item.data.folder
+              folder: item.data.folder,
+              version: item.data.version
             }
           });
 
-          if (error) throw error;
-          
-          await markEntrySynced(item.data.id);
+          if (error) {
+            if (error.message.includes('version_conflict')) {
+              await markEntryConflict(item.id, Number(error.message.split(':')[1]));
+              toast({
+                title: "Sync conflict detected",
+                description: "Please resolve the conflict in your entries.",
+                variant: "destructive"
+              });
+              return false;
+            }
+            throw error;
+          }
+
+          await markEntrySynced(item.data.id, data?.version);
           await removeSyncQueueItem(item.id);
           break;
+        }
 
         case 'delete':
-          // Handle delete operation if needed
           await removeSyncQueueItem(item.id);
           break;
       }
@@ -119,5 +136,11 @@ export const useSyncEntries = () => {
     return () => window.removeEventListener('online', handleOnline);
   }, [session?.user?.id]);
 
-  return { isSyncing, syncEntries, queueSize };
+  return { 
+    isSyncing, 
+    syncEntries, 
+    queueSize,
+    conflicts,
+    hasConflicts: conflicts.length > 0 
+  };
 };
