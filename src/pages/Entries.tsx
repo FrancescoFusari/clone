@@ -49,6 +49,13 @@ const Entries = () => {
     }
   };
 
+  const stripHTML = (html: string) => {
+    if (!html) return '';
+    const div = document.createElement('div');
+    div.innerHTML = DOMPurify.sanitize(html);
+    return div.textContent || div.innerText || '';
+  };
+
   return (
     <CenteredLayout>
       <div className="max-w-6xl mx-auto space-y-8 py-4">
@@ -105,10 +112,7 @@ const Entries = () => {
                   <div className="space-y-3">
                     <h3 className="font-semibold line-clamp-1">{entry.title}</h3>
                     <div className="text-sm text-muted-foreground line-clamp-2">
-                      <div
-                        dangerouslySetInnerHTML={sanitizeHTML(entry.formatted_content || entry.content)}
-                        className="prose prose-invert prose-sm max-w-none [&>*:first-child]:mt-0 [&>*:last-child]:mb-0 [&_p]:m-0 [&_ul]:m-0 [&_ol]:m-0 [&_blockquote]:m-0"
-                      />
+                      {stripHTML(entry.formatted_content || entry.content)}
                     </div>
                     <div className="flex items-center justify-between text-xs text-muted-foreground">
                       <span className="capitalize">{entry.category.replace(/_/g, " ")}</span>
