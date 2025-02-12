@@ -1,4 +1,3 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -179,7 +178,7 @@ async function formatTextAndGenerateComments(content: string, type: "text" | "ur
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o',  // Using the more powerful model that supports vision
+        model: type === "image" ? 'gpt-4o' : 'gpt-4o-mini',  // Using more powerful model for images
         messages,
         max_tokens: 1000,
         temperature: 0.3,
@@ -259,7 +258,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o',
+        model: 'gpt-4o-mini',  // Using the faster model for category analysis
         messages: [
           {
             role: 'system',
@@ -441,4 +440,3 @@ serve(async (req) => {
     );
   }
 });
-
