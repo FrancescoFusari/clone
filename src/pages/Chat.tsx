@@ -19,7 +19,7 @@ interface ChatPageProps {
 const Chat = ({ onSaveEntry }: ChatPageProps) => {
   const [loading, setLoading] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [model, setModel] = useState<'o3-mini'>('o3-mini');
+  const [model, setModel] = useState<'o3-mini' | 'gpt-4o-mini' | 'gpt-4o'>('o3-mini');
   const navigate = useNavigate();
 
   const handleClose = () => {
