@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { Archive, Search } from "lucide-react";
@@ -7,6 +8,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { format } from "date-fns";
+import DOMPurify from "dompurify";
 
 const Entries = () => {
   const navigate = useNavigate();
@@ -29,6 +31,16 @@ const Entries = () => {
     entry.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     entry.content.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const sanitizeHTML = (html: string) => {
+    return {
+      __html: DOMPurify.sanitize(html, {
+        USE_PROFILES: { html: true },
+        ALLOWED_TAGS: ['p', 'b', 'i', 'em', 'strong', 'a', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'blockquote'],
+        ALLOWED_ATTR: ['href', 'target', 'rel']
+      })
+    };
+  };
 
   return (
     <CenteredLayout>
@@ -86,9 +98,10 @@ const Entries = () => {
                 <CardContent className="p-6">
                   <div className="space-y-3">
                     <h3 className="font-semibold line-clamp-1">{entry.title}</h3>
-                    <p className="text-sm text-muted-foreground line-clamp-2">
-                      {entry.content}
-                    </p>
+                    <div 
+                      className="text-sm text-muted-foreground line-clamp-2 prose prose-invert prose-sm max-w-none [&_p]:m-0 [&_ul]:m-0 [&_ol]:m-0 [&_blockquote]:m-0"
+                      dangerouslySetInnerHTML={sanitizeHTML(entry.formatted_content || entry.content)}
+                    />
                     <div className="flex items-center justify-between text-xs text-muted-foreground">
                       <span className="capitalize">{entry.category.replace(/_/g, " ")}</span>
                       <span>{format(new Date(entry.created_at), "MMM d, yyyy")}</span>
