@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { User, Briefcase, Users, Palette, GraduationCap, List, Eye, FileText, Image, Link } from "lucide-react";
+import { User, Briefcase, Users, Palette, GraduationCap, List, Eye, FileText, Image, Link, CloudOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import type { Database } from "@/integrations/supabase/types";
@@ -11,6 +11,7 @@ import { useAuth } from "@/components/AuthProvider";
 import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
 import { useSyncEntries } from "@/hooks/use-sync-entries";
+import { getOfflineEntries, type OfflineEntry } from "@/lib/db";
 
 type EntryCategory = Database["public"]["Enums"]["entry_category"];
 type Entry = Database["public"]["Tables"]["entries"]["Row"];
@@ -24,11 +25,25 @@ const Test = () => {
   const { isSyncing } = useSyncEntries();
   const categories: EntryCategory[] = ["personal", "work", "social", "interests", "school"];
   const [selectedCategory, setSelectedCategory] = useState<EntryCategory | null>(null);
-  const [entries, setEntries] = useState<Entry[]>([]);
+  const [entries, setEntries] = useState<(Entry | OfflineEntry)[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(0);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
   const observer = useRef<IntersectionObserver>();
+
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   const lastEntryElementRef = useCallback((node: HTMLDivElement) => {
     if (isLoading) return;
@@ -50,36 +65,52 @@ const Test = () => {
     const fetchEntries = async () => {
       try {
         setIsLoading(true);
-        let query = supabase
-          .from('entries')
-          .select('*')
-          .eq('user_id', session.user.id)
-          .order('created_at', { ascending: false })
-          .range(page * ENTRIES_PER_PAGE, (page + 1) * ENTRIES_PER_PAGE - 1);
-        
+        let onlineEntries: Entry[] = [];
+        let offlineEntries: OfflineEntry[] = [];
+
+        // Fetch online entries if we're online
+        if (isOnline) {
+          let query = supabase
+            .from('entries')
+            .select('*')
+            .eq('user_id', session.user.id)
+            .order('created_at', { ascending: false })
+            .range(page * ENTRIES_PER_PAGE, (page + 1) * ENTRIES_PER_PAGE - 1);
+          
+          if (selectedCategory) {
+            query = query.eq('category', selectedCategory);
+          }
+          
+          const { data, error } = await query;
+          
+          if (error) {
+            console.error('Error fetching online entries:', error);
+            toast({
+              variant: "destructive",
+              title: "Error fetching entries",
+              description: "There was a problem loading your entries. Please try again.",
+            });
+          } else {
+            onlineEntries = data || [];
+          }
+        }
+
+        // Always fetch offline entries
+        offlineEntries = await getOfflineEntries();
         if (selectedCategory) {
-          query = query.eq('category', selectedCategory);
+          offlineEntries = offlineEntries.filter(entry => entry.category === selectedCategory);
         }
-        
-        const { data, error } = await query;
-        
-        if (error) {
-          console.error('Error fetching entries:', error);
-          toast({
-            variant: "destructive",
-            title: "Error fetching entries",
-            description: "There was a problem loading your entries. Please try again.",
-          });
-          return;
-        }
-        
-        if (data) {
-          setEntries(prevEntries => {
-            if (page === 0) return data;
-            return [...prevEntries, ...data];
-          });
-          setHasMore(data.length === ENTRIES_PER_PAGE);
-        }
+
+        // Combine and sort entries
+        const combinedEntries = [...onlineEntries, ...offlineEntries].sort(
+          (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
+
+        setEntries(prevEntries => {
+          if (page === 0) return combinedEntries;
+          return [...prevEntries, ...combinedEntries];
+        });
+        setHasMore(onlineEntries.length === ENTRIES_PER_PAGE);
       } catch (error) {
         console.error('Error:', error);
         toast({
@@ -93,7 +124,7 @@ const Test = () => {
     };
 
     fetchEntries();
-  }, [selectedCategory, page, session, navigate, toast]);
+  }, [selectedCategory, page, session, navigate, toast, isOnline]);
 
   const getCategoryIcon = (category: EntryCategory) => {
     switch (category) {
@@ -127,7 +158,7 @@ const Test = () => {
     }
   };
 
-  const getEntryTypeIcon = (entry: Entry) => {
+  const getEntryTypeIcon = (entry: Entry | OfflineEntry) => {
     switch (entry.entry_type) {
       case "image":
         return <Image className="h-4 w-4 text-zinc-400" />;
@@ -155,6 +186,12 @@ const Test = () => {
             <p className="text-zinc-400">Browse and manage your entries</p>
             {isSyncing && (
               <p className="text-sm text-yellow-400">Syncing offline entries...</p>
+            )}
+            {!isOnline && (
+              <p className="text-sm text-orange-400 flex items-center gap-2">
+                <CloudOff className="h-4 w-4" />
+                Offline mode - Some features may be limited
+              </p>
             )}
           </div>
           <List className="w-6 h-6 text-zinc-400" />
@@ -221,6 +258,9 @@ const Test = () => {
                     <Eye className="h-4 w-4" />
                   </Button>
                   {getEntryTypeIcon(entry)}
+                  {'synced' in entry && entry.synced === 0 && (
+                    <CloudOff className="h-4 w-4 text-orange-400" />
+                  )}
                 </div>
 
                 <div className="flex justify-between items-start mb-4">
