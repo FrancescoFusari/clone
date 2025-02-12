@@ -2,15 +2,19 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send } from "lucide-react";
+import { Send, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
 
 interface ChatInputProps {
   model: string;
+  onMessageSent?: (message: { role: 'user' | 'assistant', content: string }) => void;
 }
 
-export const ChatInput = ({ model }: ChatInputProps) => {
+export const ChatInput = ({ model, onMessageSent }: ChatInputProps) => {
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -18,8 +22,25 @@ export const ChatInput = ({ model }: ChatInputProps) => {
 
     setIsLoading(true);
     try {
-      // Chat functionality will be implemented here
-      console.log("Sending message:", inputValue, "with model:", model);
+      // Send user message to UI
+      onMessageSent?.({ role: 'user', content: inputValue.trim() });
+
+      // Send to backend
+      const { data, error } = await supabase.functions.invoke('process-chat', {
+        body: { message: inputValue.trim(), model }
+      });
+
+      if (error) throw error;
+
+      // Send AI response to UI
+      onMessageSent?.({ role: 'assistant', content: data.message });
+    } catch (error) {
+      console.error('Error sending message:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to send message. Please try again.",
+      });
     } finally {
       setInputValue("");
       setIsLoading(false);
@@ -42,7 +63,11 @@ export const ChatInput = ({ model }: ChatInputProps) => {
           disabled={isLoading || !inputValue.trim()}
           className="bg-primary/20 hover:bg-primary/30 text-primary"
         >
-          <Send className="h-4 w-4" />
+          {isLoading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Send className="h-4 w-4" />
+          )}
         </Button>
       </div>
     </form>

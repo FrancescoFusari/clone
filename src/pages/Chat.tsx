@@ -7,12 +7,18 @@ import { ChatMessages } from "@/components/chat/ChatMessages";
 import { ChatInput } from "@/components/chat/ChatInput";
 import { ModelSelector } from "@/components/chat/ModelSelector";
 
+interface Message {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
 interface ChatPageProps {
   onSaveEntry?: (content: string) => Promise<void>;
 }
 
 const Chat = ({ onSaveEntry }: ChatPageProps) => {
   const [loading, setLoading] = useState(false);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [model, setModel] = useState<'gpt-4o-mini' | 'gpt-4o'>('gpt-4o-mini');
   const navigate = useNavigate();
 
@@ -20,15 +26,22 @@ const Chat = ({ onSaveEntry }: ChatPageProps) => {
     navigate('/new');
   };
 
-  const handleSaveEntry = async (chatContent: string) => {
-    if (!onSaveEntry) return;
+  const handleSaveEntry = async () => {
+    if (!onSaveEntry || !messages.length) return;
     setLoading(true);
     try {
+      const chatContent = messages
+        .map(msg => `${msg.role === 'user' ? 'You' : 'AI'}: ${msg.content}`)
+        .join('\n\n');
       await onSaveEntry(chatContent);
       handleClose();
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleNewMessage = (message: Message) => {
+    setMessages(prev => [...prev, message]);
   };
 
   return (
@@ -42,8 +55,8 @@ const Chat = ({ onSaveEntry }: ChatPageProps) => {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => handleSaveEntry("Test content")}
-              disabled={loading}
+              onClick={handleSaveEntry}
+              disabled={loading || !messages.length}
               className="bg-primary/20 hover:bg-primary/30 text-primary border-primary/20"
             >
               {loading ? (
@@ -63,8 +76,8 @@ const Chat = ({ onSaveEntry }: ChatPageProps) => {
           </div>
         </div>
 
-        <ChatMessages />
-        <ChatInput model={model} />
+        <ChatMessages messages={messages} />
+        <ChatInput model={model} onMessageSent={handleNewMessage} />
       </div>
     </div>
   );
