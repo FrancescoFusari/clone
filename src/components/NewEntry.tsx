@@ -1,4 +1,3 @@
-
 import { CenteredLayout } from "@/components/layouts/CenteredLayout";
 import { EntryForm } from "@/components/EntryForm";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,7 +5,6 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/components/AuthProvider";
-import { addOfflineEntry } from "@/lib/db";
 
 const NewEntry = () => {
   const navigate = useNavigate();
@@ -17,29 +15,12 @@ const NewEntry = () => {
   const handleSubmit = async (content: string | File, type: "text" | "url" | "image") => {
     try {
       if (!session?.user) {
-        if (type === "text") {
-          await addOfflineEntry({
-            title: "Offline Entry",
-            content: content.toString(),
-            category: "personal",
-            user_id: null,
-            folder: "default"
-          });
-
-          toast({
-            title: "Entry saved offline",
-            description: "Your entry has been saved locally and will sync when you sign in",
-          });
-          navigate('/');
-          return;
-        } else {
-          toast({
-            variant: "destructive",
-            title: "Authentication required",
-            description: "Please sign in to create an image or URL entry",
-          });
-          return;
-        }
+        toast({
+          variant: "destructive",
+          title: "Authentication required",
+          description: "Please sign in to create an entry",
+        });
+        return;
       }
 
       if (type === "image") {
@@ -49,6 +30,7 @@ const NewEntry = () => {
 
         console.log("Uploading image:", { fileName, fileType: file.type });
 
+        // Upload image to storage
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from('entry-images')
           .upload(fileName, file, {
@@ -63,6 +45,7 @@ const NewEntry = () => {
 
         console.log("Image uploaded successfully:", uploadData);
 
+        // Get public URL for the uploaded image
         const { data: { publicUrl } } = supabase.storage
           .from('entry-images')
           .getPublicUrl(fileName);

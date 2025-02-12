@@ -1,6 +1,6 @@
 
 import { Link, useLocation } from "react-router-dom";
-import { Home, PlusCircle, FolderTree, Network, CloudOff } from "lucide-react";
+import { Home, PlusCircle, FolderTree, Network } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -8,11 +8,9 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { useSyncEntries } from "@/hooks/use-sync-entries";
 
 export const Navigation = () => {
   const location = useLocation();
-  const { isSyncing, queueSize } = useSyncEntries();
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -34,17 +32,10 @@ export const Navigation = () => {
                 <Link to="/">
                   <Home className="h-5 w-5" />
                   <span className="sr-only">Vault</span>
-                  {queueSize > 0 && (
-                    <span className="absolute -top-1 -right-1 h-4 w-4 bg-orange-500 rounded-full text-xs flex items-center justify-center">
-                      {queueSize}
-                    </span>
-                  )}
                 </Link>
               </Button>
             </TooltipTrigger>
-            <TooltipContent>
-              Vault {queueSize > 0 ? `(${queueSize} pending)` : ''}
-            </TooltipContent>
+            <TooltipContent>Vault</TooltipContent>
           </Tooltip>
 
           <Tooltip>
@@ -106,13 +97,6 @@ export const Navigation = () => {
             </TooltipTrigger>
             <TooltipContent>Mind Map</TooltipContent>
           </Tooltip>
-
-          {isSyncing && (
-            <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-orange-500/20 text-orange-200 px-3 py-1 rounded-full text-xs flex items-center gap-2">
-              <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse" />
-              Syncing...
-            </div>
-          )}
         </div>
       </nav>
     </div>
