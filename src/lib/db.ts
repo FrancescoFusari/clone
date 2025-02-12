@@ -8,7 +8,7 @@ export interface OfflineEntry {
   content: string;
   category: 'personal' | 'work' | 'social' | 'interests' | 'school';
   created_at: string;
-  synced: boolean;
+  synced: number; // Changed from boolean to number for IndexedDB compatibility
   user_id: string | null;
   entry_type?: string;
   tags?: string[];
@@ -35,7 +35,7 @@ export const addOfflineEntry = async (entry: Omit<OfflineEntry, 'id' | 'synced' 
     ...entry,
     id: crypto.randomUUID(),
     created_at: new Date().toISOString(),
-    synced: false,
+    synced: 0, // 0 for false, 1 for true
   };
 
   await db.entries.add(newEntry);
@@ -47,9 +47,9 @@ export const getOfflineEntries = async () => {
 };
 
 export const markEntrySynced = async (id: string) => {
-  await db.entries.update(id, { synced: true });
+  await db.entries.update(id, { synced: 1 });
 };
 
 export const getUnsyncedEntries = async () => {
-  return await db.entries.where('synced').equals(false).toArray();
+  return await db.entries.where('synced').equals(0).toArray();
 };
