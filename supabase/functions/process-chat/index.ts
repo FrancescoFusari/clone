@@ -7,6 +7,12 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Map our frontend model names to OpenAI model names
+const MODEL_MAPPING = {
+  'gpt-4o-mini': 'gpt-4o-mini',
+  'gpt-4o': 'gpt-4o'
+};
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -20,7 +26,12 @@ serve(async (req) => {
       throw new Error('OpenAI API key not configured');
     }
 
-    console.log('Sending request to OpenAI with model:', model);
+    const openaiModel = MODEL_MAPPING[model as keyof typeof MODEL_MAPPING];
+    if (!openaiModel) {
+      throw new Error(`Invalid model specified: ${model}`);
+    }
+
+    console.log('Sending request to OpenAI with model:', openaiModel);
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -29,7 +40,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: model, // Use the model name directly
+        model: openaiModel,
         messages: [
           { 
             role: 'system', 
