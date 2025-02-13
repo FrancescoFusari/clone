@@ -1,3 +1,4 @@
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -113,6 +114,18 @@ async function formatTextAndGenerateComments(content: string, type: "text" | "ur
     throw new Error('OpenAI API key not configured');
   }
 
+  // Limit content length for text-based entries
+  const MAX_CHARS = 10000;
+  let processedContent = content;
+  
+  if (type !== "image" && content.length > MAX_CHARS) {
+    processedContent = content.substring(0, MAX_CHARS) + "\n\n[Content truncated due to length limitations...]";
+    console.log('Content truncated:', { 
+      originalLength: content.length, 
+      truncatedLength: processedContent.length 
+    });
+  }
+
   const systemPrompt = type === "image" 
     ? `You are an AI that analyzes images. You will:
        1. Describe the image content in detail
@@ -146,7 +159,8 @@ async function formatTextAndGenerateComments(content: string, type: "text" | "ur
   console.log('Making OpenAI request with:', {
     type,
     contentLength: typeof content === 'string' ? content.length : 'image URL',
-    content: type === "image" ? content : undefined
+    content: type === "image" ? content : undefined,
+    truncated: content.length > MAX_CHARS
   });
 
   try {
@@ -168,7 +182,7 @@ async function formatTextAndGenerateComments(content: string, type: "text" | "ur
         ]
       : [
           { role: 'system', content: systemPrompt },
-          { role: 'user', content: content }
+          { role: 'user', content: processedContent }
         ];
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -259,6 +273,16 @@ async function processDocument(url: string): Promise<string> {
     
     if (!text || text.trim().length === 0) {
       throw new Error('No text could be extracted from the document');
+    }
+    
+    // Limit extracted text length
+    const MAX_CHARS = 10000;
+    if (text.length > MAX_CHARS) {
+      text = text.substring(0, MAX_CHARS) + "\n\n[Content truncated due to length limitations...]";
+      console.log('Document text truncated:', { 
+        originalLength: text.length, 
+        truncatedLength: MAX_CHARS 
+      });
     }
     
     console.log('Document processed successfully, extracted text length:', text.length);
@@ -461,9 +485,10 @@ serve(async (req) => {
     }
 
     // Add the formatted content and entry comments to the response
-    processedData.content = formattedContent;
+    processedData.content = content.length > 10000 ? content.substring(0, 10000) + "\n\n[Content truncated due to length limitations...]" : content;
     processedData.formatted_content = formattedContent;
     processedData.entry_comments = comments;
+    processedData.was_content_truncated = content.length > 10000;
     
     // Use the explicitly generated title from GPT-4, or fall back to a truncated summary
     processedData.title = processedData.title || processedData.summary
@@ -499,7 +524,8 @@ serve(async (req) => {
         summary: processedData.summary,
         has_attachments: processedData.has_attachments,
         attachments: processedData.attachments,
-        folder: folder
+        folder: folder,
+        was_content_truncated: processedData.was_content_truncated
       }])
       .select()
       .single();
