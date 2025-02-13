@@ -1,6 +1,6 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { readPdf } from 'npm:pdf-parse';
+import { parse as parsePdf } from 'npm:pdf-parse';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -25,12 +25,19 @@ async function processDocument(url: string): Promise<string> {
       case 'pdf':
         // Convert ArrayBuffer to Uint8Array for pdf-parse
         const uint8Array = new Uint8Array(buffer);
-        const pdfData = await readPdf(uint8Array);
-        text = pdfData.text;
+        try {
+          const pdfData = await parsePdf(uint8Array);
+          text = pdfData.text;
+          console.log('PDF processed successfully, text length:', text.length);
+        } catch (pdfError) {
+          console.error('PDF parsing error:', pdfError);
+          throw new Error(`Failed to parse PDF: ${pdfError.message}`);
+        }
         break;
         
       case 'txt':
         text = new TextDecoder().decode(buffer);
+        console.log('TXT processed successfully, text length:', text.length);
         break;
         
       case 'doc':
@@ -82,7 +89,10 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in document processing:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error instanceof Error ? error.message : 'Unknown error occurred',
+        details: error instanceof Error ? error.stack : undefined
+      }),
       { 
         status: 500,
         headers: { 
