@@ -64,27 +64,6 @@ export const Navigation = () => {
               <Button
                 variant="ghost"
                 className={cn(
-                  "flex-1 max-w-[140px] gap-2 transition-all duration-300 scale-105",
-                  isActive("/chat")
-                    ? "bg-white text-black hover:bg-white/90 hover:text-black scale-110"
-                    : "hover:scale-110"
-                )}
-                asChild
-              >
-                <Link to="/chat">
-                  <MessageCircle className="h-6 w-6" />
-                  <span className="sr-only">Chat</span>
-                </Link>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Chat</TooltipContent>
-          </Tooltip>
-
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                className={cn(
                   "flex-1 max-w-[100px] gap-2 transition-all duration-300",
                   isActive("/categories") &&
                     "bg-white text-black hover:bg-white/90 hover:text-black"
