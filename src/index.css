@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -77,30 +78,30 @@
   }
 
   .rainbow-border {
-    @apply border-[3px] bg-transparent;
-    animation: rainbow-border 8s linear infinite;
+    @apply bg-transparent border border-white/10;
+    animation: rainbow-shadow 8s linear infinite;
   }
 
-  @keyframes rainbow-border {
+  @keyframes rainbow-shadow {
     0%, 100% {
-      border-color: rgba(255, 0, 0, 0.8);
-      box-shadow: 0 0 15px rgba(255, 0, 0, 0.3);
+      box-shadow: 0 0 20px rgba(255, 0, 0, 0.5),
+                  inset 0 0 15px rgba(255, 0, 0, 0.3);
     }
     20% {
-      border-color: rgba(255, 165, 0, 0.8);
-      box-shadow: 0 0 15px rgba(255, 165, 0, 0.3);
+      box-shadow: 0 0 20px rgba(255, 165, 0, 0.5),
+                  inset 0 0 15px rgba(255, 165, 0, 0.3);
     }
     40% {
-      border-color: rgba(255, 255, 0, 0.8);
-      box-shadow: 0 0 15px rgba(255, 255, 0, 0.3);
+      box-shadow: 0 0 20px rgba(255, 255, 0, 0.5),
+                  inset 0 0 15px rgba(255, 255, 0, 0.3);
     }
     60% {
-      border-color: rgba(0, 255, 0, 0.8);
-      box-shadow: 0 0 15px rgba(0, 255, 0, 0.3);
+      box-shadow: 0 0 20px rgba(0, 255, 0, 0.5),
+                  inset 0 0 15px rgba(0, 255, 0, 0.3);
     }
     80% {
-      border-color: rgba(0, 0, 255, 0.8);
-      box-shadow: 0 0 15px rgba(0, 0, 255, 0.3);
+      box-shadow: 0 0 20px rgba(0, 0, 255, 0.5),
+                  inset 0 0 15px rgba(0, 0, 255, 0.3);
     }
   }
 }
