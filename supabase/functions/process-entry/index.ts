@@ -1,4 +1,3 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -192,7 +191,7 @@ async function formatTextAndGenerateComments(content: string, type: "text" | "ur
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: type === "image" ? 'gpt-4o' : 'gpt-4o-mini',  // Using more powerful model for images
+        model: type === "image" ? 'gpt-4o' : 'gpt-4o-mini',
         messages,
         max_tokens: 1000,
         temperature: 0.3,
@@ -212,28 +211,56 @@ async function formatTextAndGenerateComments(content: string, type: "text" | "ur
     try {
       const result = JSON.parse(data.choices[0].message.content);
       
-      // Validate the response structure
-      if (!result.formattedContent || !Array.isArray(result.comments)) {
-        console.error('Invalid response structure:', result);
-        throw new Error('Invalid response structure from OpenAI');
+      // Enhanced validation of the response structure
+      if (!result.formattedContent || result.formattedContent.trim() === '') {
+        console.error('Empty or invalid formatted content:', result);
+        // Use the original content as fallback if no valid formatted content
+        result.formattedContent = processedContent;
       }
-      
-      // Ensure each comment has required fields
-      result.comments = result.comments.map((comment: any, index: number) => ({
-        id: comment.id || `comment-${index}`,
-        text: comment.text || 'No comment text provided',
-        type: comment.type || 'observation'
-      }));
+
+      if (!Array.isArray(result.comments) || result.comments.length === 0) {
+        console.error('Missing or empty comments array:', result);
+        // Add a default comment if none provided
+        result.comments = [{
+          id: 'default-1',
+          text: 'This content has been processed and saved.',
+          type: 'observation'
+        }];
+      } else {
+        // Ensure each comment has required fields
+        result.comments = result.comments.map((comment: any, index: number) => ({
+          id: comment.id || `comment-${index}`,
+          text: comment.text || 'No comment text provided',
+          type: comment.type || 'observation'
+        }));
+      }
 
       return result;
     } catch (error) {
       console.error('Error parsing OpenAI response:', error);
       console.log('Raw response content:', data.choices[0].message.content);
-      throw new Error('Failed to parse OpenAI response');
+      
+      // Return a fallback response if parsing fails
+      return {
+        formattedContent: processedContent,
+        comments: [{
+          id: 'error-1',
+          text: 'This content has been saved but could not be analyzed. Please try again later.',
+          type: 'observation'
+        }]
+      };
     }
   } catch (error) {
     console.error('Error in OpenAI request:', error);
-    throw error; // Re-throw the error with the original message for better debugging
+    // Provide a fallback response for any OpenAI API errors
+    return {
+      formattedContent: processedContent,
+      comments: [{
+        id: 'error-1',
+        text: 'This content has been saved but could not be analyzed due to a temporary error. Please try again later.',
+        type: 'observation'
+      }]
+    };
   }
 }
 
