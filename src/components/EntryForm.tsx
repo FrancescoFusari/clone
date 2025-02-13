@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,9 +8,11 @@ import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import { useNavigate } from "react-router-dom";
+
 interface EntryFormProps {
   onSubmit: (content: string | File, type: "text" | "url" | "image") => Promise<void>;
 }
+
 export const EntryForm = ({
   onSubmit
 }: EntryFormProps) => {
@@ -18,6 +21,7 @@ export const EntryForm = ({
   const [loading, setLoading] = useState(false);
   const [activeInput, setActiveInput] = useState<"text" | "url" | "image">("text");
   const navigate = useNavigate();
+
   const editor = useEditor({
     extensions: [StarterKit.configure({
       history: {
@@ -41,6 +45,7 @@ export const EntryForm = ({
       }
     }
   });
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     let submitContent: string | File;
@@ -74,11 +79,13 @@ export const EntryForm = ({
       setLoading(false);
     }
   };
+
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setImage(e.target.files[0]);
     }
   };
+
   const inputTypes = [{
     id: "text" as const,
     icon: FileText,
@@ -95,14 +102,8 @@ export const EntryForm = ({
     title: "Image Upload",
     description: "Upload and analyze images for insights"
   }];
-  return <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="flex justify-end">
-        <Button type="button" onClick={() => navigate('/chat')} variant="outline" className="bg-zinc-800/50 hover:bg-zinc-700/50 text-zinc-100 border-zinc-700/50">
-          <MessageCircle className="w-4 h-4 mr-2" />
-          Switch to Chat
-        </Button>
-      </div>
 
+  return <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
         {inputTypes.map(type => <button key={type.id} type="button" onClick={() => setActiveInput(type.id)} className={cn("p-4 text-left rounded-xl border transition-all duration-200", "hover:shadow-lg hover:shadow-primary/5 hover:scale-[1.02]", activeInput === type.id ? "bg-primary/10 border-primary/20 shadow-lg shadow-primary/5" : "bg-zinc-800/50 border-zinc-700/50 hover:bg-zinc-700/50")}>
             <type.icon className={cn("w-6 h-6 mb-2", activeInput === type.id ? "text-primary" : "text-zinc-400")} />

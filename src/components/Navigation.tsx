@@ -1,6 +1,6 @@
 
 import { Link, useLocation } from "react-router-dom";
-import { Home, PlusCircle, FolderTree, Network } from "lucide-react";
+import { Home, PlusCircle, FolderTree, Network, MessageCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -96,6 +96,26 @@ export const Navigation = () => {
               </Button>
             </TooltipTrigger>
             <TooltipContent>Mind Map</TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                className={cn(
+                  "flex-1 max-w-[120px] gap-2 transition-colors",
+                  isActive("/chat") &&
+                    "bg-white text-black hover:bg-white/90 hover:text-black"
+                )}
+                asChild
+              >
+                <Link to="/chat">
+                  <MessageCircle className="h-5 w-5" />
+                  <span className="sr-only">Chat</span>
+                </Link>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Chat</TooltipContent>
           </Tooltip>
         </div>
       </nav>
