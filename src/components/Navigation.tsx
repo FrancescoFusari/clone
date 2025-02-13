@@ -24,8 +24,7 @@ export const Navigation = () => {
                 variant="ghost"
                 className={cn(
                   "flex-1 max-w-[100px] gap-2 transition-all duration-300",
-                  isActive("/") &&
-                    "bg-white text-black hover:bg-white/90 hover:text-black"
+                  isActive("/") && "text-white hover:text-white"
                 )}
                 asChild
               >
