@@ -6,10 +6,17 @@ enabled = true
 port = 54321
 schemas = ["public", "storage", "graphql_public"]
 
-[[functions]]
 [functions.process-entry]
 verify_jwt = true
 
-[[functions]]
 [functions.analyze-category]
+verify_jwt = true
+
+[functions.analyze-url]
+verify_jwt = true
+
+[functions.process-chat]
+verify_jwt = true
+
+[functions.research-content]
 verify_jwt = true
