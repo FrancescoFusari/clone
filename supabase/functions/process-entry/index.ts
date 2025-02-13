@@ -1,6 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { PDFDocument } from 'https://cdn.skypack.dev/pdf-lib';
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 
@@ -220,6 +221,58 @@ async function formatTextAndGenerateComments(content: string, type: "text" | "ur
   } catch (error) {
     console.error('Error in OpenAI request:', error);
     throw error; // Re-throw the error with the original message for better debugging
+  }
+}
+
+async function processDocument(url: string): Promise<string> {
+  try {
+    console.log('Processing document:', url);
+    
+    // Download the document
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Failed to download document: ${response.statusText}`);
+    }
+    
+    const buffer = await response.arrayBuffer();
+    const fileExtension = url.split('.').pop()?.toLowerCase();
+    let text = '';
+    
+    switch (fileExtension) {
+      case 'pdf':
+        // Load the PDF document
+        const pdfDoc = await PDFDocument.load(buffer);
+        const numPages = pdfDoc.getPageCount();
+        
+        // Extract text from each page
+        const pages = [];
+        for (let i = 0; i < numPages; i++) {
+          const page = pdfDoc.getPage(i);
+          const content = await page.doc.saveAsBase64(); // This gives us the raw content
+          pages.push(content);
+        }
+        
+        text = pages.join('\n\n');
+        break;
+        
+      case 'txt':
+        text = new TextDecoder().decode(buffer);
+        break;
+        
+      case 'doc':
+      case 'docx':
+        // For Word documents, we'll need to ask the user to convert to PDF first
+        throw new Error('Word documents are not supported yet. Please convert to PDF first.');
+        
+      default:
+        throw new Error(`Unsupported file type: ${fileExtension}`);
+    }
+    
+    console.log('Document processed successfully, extracted text length:', text.length);
+    return text;
+  } catch (error) {
+    console.error('Error processing document:', error);
+    throw new Error(`Failed to process document: ${error.message}`);
   }
 }
 
