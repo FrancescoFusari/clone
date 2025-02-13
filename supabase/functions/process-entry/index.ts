@@ -1,7 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { PDFDocument } from 'https://cdn.skypack.dev/pdf-lib';
+import { readPdf } from 'npm:pdf-parse';
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 
@@ -240,19 +240,10 @@ async function processDocument(url: string): Promise<string> {
     
     switch (fileExtension) {
       case 'pdf':
-        // Load the PDF document
-        const pdfDoc = await PDFDocument.load(buffer);
-        const numPages = pdfDoc.getPageCount();
-        
-        // Extract text from each page
-        const pages = [];
-        for (let i = 0; i < numPages; i++) {
-          const page = pdfDoc.getPage(i);
-          const content = await page.doc.saveAsBase64(); // This gives us the raw content
-          pages.push(content);
-        }
-        
-        text = pages.join('\n\n');
+        // Convert ArrayBuffer to Uint8Array for pdf-parse
+        const uint8Array = new Uint8Array(buffer);
+        const pdfData = await readPdf(uint8Array);
+        text = pdfData.text;
         break;
         
       case 'txt':
@@ -261,11 +252,14 @@ async function processDocument(url: string): Promise<string> {
         
       case 'doc':
       case 'docx':
-        // For Word documents, we'll need to ask the user to convert to PDF first
         throw new Error('Word documents are not supported yet. Please convert to PDF first.');
         
       default:
         throw new Error(`Unsupported file type: ${fileExtension}`);
+    }
+    
+    if (!text || text.trim().length === 0) {
+      throw new Error('No text could be extracted from the document');
     }
     
     console.log('Document processed successfully, extracted text length:', text.length);
