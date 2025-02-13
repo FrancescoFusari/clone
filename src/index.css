@@ -11,7 +11,7 @@
     --card-foreground: 210 40% 98%;
     --popover: 0 0% 0%;
     --popover-foreground: 210 40% 98%;
-    --primary: 142 69% 58%;
+    --primary: 0 0% 100%;
     --primary-foreground: 0 0% 0%;
     --secondary: 217 19% 27%;
     --secondary-foreground: 210 40% 98%;
@@ -23,7 +23,7 @@
     --destructive-foreground: 210 40% 98%;
     --border: 217 19% 27%;
     --input: 217 19% 27%;
-    --ring: 142 69% 58%;
+    --ring: 0 0% 100%;
     --radius: 1.5rem;
   }
 }
@@ -62,7 +62,7 @@
   }
   
   .text-gradient {
-    @apply bg-gradient-to-br from-primary via-primary/90 to-primary/70 bg-clip-text text-transparent;
+    @apply bg-gradient-to-br from-white via-white/90 to-white/70 bg-clip-text text-transparent;
   }
   
   .text-gradient-white {
@@ -75,5 +75,45 @@
 
   .perspective {
     perspective: 1000px;
+  }
+
+  .rainbow-border {
+    position: relative;
+    background-clip: padding-box;
+    border: 2px solid transparent;
+  }
+
+  .rainbow-border::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    z-index: -1;
+    border-radius: inherit;
+    background: linear-gradient(
+      45deg,
+      #ff0000,
+      #ff7300,
+      #fffb00,
+      #48ff00,
+      #00ffd5,
+      #002bff,
+      #7a00ff,
+      #ff00c8,
+      #ff0000
+    );
+    background-size: 200% 200%;
+    animation: rainbow-border 4s linear infinite;
+  }
+
+  @keyframes rainbow-border {
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
   }
 }

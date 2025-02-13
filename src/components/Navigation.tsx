@@ -61,9 +61,9 @@ export const Navigation = () => {
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
-                variant="default"
+                variant="outline"
                 className={cn(
-                  "flex-1 max-w-[140px] gap-2 transition-all duration-300 scale-105 bg-primary hover:bg-primary/90",
+                  "flex-1 max-w-[140px] gap-2 transition-all duration-300 scale-105 rainbow-border bg-background hover:bg-background/90",
                   isActive("/new") && "scale-110"
                 )}
                 asChild
