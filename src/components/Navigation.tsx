@@ -1,6 +1,6 @@
 
 import { Link, useLocation } from "react-router-dom";
-import { Home, PlusCircle, FolderTree, Network, MessageCircle, Settings } from "lucide-react";
+import { Home, PlusCircle, FolderTree, Network, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -43,27 +43,6 @@ export const Navigation = () => {
               <Button
                 variant="ghost"
                 className={cn(
-                  "flex-1 max-w-[140px] gap-2 transition-all duration-300 scale-105",
-                  isActive("/new")
-                    ? "bg-white text-black hover:bg-white/90 hover:text-black scale-110"
-                    : "hover:scale-110"
-                )}
-                asChild
-              >
-                <Link to="/new">
-                  <PlusCircle className="h-6 w-6" />
-                  <span className="sr-only">New Entry</span>
-                </Link>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>New Entry</TooltipContent>
-          </Tooltip>
-
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                className={cn(
                   "flex-1 max-w-[100px] gap-2 transition-all duration-300",
                   isActive("/categories") &&
                     "bg-white text-black hover:bg-white/90 hover:text-black"
@@ -77,6 +56,25 @@ export const Navigation = () => {
               </Button>
             </TooltipTrigger>
             <TooltipContent>Categories</TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="default"
+                className={cn(
+                  "flex-1 max-w-[140px] gap-2 transition-all duration-300 scale-105 bg-primary hover:bg-primary/90",
+                  isActive("/new") && "scale-110"
+                )}
+                asChild
+              >
+                <Link to="/new">
+                  <PlusCircle className="h-6 w-6" />
+                  <span className="sr-only">New Entry</span>
+                </Link>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>New Entry</TooltipContent>
           </Tooltip>
 
           <Tooltip>
