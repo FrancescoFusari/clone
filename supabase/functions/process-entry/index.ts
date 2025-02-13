@@ -108,23 +108,9 @@ function levenshteinDistance(str1: string, str2: string): number {
   return track[str2.length][str1.length];
 }
 
-async function formatTextAndGenerateComments(content: string, type: "text" | "url" | "image" | "document"): Promise<{ formattedContent: string, comments: any[], wasContentTruncated?: boolean }> {
+async function formatTextAndGenerateComments(content: string, type: "text" | "url" | "image" | "document"): Promise<{ formattedContent: string, comments: any[] }> {
   if (!openAIApiKey) {
     throw new Error('OpenAI API key not configured');
-  }
-
-  // Estimate tokens - rough approximation (4 characters per token)
-  const MAX_CHARS = 100000; // Approximately 25k tokens, leaving room for system messages
-  let truncatedContent = content;
-  let wasContentTruncated = false;
-
-  if (type !== "image" && content.length > MAX_CHARS) {
-    truncatedContent = content.substring(0, MAX_CHARS) + "\n\n[Content truncated due to length...]";
-    wasContentTruncated = true;
-    console.log('Content truncated to prevent token limit:', { 
-      originalLength: content.length, 
-      truncatedLength: truncatedContent.length 
-    });
   }
 
   const systemPrompt = type === "image" 
@@ -182,7 +168,7 @@ async function formatTextAndGenerateComments(content: string, type: "text" | "ur
         ]
       : [
           { role: 'system', content: systemPrompt },
-          { role: 'user', content: truncatedContent }
+          { role: 'user', content: content }
         ];
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -225,8 +211,7 @@ async function formatTextAndGenerateComments(content: string, type: "text" | "ur
         type: comment.type || 'observation'
       }));
 
-      // Add truncation flag to response
-      return { ...result, wasContentTruncated };
+      return result;
     } catch (error) {
       console.error('Error parsing OpenAI response:', error);
       console.log('Raw response content:', data.choices[0].message.content);
@@ -334,7 +319,7 @@ serve(async (req) => {
     }
 
     // Then, get formatted content and comments using the extracted text
-    const { formattedContent, comments, wasContentTruncated } = await formatTextAndGenerateComments(
+    const { formattedContent, comments } = await formatTextAndGenerateComments(
       processedContent, 
       type as "text" | "url" | "image" | "document"
     );
@@ -479,7 +464,6 @@ serve(async (req) => {
     processedData.content = formattedContent;
     processedData.formatted_content = formattedContent;
     processedData.entry_comments = comments;
-    processedData.was_content_truncated = wasContentTruncated;
     
     // Use the explicitly generated title from GPT-4, or fall back to a truncated summary
     processedData.title = processedData.title || processedData.summary
@@ -515,8 +499,7 @@ serve(async (req) => {
         summary: processedData.summary,
         has_attachments: processedData.has_attachments,
         attachments: processedData.attachments,
-        folder: folder,
-        was_content_truncated: processedData.was_content_truncated
+        folder: folder
       }])
       .select()
       .single();
