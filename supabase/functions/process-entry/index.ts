@@ -288,7 +288,33 @@ serve(async (req) => {
     // First, extract text from document if it's a document type
     if (type === "document") {
       console.log('Processing document before AI analysis');
-      processedContent = await processDocument(content);
+      
+      // Call the process-document function
+      const supabaseUrl = Deno.env.get('SUPABASE_URL');
+      if (!supabaseUrl) {
+        throw new Error('Supabase URL not configured');
+      }
+
+      const response = await fetch(`${supabaseUrl}/functions/v1/process-document`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${Deno.env.get('SUPABASE_ANON_KEY')}`,
+        },
+        body: JSON.stringify({ url: content })
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(`Document processing failed: ${error.error || 'Unknown error'}`);
+      }
+
+      const { text } = await response.json();
+      if (!text) {
+        throw new Error('No text was extracted from the document');
+      }
+
+      processedContent = text;
       console.log('Successfully processed document:', processedContent.substring(0, 100) + "...");
     }
 
