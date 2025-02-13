@@ -167,6 +167,7 @@ export type Database = {
           tags: string[] | null
           title: string
           user_id: string
+          was_content_truncated: boolean | null
         }
         Insert: {
           analysis_data?: Json | null
@@ -195,6 +196,7 @@ export type Database = {
           tags?: string[] | null
           title: string
           user_id: string
+          was_content_truncated?: boolean | null
         }
         Update: {
           analysis_data?: Json | null
@@ -223,6 +225,7 @@ export type Database = {
           tags?: string[] | null
           title?: string
           user_id?: string
+          was_content_truncated?: boolean | null
         }
         Relationships: []
       }
