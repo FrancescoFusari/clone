@@ -184,10 +184,8 @@ export const UnifiedGraphVisualization = () => {
       });
     });
 
-    const Graph = ForceGraph3D();
+    const Graph = new ForceGraph3D();
     const graphInstance = Graph(graphRef.current)
-      .width(window.innerWidth)
-      .height(window.innerHeight)
       .graphData(graphData)
       .nodeLabel("name")
       .nodeColor(node => {
@@ -215,6 +213,8 @@ export const UnifiedGraphVisualization = () => {
       .linkWidth(0.8)
       .linkColor(link => (link as Link).color || "#ffffff50")
       .backgroundColor("#0f1729")
+      .width(window.innerWidth)
+      .height(window.innerHeight)
       .showNavInfo(false)
       .onNodeDragEnd(node => {
         const n = node as Node;
