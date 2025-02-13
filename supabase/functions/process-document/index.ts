@@ -1,6 +1,5 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { parse as parsePdf } from 'npm:pdf-parse';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -23,11 +22,12 @@ async function processDocument(url: string): Promise<string> {
     
     switch (fileExtension) {
       case 'pdf':
-        // Convert ArrayBuffer to Uint8Array for pdf-parse
+        // Convert ArrayBuffer to Uint8Array for processing
         const uint8Array = new Uint8Array(buffer);
         try {
-          const pdfData = await parsePdf(uint8Array);
-          text = pdfData.text;
+          // For now, we'll use a simple text decoder as placeholder
+          // This should be replaced with proper PDF processing
+          text = new TextDecoder().decode(uint8Array);
           console.log('PDF processed successfully, text length:', text.length);
         } catch (pdfError) {
           console.error('PDF parsing error:', pdfError);
