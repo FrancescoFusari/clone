@@ -32,10 +32,10 @@ const NewEntry = () => {
 
         console.log(`Uploading ${type}:`, { fileName, fileType: file.type, bucket });
 
-        // Upload file to storage with explicit content type
+        // Upload file to storage with explicit content type and owner
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from(bucket)
-          .upload(fileName, file, {
+          .upload(`${session.user.id}/${fileName}`, file, {
             contentType: file.type || (type === "document" ? "application/pdf" : "image/jpeg"),
             cacheControl: '3600',
             upsert: false
@@ -51,7 +51,7 @@ const NewEntry = () => {
         // Get public URL for the uploaded file
         const { data: { publicUrl } } = supabase.storage
           .from(bucket)
-          .getPublicUrl(fileName);
+          .getPublicUrl(`${session.user.id}/${fileName}`);
 
         console.log(`Processing ${type} content from URL:`, publicUrl);
 
