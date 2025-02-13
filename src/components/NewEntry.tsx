@@ -28,13 +28,15 @@ const NewEntry = () => {
         const file = content as File;
         const fileExt = file.name.split('.').pop();
         const fileName = `${crypto.randomUUID()}.${fileExt}`;
+        const bucket = type === "image" ? 'entry-images' : 'entry-documents';
 
-        console.log(`Uploading ${type}:`, { fileName, fileType: file.type });
+        console.log(`Uploading ${type}:`, { fileName, fileType: file.type, bucket });
 
-        // Upload file to storage
+        // Upload file to storage with explicit content type
         const { data: uploadData, error: uploadError } = await supabase.storage
-          .from(type === "image" ? 'entry-images' : 'entry-documents')
+          .from(bucket)
           .upload(fileName, file, {
+            contentType: file.type || (type === "document" ? "application/pdf" : "image/jpeg"),
             cacheControl: '3600',
             upsert: false
           });
@@ -48,7 +50,7 @@ const NewEntry = () => {
 
         // Get public URL for the uploaded file
         const { data: { publicUrl } } = supabase.storage
-          .from(type === "image" ? 'entry-images' : 'entry-documents')
+          .from(bucket)
           .getPublicUrl(fileName);
 
         console.log(`Processing ${type} content from URL:`, publicUrl);
