@@ -143,7 +143,7 @@ export const EntryForm = ({
               </div>
             </div>
             <div className="min-h-[300px] my-0 ">
-              <EditorContent editor={editor} className="h-full p-4 bg-zinc-900/50 border border-zinc-700/50 rounded-b-xl text-zinc-100 focus-within:border-zinc-600 transition-colors prose prose-invert max-w-none prose-sm overflow-y-auto" />
+              <EditorContent editor={editor} className="h-full p-4 bg-zinc-900/50 border border-zinc-700/50 rounded-b-xl text-zinc-100 focus-within:border-zinc-600 transition-colors prose prose-invert max-w-none prose-sm overflow-y-auto py-[45px]" />
             </div>
           </div>}
         
