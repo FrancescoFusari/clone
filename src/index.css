@@ -78,7 +78,7 @@
   }
 
   .rainbow-border {
-    @apply bg-transparent border border-white/10;
+    @apply bg-transparent;
     animation: rainbow-shadow 8s linear infinite;
   }
 
