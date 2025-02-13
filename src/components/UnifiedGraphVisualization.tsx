@@ -1,3 +1,4 @@
+
 import { useEffect, useRef } from "react";
 import ForceGraph3D from "3d-force-graph";
 import { useQuery } from "@tanstack/react-query";
@@ -184,8 +185,8 @@ export const UnifiedGraphVisualization = () => {
       });
     });
 
-    const Graph = new ForceGraph3D();
-    const graphInstance = Graph(graphRef.current)
+    // Create the graph instance with the container element
+    const Graph = ForceGraph3D()(graphRef.current)
       .graphData(graphData)
       .nodeLabel("name")
       .nodeColor(node => {
@@ -226,7 +227,7 @@ export const UnifiedGraphVisualization = () => {
         const distance = 150;
         const distRatio = 1 + distance/Math.hypot(node.x || 0, node.y || 0, node.z || 0);
 
-        graphInstance.cameraPosition(
+        Graph.cameraPosition(
           { 
             x: (node.x || 0) * distRatio, 
             y: (node.y || 0) * distRatio, 
@@ -238,19 +239,18 @@ export const UnifiedGraphVisualization = () => {
       });
 
     const handleResize = () => {
-      graphInstance
-        .width(window.innerWidth)
+      Graph.width(window.innerWidth)
         .height(window.innerHeight);
     };
     window.addEventListener('resize', handleResize);
 
-    graphInstance.cameraPosition({ x: 500, y: 500, z: 800 });
+    Graph.cameraPosition({ x: 500, y: 500, z: 800 });
 
     const userNode = graphData.nodes.find(node => node.type === "user");
     if (userNode) {
-      graphInstance.d3Force('center', null);
-      graphInstance.d3Force('charge')?.strength(-150);
-      graphInstance.d3Force('link')?.distance(200);
+      Graph.d3Force('center', null);
+      Graph.d3Force('charge')?.strength(-150);
+      Graph.d3Force('link')?.distance(200);
       userNode.fx = 0;
       userNode.fy = 0;
       userNode.fz = 0;
