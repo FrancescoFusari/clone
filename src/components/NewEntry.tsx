@@ -1,3 +1,4 @@
+
 import { CenteredLayout } from "@/components/layouts/CenteredLayout";
 import { EntryForm } from "@/components/EntryForm";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,7 +13,7 @@ const NewEntry = () => {
   const queryClient = useQueryClient();
   const { session } = useAuth();
 
-  const handleSubmit = async (content: string | File, type: "text" | "url" | "image") => {
+  const handleSubmit = async (content: string | File, type: "text" | "url" | "image" | "document") => {
     try {
       if (!session?.user) {
         toast({
@@ -23,50 +24,50 @@ const NewEntry = () => {
         return;
       }
 
-      if (type === "image") {
+      if (type === "image" || type === "document") {
         const file = content as File;
         const fileExt = file.name.split('.').pop();
         const fileName = `${crypto.randomUUID()}.${fileExt}`;
 
-        console.log("Uploading image:", { fileName, fileType: file.type });
+        console.log(`Uploading ${type}:`, { fileName, fileType: file.type });
 
-        // Upload image to storage
+        // Upload file to storage
         const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('entry-images')
+          .from(type === "image" ? 'entry-images' : 'entry-documents')
           .upload(fileName, file, {
             cacheControl: '3600',
             upsert: false
           });
 
         if (uploadError) {
-          console.error("Error uploading image:", uploadError);
-          throw new Error(`Failed to upload image: ${uploadError.message}`);
+          console.error(`Error uploading ${type}:`, uploadError);
+          throw new Error(`Failed to upload ${type}: ${uploadError.message}`);
         }
 
-        console.log("Image uploaded successfully:", uploadData);
+        console.log(`${type} uploaded successfully:`, uploadData);
 
-        // Get public URL for the uploaded image
+        // Get public URL for the uploaded file
         const { data: { publicUrl } } = supabase.storage
-          .from('entry-images')
+          .from(type === "image" ? 'entry-images' : 'entry-documents')
           .getPublicUrl(fileName);
 
-        console.log("Processing image content from URL:", publicUrl);
+        console.log(`Processing ${type} content from URL:`, publicUrl);
 
         const { data, error } = await supabase.functions.invoke('process-entry', {
           body: { 
             content: publicUrl,
             user_id: session.user.id,
-            type: "image",
+            type,
             folder: "default"
           }
         });
 
         if (error) {
-          console.error("Error processing image entry:", error);
+          console.error(`Error processing ${type} entry:`, error);
           throw error;
         }
 
-        console.log("Image entry processed successfully:", data);
+        console.log(`${type} entry processed successfully:`, data);
       } else {
         console.log(`Processing ${type} content:`, content.toString().substring(0, 100) + "...");
 
