@@ -1,7 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { readPdf } from 'npm:pdf-parse';
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 
@@ -109,7 +108,7 @@ function levenshteinDistance(str1: string, str2: string): number {
   return track[str2.length][str1.length];
 }
 
-async function formatTextAndGenerateComments(content: string, type: "text" | "url" | "image"): Promise<{ formattedContent: string, comments: any[] }> {
+async function formatTextAndGenerateComments(content: string, type: "text" | "url" | "image" | "document"): Promise<{ formattedContent: string, comments: any[] }> {
   if (!openAIApiKey) {
     throw new Error('OpenAI API key not configured');
   }
@@ -284,8 +283,20 @@ serve(async (req) => {
       throw new Error('Content is required');
     }
 
-    // Get formatted content and comments
-    const { formattedContent, comments } = await formatTextAndGenerateComments(content, type as "text" | "url" | "image");
+    let processedContent = content;
+    
+    // First, extract text from document if it's a document type
+    if (type === "document") {
+      console.log('Processing document before AI analysis');
+      processedContent = await processDocument(content);
+      console.log('Successfully processed document:', processedContent.substring(0, 100) + "...");
+    }
+
+    // Then, get formatted content and comments using the extracted text
+    const { formattedContent, comments } = await formatTextAndGenerateComments(
+      processedContent, 
+      type as "text" | "url" | "image" | "document"
+    );
     console.log('Generated formatted content and comments');
 
     // Initialize Supabase client
