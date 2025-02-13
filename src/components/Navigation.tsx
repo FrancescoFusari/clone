@@ -1,6 +1,6 @@
 
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Home, PlusCircle, FileText, MessageCircle, Book, BookOpen, Robot } from "lucide-react";
+import { Home, PlusCircle, FileText, MessageCircle, Book, BookOpen, Bot } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -24,7 +24,7 @@ export const Navigation = () => {
     {
       title: "AI Entry",
       description: "Create an AI-processed entry",
-      icon: Robot,
+      icon: Bot,
       action: () => navigate("/new")
     },
     {
