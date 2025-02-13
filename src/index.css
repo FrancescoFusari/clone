@@ -76,4 +76,33 @@
   .perspective {
     perspective: 1000px;
   }
+
+  .rainbow-border {
+    @apply border-2;
+    animation: rainbow-border 4s linear infinite;
+  }
+
+  @keyframes rainbow-border {
+    0% {
+      border-color: #ff0000;
+    }
+    16.666% {
+      border-color: #ff8800;
+    }
+    33.333% {
+      border-color: #ffff00;
+    }
+    50% {
+      border-color: #00ff00;
+    }
+    66.666% {
+      border-color: #0088ff;
+    }
+    83.333% {
+      border-color: #8800ff;
+    }
+    100% {
+      border-color: #ff0000;
+    }
+  }
 }
