@@ -10,7 +10,7 @@ import Placeholder from '@tiptap/extension-placeholder';
 import { useNavigate } from "react-router-dom";
 
 interface EntryFormProps {
-  onSubmit: (content: string | File, type: "text" | "url" | "image") => Promise<void>;
+  onSubmit: (content: string | File, type: "text" | "url" | "image" | "document") => Promise<void>;
 }
 
 export const EntryForm = ({
@@ -18,8 +18,9 @@ export const EntryForm = ({
 }: EntryFormProps) => {
   const [url, setUrl] = useState("");
   const [image, setImage] = useState<File | null>(null);
+  const [document, setDocument] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
-  const [activeInput, setActiveInput] = useState<"text" | "url" | "image">("text");
+  const [activeInput, setActiveInput] = useState<"text" | "url" | "image" | "document">("text");
   const navigate = useNavigate();
 
   const editor = useEditor({
@@ -61,10 +62,17 @@ export const EntryForm = ({
         if (!image) return;
         submitContent = image;
         break;
+      case "document":
+        if (!document) return;
+        submitContent = document;
+        break;
       default:
         return;
     }
-    if (typeof submitContent === "string" && !submitContent.trim() || activeInput === "image" && !image) return;
+    if (typeof submitContent === "string" && !submitContent.trim() || 
+        (activeInput === "image" && !image) ||
+        (activeInput === "document" && !document)) return;
+    
     setLoading(true);
     try {
       await onSubmit(submitContent, activeInput);
@@ -72,17 +80,23 @@ export const EntryForm = ({
         editor?.commands.clearContent();
       } else if (activeInput === "url") {
         setUrl("");
-      } else {
+      } else if (activeInput === "image") {
         setImage(null);
+      } else if (activeInput === "document") {
+        setDocument(null);
       }
     } finally {
       setLoading(false);
     }
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: "image" | "document") => {
     if (e.target.files && e.target.files[0]) {
-      setImage(e.target.files[0]);
+      if (type === "image") {
+        setImage(e.target.files[0]);
+      } else {
+        setDocument(e.target.files[0]);
+      }
     }
   };
 
@@ -165,7 +179,7 @@ export const EntryForm = ({
               Upload an image to analyze its content and extract insights.
             </p>
             <div className="flex flex-col items-center p-6 border-2 border-dashed border-zinc-700/50 rounded-xl bg-zinc-900/30 hover:bg-zinc-900/50 transition-colors">
-              <Input type="file" accept="image/*" onChange={handleImageChange} className="hidden" id="image-upload" />
+              <Input type="file" accept="image/*" onChange={(e) => handleFileChange(e, "image")} className="hidden" id="image-upload" />
               <label htmlFor="image-upload" className="cursor-pointer flex flex-col items-center gap-2">
                 <Image className="w-10 h-10 text-zinc-500" />
                 <span className="text-sm text-zinc-400">
@@ -174,13 +188,34 @@ export const EntryForm = ({
               </label>
             </div>
           </div>}
+
+        {activeInput === "document" && <div className="space-y-2 bg-zinc-900/30 p-4 rounded-xl border border-zinc-800/50">
+            <p className="text-sm text-zinc-400">
+              Upload a document (PDF, DOC, or TXT) to analyze its content and extract insights.
+            </p>
+            <div className="flex flex-col items-center p-6 border-2 border-dashed border-zinc-700/50 rounded-xl bg-zinc-900/30 hover:bg-zinc-900/50 transition-colors">
+              <Input 
+                type="file" 
+                accept=".pdf,.doc,.docx,.txt" 
+                onChange={(e) => handleFileChange(e, "document")} 
+                className="hidden" 
+                id="document-upload" 
+              />
+              <label htmlFor="document-upload" className="cursor-pointer flex flex-col items-center gap-2">
+                <FileSearch className="w-10 h-10 text-zinc-500" />
+                <span className="text-sm text-zinc-400">
+                  {document ? document.name : "Click to upload a document"}
+                </span>
+              </label>
+            </div>
+          </div>}
       </div>
       
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4">
         <p className="text-sm text-zinc-400 text-center sm:text-left">
-          Your {activeInput === "text" ? "entry" : activeInput === "url" ? "URL" : "image"} will be processed with AI to extract insights
+          Your {activeInput === "text" ? "entry" : activeInput === "url" ? "URL" : activeInput === "image" ? "image" : "document"} will be processed with AI to extract insights
         </p>
-        <Button type="submit" disabled={loading || (activeInput === "text" ? !editor?.getHTML() : activeInput === "url" ? !url.trim() : !image)} className="w-full sm:w-auto bg-zinc-800 hover:bg-zinc-700 text-zinc-100 disabled:bg-zinc-900/50 disabled:text-zinc-500">
+        <Button type="submit" disabled={loading || (activeInput === "text" ? !editor?.getHTML() : activeInput === "url" ? !url.trim() : activeInput === "image" ? !image : !document)} className="w-full sm:w-auto bg-zinc-800 hover:bg-zinc-700 text-zinc-100 disabled:bg-zinc-900/50 disabled:text-zinc-500">
           {loading ? <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               Processing...
