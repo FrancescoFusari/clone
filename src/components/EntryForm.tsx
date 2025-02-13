@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { FileText, Image, Link, Loader2, MessageCircle, Bold, Italic, List, ListOrdered, Quote, Undo, Redo } from "lucide-react";
+import { FileText, Image, Link, Loader2, MessageCircle, Bold, Italic, List, ListOrdered, Quote, Undo, Redo, FileSearch } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -101,10 +101,15 @@ export const EntryForm = ({
     icon: Image,
     title: "Image Upload",
     description: "Upload and analyze images for insights"
+  }, {
+    id: "document" as const,
+    icon: FileSearch,
+    title: "Document Analysis",
+    description: "Upload and analyze documents (PDF, DOC, TXT)"
   }];
 
   return <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">
         {inputTypes.map(type => <button key={type.id} type="button" onClick={() => setActiveInput(type.id)} className={cn("p-4 text-left rounded-xl border transition-all duration-200", "hover:shadow-lg hover:shadow-primary/5 hover:scale-[1.02]", activeInput === type.id ? "bg-primary/10 border-primary/20 shadow-lg shadow-primary/5" : "bg-zinc-800/50 border-zinc-700/50 hover:bg-zinc-700/50")}>
             <type.icon className={cn("w-6 h-6 mb-2", activeInput === type.id ? "text-primary" : "text-zinc-400")} />
             <h3 className={cn("font-medium mb-1 text-sm", activeInput === type.id ? "text-primary" : "text-zinc-100")}>
