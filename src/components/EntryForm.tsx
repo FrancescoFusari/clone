@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { FileText, Image, Link, Loader2, MessageCircle, Bold, Italic, List, ListOrdered, Quote, Undo, Redo, FileSearch } from "lucide-react";
+import { FileText, Image, Link, Loader2, MessageCircle, Bold, Italic, List, ListOrdered, Quote, Undo, Redo } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -134,15 +134,7 @@ export const EntryForm = ({
               <Button type="button" size="sm" variant="ghost" onClick={() => editor?.chain().focus().toggleBlockquote().run()} className={cn("p-2 h-8 w-8", editor?.isActive('blockquote') ? 'bg-zinc-700/50' : '')}>
                 <Quote className="h-4 w-4" />
               </Button>
-              <Button 
-                type="button" 
-                size="sm" 
-                variant="ghost" 
-                className="p-2 h-8 ml-auto rainbow-border rounded-full"
-              >
-                <FileSearch className="h-4 w-4" />
-              </Button>
-              <div className="flex items-center gap-1">
+              <div className="ml-auto flex items-center gap-1">
                 <Button type="button" size="sm" variant="ghost" onClick={() => editor?.chain().focus().undo().run()} className="p-2 h-8 w-8">
                   <Undo className="h-4 w-4" />
                 </Button>
