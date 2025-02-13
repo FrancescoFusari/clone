@@ -61,14 +61,15 @@ export const Navigation = () => {
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
-                variant="ghost"
+                variant="outline"
                 className={cn(
-                  "flex-1 max-w-[140px] gap-2 transition-all duration-300 scale-105 rainbow-border bg-background/20 backdrop-blur-sm hover:bg-background/40",
-                  isActive("/new") && "scale-110"
+                  "flex-1 max-w-[140px] gap-2 transition-all duration-300 scale-105 border-2 bg-background/20 backdrop-blur-sm hover:bg-background/40",
+                  isActive("/new") && "scale-110",
+                  "bg-gradient-to-r from-red-500 via-blue-500 to-purple-500 p-[1px]"
                 )}
                 asChild
               >
-                <Link to="/new">
+                <Link to="/new" className="bg-background rounded-[11px] w-full h-full flex items-center justify-center">
                   <PlusCircle className="h-6 w-6" />
                   <span className="sr-only">New Entry</span>
                 </Link>
