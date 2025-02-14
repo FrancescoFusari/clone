@@ -153,8 +153,8 @@ const EntryDetails = () => {
   const [editedTitle, setEditedTitle] = useState("");
   const [editedContent, setEditedContent] = useState("");
   const [editedTags, setEditedTags] = useState("");
-  const [category, setCategory] = useState<EntryCategory>("personal");
-  const [subcategory, setSubcategory] = useState<string>("");
+  const [editedCategory, setEditedCategory] = useState<EntryCategory>("personal");
+  const [editedSubcategory, setEditedSubcategory] = useState<string>("");
 
   if (!id) {
     console.log("No entry ID provided, redirecting to entries list");
@@ -205,8 +205,8 @@ const EntryDetails = () => {
       setEditedTitle(entry.title || "");
       setEditedContent(entry.formatted_content || entry.content || "");
       setEditedTags((entry.tags || []).join(", "));
-      setCategory(entry.category || "");
-      setSubcategory(entry.subcategory || "");
+      setEditedCategory(entry.category || "");
+      setEditedSubcategory(entry.subcategory || "");
     }
   }, [entry]);
 
@@ -344,8 +344,8 @@ const EntryDetails = () => {
       title: editedTitle,
       content: editedContent,
       tags: trimmedTags,
-      category: category,
-      subcategory: subcategory,
+      category: editedCategory,
+      subcategory: editedSubcategory,
     });
   };
 
@@ -366,10 +366,6 @@ const EntryDetails = () => {
         });
       }
     }
-  };
-
-  const handleCategoryChange = (newCategory: EntryCategory) => {
-    setCategory(newCategory); // Now the type is correct, no empty string allowed
   };
 
   if (isLoading) {
@@ -505,8 +501,11 @@ const EntryDetails = () => {
               <div>
                 <Label htmlFor="category">Category</Label>
                 <Select 
-                  value={category} 
-                  onValueChange={handleCategoryChange}
+                  value={editedCategory} 
+                  onValueChange={(value: EntryCategory) => {
+                    setEditedCategory(value);
+                    setEditedSubcategory('');
+                  }}
                 >
                   <SelectTrigger className="bg-white/5 border-white/10 text-white/90">
                     <SelectValue placeholder="Select a category" />
@@ -527,14 +526,14 @@ const EntryDetails = () => {
               <div>
                 <Label htmlFor="subcategory">Subcategory</Label>
                 <Select 
-                  value={subcategory} 
-                  onValueChange={setSubcategory}
+                  value={editedSubcategory} 
+                  onValueChange={setEditedSubcategory}
                 >
                   <SelectTrigger className="bg-white/5 border-white/10 text-white/90">
                     <SelectValue placeholder="Select a subcategory" />
                   </SelectTrigger>
                   <SelectContent>
-                    {category && SUBCATEGORIES[category]?.map(sub => (
+                    {editedCategory && SUBCATEGORIES[editedCategory]?.map(sub => (
                       <SelectItem 
                         key={sub.value} 
                         value={sub.value}

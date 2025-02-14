@@ -108,21 +108,9 @@ function levenshteinDistance(str1: string, str2: string): number {
   return track[str2.length][str1.length];
 }
 
-async function formatTextAndGenerateComments(content: string, type: "text" | "url" | "image" | "document"): Promise<{ formattedContent: string, comments: any[] }> {
+async function formatTextAndGenerateComments(content: string, type: "text" | "url" | "image"): Promise<{ formattedContent: string, comments: any[] }> {
   if (!openAIApiKey) {
     throw new Error('OpenAI API key not configured');
-  }
-
-  // Limit content length for text-based entries
-  const MAX_CHARS = 10000;
-  let processedContent = content;
-  
-  if (type !== "image" && content.length > MAX_CHARS) {
-    processedContent = content.substring(0, MAX_CHARS) + "\n\n[Content truncated due to length limitations...]";
-    console.log('Content truncated:', { 
-      originalLength: content.length, 
-      truncatedLength: processedContent.length 
-    });
   }
 
   const systemPrompt = type === "image" 
@@ -158,8 +146,7 @@ async function formatTextAndGenerateComments(content: string, type: "text" | "ur
   console.log('Making OpenAI request with:', {
     type,
     contentLength: typeof content === 'string' ? content.length : 'image URL',
-    content: type === "image" ? content : undefined,
-    truncated: content.length > MAX_CHARS
+    content: type === "image" ? content : undefined
   });
 
   try {
@@ -181,7 +168,7 @@ async function formatTextAndGenerateComments(content: string, type: "text" | "ur
         ]
       : [
           { role: 'system', content: systemPrompt },
-          { role: 'user', content: processedContent }
+          { role: 'user', content: content }
         ];
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -191,7 +178,7 @@ async function formatTextAndGenerateComments(content: string, type: "text" | "ur
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: type === "image" ? 'gpt-4o' : 'gpt-4o-mini',
+        model: type === "image" ? 'gpt-4o' : 'gpt-4o-mini',  // Using more powerful model for images
         messages,
         max_tokens: 1000,
         temperature: 0.3,
@@ -211,94 +198,28 @@ async function formatTextAndGenerateComments(content: string, type: "text" | "ur
     try {
       const result = JSON.parse(data.choices[0].message.content);
       
-      // Enhanced validation of the response structure
-      if (!result.formattedContent || result.formattedContent.trim() === '') {
-        console.error('Empty or invalid formatted content:', result);
-        // Use the original content as fallback if no valid formatted content
-        result.formattedContent = processedContent;
+      // Validate the response structure
+      if (!result.formattedContent || !Array.isArray(result.comments)) {
+        console.error('Invalid response structure:', result);
+        throw new Error('Invalid response structure from OpenAI');
       }
-
-      if (!Array.isArray(result.comments) || result.comments.length === 0) {
-        console.error('Missing or empty comments array:', result);
-        // Add a default comment if none provided
-        result.comments = [{
-          id: 'default-1',
-          text: 'This content has been processed and saved.',
-          type: 'observation'
-        }];
-      } else {
-        // Ensure each comment has required fields
-        result.comments = result.comments.map((comment: any, index: number) => ({
-          id: comment.id || `comment-${index}`,
-          text: comment.text || 'No comment text provided',
-          type: comment.type || 'observation'
-        }));
-      }
+      
+      // Ensure each comment has required fields
+      result.comments = result.comments.map((comment: any, index: number) => ({
+        id: comment.id || `comment-${index}`,
+        text: comment.text || 'No comment text provided',
+        type: comment.type || 'observation'
+      }));
 
       return result;
     } catch (error) {
       console.error('Error parsing OpenAI response:', error);
       console.log('Raw response content:', data.choices[0].message.content);
-      
-      // Return a fallback response if parsing fails
-      return {
-        formattedContent: processedContent,
-        comments: [{
-          id: 'error-1',
-          text: 'This content has been saved but could not be analyzed. Please try again later.',
-          type: 'observation'
-        }]
-      };
+      throw new Error('Failed to parse OpenAI response');
     }
   } catch (error) {
     console.error('Error in OpenAI request:', error);
-    // Provide a fallback response for any OpenAI API errors
-    return {
-      formattedContent: processedContent,
-      comments: [{
-        id: 'error-1',
-        text: 'This content has been saved but could not be analyzed due to a temporary error. Please try again later.',
-        type: 'observation'
-      }]
-    };
-  }
-}
-
-async function processDocument(url: string): Promise<string> {
-  try {
-    console.log('Initiating document processing for URL:', url);
-    
-    // Call the process-document function
-    const supabaseUrl = Deno.env.get('SUPABASE_URL');
-    if (!supabaseUrl) {
-      throw new Error('Supabase URL not configured');
-    }
-
-    const response = await fetch(`${supabaseUrl}/functions/v1/process-document`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${Deno.env.get('SUPABASE_ANON_KEY')}`,
-      },
-      body: JSON.stringify({ url })
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      console.error('Document processing failed:', error);
-      throw new Error(`Document processing failed: ${error.error || 'Unknown error'}`);
-    }
-
-    const { text } = await response.json();
-    if (!text) {
-      throw new Error('No text was extracted from the document');
-    }
-
-    console.log('Document processed successfully, text length:', text.length);
-    return text;
-  } catch (error) {
-    console.error('Error in document processing:', error);
-    throw error;
+    throw error; // Re-throw the error with the original message for better debugging
   }
 }
 
@@ -316,46 +237,8 @@ serve(async (req) => {
       throw new Error('Content is required');
     }
 
-    let processedContent = content;
-    
-    // First, extract text from document if it's a document type
-    if (type === "document") {
-      console.log('Processing document before AI analysis');
-      
-      // Call the process-document function
-      const supabaseUrl = Deno.env.get('SUPABASE_URL');
-      if (!supabaseUrl) {
-        throw new Error('Supabase URL not configured');
-      }
-
-      const response = await fetch(`${supabaseUrl}/functions/v1/process-document`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${Deno.env.get('SUPABASE_ANON_KEY')}`,
-        },
-        body: JSON.stringify({ url: content })
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(`Document processing failed: ${error.error || 'Unknown error'}`);
-      }
-
-      const { text } = await response.json();
-      if (!text) {
-        throw new Error('No text was extracted from the document');
-      }
-
-      processedContent = text;
-      console.log('Successfully processed document:', processedContent.substring(0, 100) + "...");
-    }
-
-    // Then, get formatted content and comments using the extracted text
-    const { formattedContent, comments } = await formatTextAndGenerateComments(
-      processedContent, 
-      type as "text" | "url" | "image" | "document"
-    );
+    // Get formatted content and comments
+    const { formattedContent, comments } = await formatTextAndGenerateComments(content, type as "text" | "url" | "image");
     console.log('Generated formatted content and comments');
 
     // Initialize Supabase client
@@ -494,10 +377,9 @@ serve(async (req) => {
     }
 
     // Add the formatted content and entry comments to the response
-    processedData.content = content.length > 10000 ? content.substring(0, 10000) + "\n\n[Content truncated due to length limitations...]" : content;
+    processedData.content = formattedContent;
     processedData.formatted_content = formattedContent;
     processedData.entry_comments = comments;
-    processedData.was_content_truncated = content.length > 10000;
     
     // Use the explicitly generated title from GPT-4, or fall back to a truncated summary
     processedData.title = processedData.title || processedData.summary
@@ -533,8 +415,7 @@ serve(async (req) => {
         summary: processedData.summary,
         has_attachments: processedData.has_attachments,
         attachments: processedData.attachments,
-        folder: folder,
-        was_content_truncated: processedData.was_content_truncated
+        folder: folder
       }])
       .select()
       .single();

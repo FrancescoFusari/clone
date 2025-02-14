@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { FileText, Image, Link, Loader2, MessageCircle, Bold, Italic, List, ListOrdered, Quote, Undo, Redo, FileSearch } from "lucide-react";
+import { FileText, Image, Link, Loader2, MessageCircle, Bold, Italic, List, ListOrdered, Quote, Undo, Redo } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -10,7 +10,7 @@ import Placeholder from '@tiptap/extension-placeholder';
 import { useNavigate } from "react-router-dom";
 
 interface EntryFormProps {
-  onSubmit: (content: string | File, type: "text" | "url" | "image" | "document") => Promise<void>;
+  onSubmit: (content: string | File, type: "text" | "url" | "image") => Promise<void>;
 }
 
 export const EntryForm = ({
@@ -18,9 +18,8 @@ export const EntryForm = ({
 }: EntryFormProps) => {
   const [url, setUrl] = useState("");
   const [image, setImage] = useState<File | null>(null);
-  const [document, setDocument] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
-  const [activeInput, setActiveInput] = useState<"text" | "url" | "image" | "document">("text");
+  const [activeInput, setActiveInput] = useState<"text" | "url" | "image">("text");
   const navigate = useNavigate();
 
   const editor = useEditor({
@@ -62,17 +61,10 @@ export const EntryForm = ({
         if (!image) return;
         submitContent = image;
         break;
-      case "document":
-        if (!document) return;
-        submitContent = document;
-        break;
       default:
         return;
     }
-    if (typeof submitContent === "string" && !submitContent.trim() || 
-        (activeInput === "image" && !image) ||
-        (activeInput === "document" && !document)) return;
-    
+    if (typeof submitContent === "string" && !submitContent.trim() || activeInput === "image" && !image) return;
     setLoading(true);
     try {
       await onSubmit(submitContent, activeInput);
@@ -80,23 +72,17 @@ export const EntryForm = ({
         editor?.commands.clearContent();
       } else if (activeInput === "url") {
         setUrl("");
-      } else if (activeInput === "image") {
+      } else {
         setImage(null);
-      } else if (activeInput === "document") {
-        setDocument(null);
       }
     } finally {
       setLoading(false);
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: "image" | "document") => {
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      if (type === "image") {
-        setImage(e.target.files[0]);
-      } else {
-        setDocument(e.target.files[0]);
-      }
+      setImage(e.target.files[0]);
     }
   };
 
@@ -115,15 +101,10 @@ export const EntryForm = ({
     icon: Image,
     title: "Image Upload",
     description: "Upload and analyze images for insights"
-  }, {
-    id: "document" as const,
-    icon: FileSearch,
-    title: "Document Analysis",
-    description: "Upload and analyze documents (PDF, DOC, TXT)"
   }];
 
   return <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
         {inputTypes.map(type => <button key={type.id} type="button" onClick={() => setActiveInput(type.id)} className={cn("p-4 text-left rounded-xl border transition-all duration-200", "hover:shadow-lg hover:shadow-primary/5 hover:scale-[1.02]", activeInput === type.id ? "bg-primary/10 border-primary/20 shadow-lg shadow-primary/5" : "bg-zinc-800/50 border-zinc-700/50 hover:bg-zinc-700/50")}>
             <type.icon className={cn("w-6 h-6 mb-2", activeInput === type.id ? "text-primary" : "text-zinc-400")} />
             <h3 className={cn("font-medium mb-1 text-sm", activeInput === type.id ? "text-primary" : "text-zinc-100")}>
@@ -179,7 +160,7 @@ export const EntryForm = ({
               Upload an image to analyze its content and extract insights.
             </p>
             <div className="flex flex-col items-center p-6 border-2 border-dashed border-zinc-700/50 rounded-xl bg-zinc-900/30 hover:bg-zinc-900/50 transition-colors">
-              <Input type="file" accept="image/*" onChange={(e) => handleFileChange(e, "image")} className="hidden" id="image-upload" />
+              <Input type="file" accept="image/*" onChange={handleImageChange} className="hidden" id="image-upload" />
               <label htmlFor="image-upload" className="cursor-pointer flex flex-col items-center gap-2">
                 <Image className="w-10 h-10 text-zinc-500" />
                 <span className="text-sm text-zinc-400">
@@ -188,34 +169,13 @@ export const EntryForm = ({
               </label>
             </div>
           </div>}
-
-        {activeInput === "document" && <div className="space-y-2 bg-zinc-900/30 p-4 rounded-xl border border-zinc-800/50">
-            <p className="text-sm text-zinc-400">
-              Upload a document (PDF, DOC, or TXT) to analyze its content and extract insights.
-            </p>
-            <div className="flex flex-col items-center p-6 border-2 border-dashed border-zinc-700/50 rounded-xl bg-zinc-900/30 hover:bg-zinc-900/50 transition-colors">
-              <Input 
-                type="file" 
-                accept=".pdf,.doc,.docx,.txt" 
-                onChange={(e) => handleFileChange(e, "document")} 
-                className="hidden" 
-                id="document-upload" 
-              />
-              <label htmlFor="document-upload" className="cursor-pointer flex flex-col items-center gap-2">
-                <FileSearch className="w-10 h-10 text-zinc-500" />
-                <span className="text-sm text-zinc-400">
-                  {document ? document.name : "Click to upload a document"}
-                </span>
-              </label>
-            </div>
-          </div>}
       </div>
       
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4">
         <p className="text-sm text-zinc-400 text-center sm:text-left">
-          Your {activeInput === "text" ? "entry" : activeInput === "url" ? "URL" : activeInput === "image" ? "image" : "document"} will be processed with AI to extract insights
+          Your {activeInput === "text" ? "entry" : activeInput === "url" ? "URL" : "image"} will be processed with AI to extract insights
         </p>
-        <Button type="submit" disabled={loading || (activeInput === "text" ? !editor?.getHTML() : activeInput === "url" ? !url.trim() : activeInput === "image" ? !image : !document)} className="w-full sm:w-auto bg-zinc-800 hover:bg-zinc-700 text-zinc-100 disabled:bg-zinc-900/50 disabled:text-zinc-500">
+        <Button type="submit" disabled={loading || (activeInput === "text" ? !editor?.getHTML() : activeInput === "url" ? !url.trim() : !image)} className="w-full sm:w-auto bg-zinc-800 hover:bg-zinc-700 text-zinc-100 disabled:bg-zinc-900/50 disabled:text-zinc-500">
           {loading ? <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               Processing...
