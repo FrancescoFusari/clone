@@ -1,12 +1,11 @@
 import { useEffect, useRef } from "react";
 import ForceGraph3D from "3d-force-graph";
-import ForceGraph2D from "force-graph";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "./ui/skeleton";
 import { Card, CardContent } from "./ui/card";
 import { Button } from "./ui/button";
-import { Maximize2, Minimize2, Cuboid, Square } from "lucide-react";
+import { Maximize2, Minimize2 } from "lucide-react";
 import { useState } from "react";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -36,15 +35,9 @@ interface GraphData {
   links: Link[];
 }
 
-interface Props {
-  is3D: boolean;
-  setIs3D: (value: boolean) => void;
-}
-
-export const UnifiedGraphVisualization = ({ is3D, setIs3D }: Props) => {
+export const UnifiedGraphVisualization = () => {
   const graphRef = useRef<HTMLDivElement>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
-
   const { data: entries } = useQuery({
     queryKey: ["all-entries"],
     queryFn: async () => {
@@ -123,6 +116,7 @@ export const UnifiedGraphVisualization = ({ is3D, setIs3D }: Props) => {
         val: 20
       });
 
+      // Get category color before using it
       const categoryColor = getCategoryColor(entry.category);
       if (categoryColor) {
         graphData.links.push({
@@ -190,48 +184,45 @@ export const UnifiedGraphVisualization = ({ is3D, setIs3D }: Props) => {
       });
     });
 
-    // Clear previous graph
-    if (graphRef.current) {
-      graphRef.current.innerHTML = "";
-    }
-
-    if (is3D) {
-      const Graph3D = ForceGraph3D();
-      const graphInstance = Graph3D(graphRef.current)
-        .graphData(graphData)
-        .nodeLabel("name")
-        .nodeColor(node => {
-          const n = node as Node;
-          switch (n.type) {
-            case "user":
-              return "#9b87f5";
-            case "category":
-              const catColor = getCategoryColor(n.id as EntryCategory);
-              return catColor ? catColor.primary : "#F5F3F2";
-            case "subcategory":
-              const subCatColor = getCategoryColor(getNodeCategory(n.id, graphData) as EntryCategory);
-              return subCatColor ? subCatColor.secondary : "#F5F3F2";
-            case "entry":
-              const entryColor = getCategoryColor(getNodeCategory(n.id, graphData) as EntryCategory);
-              return entryColor ? entryColor.tertiary : "#F5F3F2";
-            case "tag":
-              const tagColor = getCategoryColor(getNodeCategory(n.id, graphData) as EntryCategory);
-              return tagColor ? tagColor.soft : "#F5F3F2";
-            default:
-              return "#F5F3F2";
-          }
-        })
-        .nodeVal(node => (node as Node).val)
-        .linkWidth(0.8)
-        .linkColor(link => (link as Link).color || "#ffffff50")
-        .backgroundColor("#0f1729")
-        .width(window.innerWidth)
-        .height(window.innerHeight);
-
-      graphInstance.showNavInfo(false);
-      graphInstance.cameraPosition({ x: 500, y: 500, z: 800 });
-
-      graphInstance.onNodeClick((node) => {
+    const Graph = new ForceGraph3D();
+    const graphInstance = Graph(graphRef.current)
+      .graphData(graphData)
+      .nodeLabel("name")
+      .nodeColor(node => {
+        const n = node as Node;
+        switch (n.type) {
+          case "user":
+            return "#9b87f5";
+          case "category":
+            const catColor = getCategoryColor(n.id as EntryCategory);
+            return catColor ? catColor.primary : "#F5F3F2";
+          case "subcategory":
+            const subCatColor = getCategoryColor(getNodeCategory(n.id, graphData) as EntryCategory);
+            return subCatColor ? subCatColor.secondary : "#F5F3F2";
+          case "entry":
+            const entryColor = getCategoryColor(getNodeCategory(n.id, graphData) as EntryCategory);
+            return entryColor ? entryColor.tertiary : "#F5F3F2";
+          case "tag":
+            const tagColor = getCategoryColor(getNodeCategory(n.id, graphData) as EntryCategory);
+            return tagColor ? tagColor.soft : "#F5F3F2";
+          default:
+            return "#F5F3F2";
+        }
+      })
+      .nodeVal(node => (node as Node).val)
+      .linkWidth(0.8)
+      .linkColor(link => (link as Link).color || "#ffffff50")
+      .backgroundColor("#0f1729")
+      .width(window.innerWidth)
+      .height(window.innerHeight)
+      .showNavInfo(false)
+      .onNodeDragEnd(node => {
+        const n = node as Node;
+        n.fx = n.x;
+        n.fy = n.y;
+        n.fz = n.z;
+      })
+      .onNodeClick((node) => {
         const distance = 150;
         const distRatio = 1 + distance/Math.hypot(node.x || 0, node.y || 0, node.z || 0);
 
@@ -245,97 +236,25 @@ export const UnifiedGraphVisualization = ({ is3D, setIs3D }: Props) => {
           3000
         );
       });
-    } else {
-      const Graph2D = ForceGraph2D();
-      const graphInstance = Graph2D(graphRef.current)
-        .graphData(graphData)
-        .nodeLabel("name")
-        .nodeColor(node => {
-          const n = node as Node;
-          switch (n.type) {
-            case "user":
-              return "#9b87f5";
-            case "category":
-              const catColor = getCategoryColor(n.id as EntryCategory);
-              return catColor ? catColor.primary : "#F5F3F2";
-            case "subcategory":
-              const subCatColor = getCategoryColor(getNodeCategory(n.id, graphData) as EntryCategory);
-              return subCatColor ? subCatColor.secondary : "#F5F3F2";
-            case "entry":
-              const entryColor = getCategoryColor(getNodeCategory(n.id, graphData) as EntryCategory);
-              return entryColor ? entryColor.tertiary : "#F5F3F2";
-            case "tag":
-              const tagColor = getCategoryColor(getNodeCategory(n.id, graphData) as EntryCategory);
-              return tagColor ? tagColor.soft : "#F5F3F2";
-            default:
-              return "#F5F3F2";
-          }
-        })
-        .nodeVal(node => (node as Node).val)
-        .linkWidth(0.8)
-        .linkColor(link => (link as Link).color || "#ffffff50")
-        .backgroundColor("#0f1729")
-        .width(window.innerWidth)
-        .height(window.innerHeight);
-
-      graphInstance
-        .d3Force('link')
-        ?.distance(200)
-        .strength(1);
-
-      graphInstance
-        .d3Force('charge')
-        ?.strength(-1000)
-        .distanceMax(350);
-
-      graphInstance
-        .d3Force('radial', (alpha) => {
-          const nodes = graphData.nodes;
-          const center = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
-          const strength = 0.3;
-
-          nodes.forEach(node => {
-            if (node.type === 'user') {
-              node.x = center.x;
-              node.y = center.y;
-              node.fx = center.x;
-              node.fy = center.y;
-              return;
-            }
-
-            const dx = node.x! - center.x;
-            const dy = node.y! - center.y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
-
-            if (distance === 0) return;
-
-            // Determine radius based on node type
-            let targetDistance = 0;
-            switch (node.type) {
-              case 'category': targetDistance = 200; break;
-              case 'subcategory': targetDistance = 350; break;
-              case 'entry': targetDistance = 500; break;
-              case 'tag': targetDistance = 650; break;
-            }
-
-            const k = (targetDistance - distance) * strength * alpha;
-            const vx = (dx / distance) * k;
-            const vy = (dy / distance) * k;
-            
-            node.vx! += vx;
-            node.vy! += vy;
-          });
-        });
-    }
 
     const handleResize = () => {
-      const instance = is3D ? Graph3D : Graph2D;
-      instance
+      graphInstance
         .width(window.innerWidth)
         .height(window.innerHeight);
     };
-
     window.addEventListener('resize', handleResize);
+
+    graphInstance.cameraPosition({ x: 500, y: 500, z: 800 });
+
+    const userNode = graphData.nodes.find(node => node.type === "user");
+    if (userNode) {
+      graphInstance.d3Force('center', null);
+      graphInstance.d3Force('charge')?.strength(-150);
+      graphInstance.d3Force('link')?.distance(200);
+      userNode.fx = 0;
+      userNode.fy = 0;
+      userNode.fz = 0;
+    }
 
     return () => {
       window.removeEventListener('resize', handleResize);
@@ -343,7 +262,7 @@ export const UnifiedGraphVisualization = ({ is3D, setIs3D }: Props) => {
         graphRef.current.innerHTML = "";
       }
     };
-  }, [entries, profile, is3D]);
+  }, [entries, profile]);
 
   if (!entries || !profile) {
     return <Skeleton className="w-screen h-screen" />;
@@ -353,24 +272,14 @@ export const UnifiedGraphVisualization = ({ is3D, setIs3D }: Props) => {
     <Card className="relative w-screen h-screen overflow-hidden">
       <CardContent className="p-0 w-full h-full">
         <div ref={graphRef} className="w-full h-full" />
-        <div className="absolute top-4 right-4 flex gap-2">
-          <Button
-            variant="outline"
-            size="icon"
-            className="bg-background/50 backdrop-blur-sm"
-            onClick={() => setIs3D(!is3D)}
-          >
-            {is3D ? <Cuboid className="h-4 w-4" /> : <Square className="h-4 w-4" />}
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            className="bg-background/50 backdrop-blur-sm"
-            onClick={toggleFullscreen}
-          >
-            {isFullscreen ? <Minimize2 /> : <Maximize2 />}
-          </Button>
-        </div>
+        <Button
+          variant="outline"
+          size="icon"
+          className="absolute top-4 right-4 bg-background/50 backdrop-blur-sm"
+          onClick={toggleFullscreen}
+        >
+          {isFullscreen ? <Minimize2 /> : <Maximize2 />}
+        </Button>
       </CardContent>
     </Card>
   );
