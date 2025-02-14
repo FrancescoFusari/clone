@@ -47,14 +47,29 @@ const UnifiedGraph = () => {
         if (edgesError) throw edgesError;
 
         // Transform the data to match our GraphNode and GraphEdge interfaces
-        const transformedNodes = nodesData.map((node): GraphNode => ({
-          id: node.id,
-          label: node.label,
-          color: node.color || '#ffffff',
-          type: node.node_type,
-          referenceId: node.reference_id,
-          data: node.data
-        }));
+        const transformedNodes = nodesData.map((node): GraphNode => {
+          let nodeData: Record<string, any> | undefined;
+          
+          // Handle the data field conversion from Json to Record<string, any>
+          if (node.data) {
+            try {
+              // If it's a string, parse it; if it's already an object, use it directly
+              nodeData = typeof node.data === 'string' ? JSON.parse(node.data) : node.data;
+            } catch (e) {
+              console.error('Error parsing node data:', e);
+              nodeData = undefined;
+            }
+          }
+
+          return {
+            id: node.id,
+            label: node.label,
+            color: node.color || '#ffffff',
+            type: node.node_type,
+            referenceId: node.reference_id,
+            data: nodeData
+          };
+        });
 
         const transformedEdges = edgesData.map((edge): GraphEdge => ({
           id: edge.id,
