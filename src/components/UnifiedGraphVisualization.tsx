@@ -1,4 +1,3 @@
-
 import { useEffect, useRef } from "react";
 import ForceGraph3D from "3d-force-graph";
 import ForceGraph2D from "force-graph";
@@ -7,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "./ui/skeleton";
 import { Card, CardContent } from "./ui/card";
 import { Button } from "./ui/button";
-import { Maximize2, Minimize2, Cube, Square } from "lucide-react";
+import { Maximize2, Minimize2, Cuboid, Square } from "lucide-react";
 import { useState } from "react";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -196,7 +195,7 @@ export const UnifiedGraphVisualization = ({ is3D, setIs3D }: Props) => {
     }
 
     // Initialize the appropriate graph based on is3D
-    const Graph = is3D ? ForceGraph3D() : ForceGraph2D();
+    const Graph = is3D ? new ForceGraph3D() : new ForceGraph2D();
     const graphInstance = Graph(graphRef.current)
       .graphData(graphData)
       .nodeLabel("name")
@@ -307,7 +306,7 @@ export const UnifiedGraphVisualization = ({ is3D, setIs3D }: Props) => {
             className="bg-background/50 backdrop-blur-sm"
             onClick={() => setIs3D(!is3D)}
           >
-            {is3D ? <Cube className="h-4 w-4" /> : <Square className="h-4 w-4" />}
+            {is3D ? <Cuboid className="h-4 w-4" /> : <Square className="h-4 w-4" />}
           </Button>
           <Button
             variant="outline"
