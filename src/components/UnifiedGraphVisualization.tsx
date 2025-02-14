@@ -44,6 +44,7 @@ interface Props {
 export const UnifiedGraphVisualization = ({ is3D, setIs3D }: Props) => {
   const graphRef = useRef<HTMLDivElement>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
+
   const { data: entries } = useQuery({
     queryKey: ["all-entries"],
     queryFn: async () => {
@@ -194,61 +195,47 @@ export const UnifiedGraphVisualization = ({ is3D, setIs3D }: Props) => {
       graphRef.current.innerHTML = "";
     }
 
-    // Initialize the appropriate graph based on is3D
-    const Graph = is3D ? new ForceGraph3D() : new ForceGraph2D();
-    const graphInstance = Graph(graphRef.current)
-      .graphData(graphData)
-      .nodeLabel("name")
-      .nodeColor(node => {
-        const n = node as Node;
-        switch (n.type) {
-          case "user":
-            return "#9b87f5";
-          case "category":
-            const catColor = getCategoryColor(n.id as EntryCategory);
-            return catColor ? catColor.primary : "#F5F3F2";
-          case "subcategory":
-            const subCatColor = getCategoryColor(getNodeCategory(n.id, graphData) as EntryCategory);
-            return subCatColor ? subCatColor.secondary : "#F5F3F2";
-          case "entry":
-            const entryColor = getCategoryColor(getNodeCategory(n.id, graphData) as EntryCategory);
-            return entryColor ? entryColor.tertiary : "#F5F3F2";
-          case "tag":
-            const tagColor = getCategoryColor(getNodeCategory(n.id, graphData) as EntryCategory);
-            return tagColor ? tagColor.soft : "#F5F3F2";
-          default:
-            return "#F5F3F2";
-        }
-      })
-      .nodeVal(node => (node as Node).val)
-      .linkWidth(0.8)
-      .linkColor(link => (link as Link).color || "#ffffff50")
-      .backgroundColor("#0f1729")
-      .width(window.innerWidth)
-      .height(window.innerHeight);
-
     if (is3D) {
-      (graphInstance as any).showNavInfo(false);
-    }
+      const Graph3D = ForceGraph3D();
+      const graphInstance = Graph3D(graphRef.current)
+        .graphData(graphData)
+        .nodeLabel("name")
+        .nodeColor(node => {
+          const n = node as Node;
+          switch (n.type) {
+            case "user":
+              return "#9b87f5";
+            case "category":
+              const catColor = getCategoryColor(n.id as EntryCategory);
+              return catColor ? catColor.primary : "#F5F3F2";
+            case "subcategory":
+              const subCatColor = getCategoryColor(getNodeCategory(n.id, graphData) as EntryCategory);
+              return subCatColor ? subCatColor.secondary : "#F5F3F2";
+            case "entry":
+              const entryColor = getCategoryColor(getNodeCategory(n.id, graphData) as EntryCategory);
+              return entryColor ? entryColor.tertiary : "#F5F3F2";
+            case "tag":
+              const tagColor = getCategoryColor(getNodeCategory(n.id, graphData) as EntryCategory);
+              return tagColor ? tagColor.soft : "#F5F3F2";
+            default:
+              return "#F5F3F2";
+          }
+        })
+        .nodeVal(node => (node as Node).val)
+        .linkWidth(0.8)
+        .linkColor(link => (link as Link).color || "#ffffff50")
+        .backgroundColor("#0f1729")
+        .width(window.innerWidth)
+        .height(window.innerHeight);
 
-    graphInstance.onNodeDragEnd(node => {
-      const n = node as Node;
-      if (is3D) {
-        n.fx = n.x;
-        n.fy = n.y;
-        n.fz = n.z;
-      } else {
-        n.fx = n.x;
-        n.fy = n.y;
-      }
-    });
+      graphInstance.showNavInfo(false);
+      graphInstance.cameraPosition({ x: 500, y: 500, z: 800 });
 
-    graphInstance.onNodeClick((node) => {
-      if (is3D) {
+      graphInstance.onNodeClick((node) => {
         const distance = 150;
         const distRatio = 1 + distance/Math.hypot(node.x || 0, node.y || 0, node.z || 0);
 
-        (graphInstance as any).cameraPosition(
+        graphInstance.cameraPosition(
           { 
             x: (node.x || 0) * distRatio, 
             y: (node.y || 0) * distRatio, 
@@ -257,31 +244,98 @@ export const UnifiedGraphVisualization = ({ is3D, setIs3D }: Props) => {
           node as { x: number, y: number, z: number },
           3000
         );
-      }
-    });
+      });
+    } else {
+      const Graph2D = ForceGraph2D();
+      const graphInstance = Graph2D(graphRef.current)
+        .graphData(graphData)
+        .nodeLabel("name")
+        .nodeColor(node => {
+          const n = node as Node;
+          switch (n.type) {
+            case "user":
+              return "#9b87f5";
+            case "category":
+              const catColor = getCategoryColor(n.id as EntryCategory);
+              return catColor ? catColor.primary : "#F5F3F2";
+            case "subcategory":
+              const subCatColor = getCategoryColor(getNodeCategory(n.id, graphData) as EntryCategory);
+              return subCatColor ? subCatColor.secondary : "#F5F3F2";
+            case "entry":
+              const entryColor = getCategoryColor(getNodeCategory(n.id, graphData) as EntryCategory);
+              return entryColor ? entryColor.tertiary : "#F5F3F2";
+            case "tag":
+              const tagColor = getCategoryColor(getNodeCategory(n.id, graphData) as EntryCategory);
+              return tagColor ? tagColor.soft : "#F5F3F2";
+            default:
+              return "#F5F3F2";
+          }
+        })
+        .nodeVal(node => (node as Node).val)
+        .linkWidth(0.8)
+        .linkColor(link => (link as Link).color || "#ffffff50")
+        .backgroundColor("#0f1729")
+        .width(window.innerWidth)
+        .height(window.innerHeight);
+
+      graphInstance
+        .d3Force('link')
+        ?.distance(200)
+        .strength(1);
+
+      graphInstance
+        .d3Force('charge')
+        ?.strength(-1000)
+        .distanceMax(350);
+
+      graphInstance
+        .d3Force('radial', (alpha) => {
+          const nodes = graphData.nodes;
+          const center = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+          const strength = 0.3;
+
+          nodes.forEach(node => {
+            if (node.type === 'user') {
+              node.x = center.x;
+              node.y = center.y;
+              node.fx = center.x;
+              node.fy = center.y;
+              return;
+            }
+
+            const dx = node.x! - center.x;
+            const dy = node.y! - center.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+
+            if (distance === 0) return;
+
+            // Determine radius based on node type
+            let targetDistance = 0;
+            switch (node.type) {
+              case 'category': targetDistance = 200; break;
+              case 'subcategory': targetDistance = 350; break;
+              case 'entry': targetDistance = 500; break;
+              case 'tag': targetDistance = 650; break;
+            }
+
+            const k = (targetDistance - distance) * strength * alpha;
+            const vx = (dx / distance) * k;
+            const vy = (dy / distance) * k;
+            
+            node.vx! += vx;
+            node.vy! += vy;
+          });
+        });
+    }
 
     const handleResize = () => {
-      graphInstance
+      const instance = is3D ? Graph3D : Graph2D;
+      instance
         .width(window.innerWidth)
         .height(window.innerHeight);
     };
+
     window.addEventListener('resize', handleResize);
-
-    if (is3D) {
-      (graphInstance as any).cameraPosition({ x: 500, y: 500, z: 800 });
-    }
-
-    const userNode = graphData.nodes.find(node => node.type === "user");
-    if (userNode) {
-      graphInstance.d3Force('center', null);
-      graphInstance.d3Force('charge')?.strength(-150);
-      graphInstance.d3Force('link')?.distance(200);
-      userNode.fx = 0;
-      userNode.fy = 0;
-      if (is3D) {
-        userNode.fz = 0;
-      }
-    }
 
     return () => {
       window.removeEventListener('resize', handleResize);
