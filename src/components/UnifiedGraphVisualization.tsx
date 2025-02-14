@@ -42,6 +42,13 @@ interface Props {
   setIs3D: (value: boolean) => void;
 }
 
+interface LinkDistances {
+  userToCategory: number;
+  categoryToEntry: number;
+  entryToSubcategory: number;
+  entryToTag: number;
+}
+
 export const UnifiedGraphVisualization = ({ is3D, setIs3D }: Props) => {
   const graphRef = useRef<HTMLDivElement>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -53,6 +60,7 @@ export const UnifiedGraphVisualization = ({ is3D, setIs3D }: Props) => {
     entryToSubcategory: 100,
     entryToTag: 80
   });
+  const [visibleLabels, setVisibleLabels] = useState<NodeType[]>(["user", "category", "subcategory", "entry", "tag"]);
 
   const { data: entries } = useQuery({
     queryKey: ["all-entries"],
@@ -213,10 +221,13 @@ export const UnifiedGraphVisualization = ({ is3D, setIs3D }: Props) => {
       });
     });
 
-    const Graph = ForceGraph3D();
+    const Graph = new ForceGraph3D();
     const graphInstance = Graph(graphRef.current)
       .graphData(graphData)
-      .nodeLabel("name")
+      .nodeLabel(node => {
+        const n = node as Node;
+        return visibleLabels.includes(n.type) ? n.name : '';
+      })
       .nodeColor(node => {
         const n = node as Node;
         switch (n.type) {
@@ -316,7 +327,7 @@ export const UnifiedGraphVisualization = ({ is3D, setIs3D }: Props) => {
         graphRef.current.innerHTML = "";
       }
     };
-  }, [entries, profile, visibleNodeTypes, visibleCategories, linkDistances]);
+  }, [entries, profile, visibleNodeTypes, visibleCategories, linkDistances, visibleLabels]);
 
   if (!entries || !profile) {
     return <Skeleton className="w-screen h-screen" />;
@@ -367,6 +378,33 @@ export const UnifiedGraphVisualization = ({ is3D, setIs3D }: Props) => {
                       Entries
                     </ToggleGroupItem>
                     <ToggleGroupItem value="tag" aria-label="Toggle Tags">
+                      Tags
+                    </ToggleGroupItem>
+                  </ToggleGroup>
+                </div>
+                <div className="space-y-2">
+                  <h4 className="text-sm font-medium">Node Labels</h4>
+                  <ToggleGroup 
+                    type="multiple" 
+                    className="flex flex-wrap justify-start gap-2"
+                    value={visibleLabels}
+                    onValueChange={(value) => {
+                      setVisibleLabels(value as NodeType[]);
+                    }}
+                  >
+                    <ToggleGroupItem value="user" aria-label="Toggle User Labels">
+                      User
+                    </ToggleGroupItem>
+                    <ToggleGroupItem value="category" aria-label="Toggle Category Labels">
+                      Categories
+                    </ToggleGroupItem>
+                    <ToggleGroupItem value="subcategory" aria-label="Toggle Subcategory Labels">
+                      Subcategories
+                    </ToggleGroupItem>
+                    <ToggleGroupItem value="entry" aria-label="Toggle Entry Labels">
+                      Entries
+                    </ToggleGroupItem>
+                    <ToggleGroupItem value="tag" aria-label="Toggle Tag Labels">
                       Tags
                     </ToggleGroupItem>
                   </ToggleGroup>
