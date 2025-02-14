@@ -1,11 +1,13 @@
+
 import { useEffect, useRef } from "react";
 import ForceGraph3D from "3d-force-graph";
+import ForceGraph2D from "force-graph";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "./ui/skeleton";
 import { Card, CardContent } from "./ui/card";
 import { Button } from "./ui/button";
-import { Maximize2, Minimize2 } from "lucide-react";
+import { Maximize2, Minimize2, Cube, Square } from "lucide-react";
 import { useState } from "react";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -35,7 +37,12 @@ interface GraphData {
   links: Link[];
 }
 
-export const UnifiedGraphVisualization = () => {
+interface Props {
+  is3D: boolean;
+  setIs3D: (value: boolean) => void;
+}
+
+export const UnifiedGraphVisualization = ({ is3D, setIs3D }: Props) => {
   const graphRef = useRef<HTMLDivElement>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const { data: entries } = useQuery({
@@ -116,7 +123,6 @@ export const UnifiedGraphVisualization = () => {
         val: 20
       });
 
-      // Get category color before using it
       const categoryColor = getCategoryColor(entry.category);
       if (categoryColor) {
         graphData.links.push({
@@ -184,7 +190,13 @@ export const UnifiedGraphVisualization = () => {
       });
     });
 
-    const Graph = new ForceGraph3D();
+    // Clear previous graph
+    if (graphRef.current) {
+      graphRef.current.innerHTML = "";
+    }
+
+    // Initialize the appropriate graph based on is3D
+    const Graph = is3D ? ForceGraph3D() : ForceGraph2D();
     const graphInstance = Graph(graphRef.current)
       .graphData(graphData)
       .nodeLabel("name")
@@ -214,19 +226,30 @@ export const UnifiedGraphVisualization = () => {
       .linkColor(link => (link as Link).color || "#ffffff50")
       .backgroundColor("#0f1729")
       .width(window.innerWidth)
-      .height(window.innerHeight)
-      .showNavInfo(false)
-      .onNodeDragEnd(node => {
-        const n = node as Node;
+      .height(window.innerHeight);
+
+    if (is3D) {
+      (graphInstance as any).showNavInfo(false);
+    }
+
+    graphInstance.onNodeDragEnd(node => {
+      const n = node as Node;
+      if (is3D) {
         n.fx = n.x;
         n.fy = n.y;
         n.fz = n.z;
-      })
-      .onNodeClick((node) => {
+      } else {
+        n.fx = n.x;
+        n.fy = n.y;
+      }
+    });
+
+    graphInstance.onNodeClick((node) => {
+      if (is3D) {
         const distance = 150;
         const distRatio = 1 + distance/Math.hypot(node.x || 0, node.y || 0, node.z || 0);
 
-        graphInstance.cameraPosition(
+        (graphInstance as any).cameraPosition(
           { 
             x: (node.x || 0) * distRatio, 
             y: (node.y || 0) * distRatio, 
@@ -235,7 +258,8 @@ export const UnifiedGraphVisualization = () => {
           node as { x: number, y: number, z: number },
           3000
         );
-      });
+      }
+    });
 
     const handleResize = () => {
       graphInstance
@@ -244,7 +268,9 @@ export const UnifiedGraphVisualization = () => {
     };
     window.addEventListener('resize', handleResize);
 
-    graphInstance.cameraPosition({ x: 500, y: 500, z: 800 });
+    if (is3D) {
+      (graphInstance as any).cameraPosition({ x: 500, y: 500, z: 800 });
+    }
 
     const userNode = graphData.nodes.find(node => node.type === "user");
     if (userNode) {
@@ -253,7 +279,9 @@ export const UnifiedGraphVisualization = () => {
       graphInstance.d3Force('link')?.distance(200);
       userNode.fx = 0;
       userNode.fy = 0;
-      userNode.fz = 0;
+      if (is3D) {
+        userNode.fz = 0;
+      }
     }
 
     return () => {
@@ -262,7 +290,7 @@ export const UnifiedGraphVisualization = () => {
         graphRef.current.innerHTML = "";
       }
     };
-  }, [entries, profile]);
+  }, [entries, profile, is3D]);
 
   if (!entries || !profile) {
     return <Skeleton className="w-screen h-screen" />;
@@ -272,14 +300,24 @@ export const UnifiedGraphVisualization = () => {
     <Card className="relative w-screen h-screen overflow-hidden">
       <CardContent className="p-0 w-full h-full">
         <div ref={graphRef} className="w-full h-full" />
-        <Button
-          variant="outline"
-          size="icon"
-          className="absolute top-4 right-4 bg-background/50 backdrop-blur-sm"
-          onClick={toggleFullscreen}
-        >
-          {isFullscreen ? <Minimize2 /> : <Maximize2 />}
-        </Button>
+        <div className="absolute top-4 right-4 flex gap-2">
+          <Button
+            variant="outline"
+            size="icon"
+            className="bg-background/50 backdrop-blur-sm"
+            onClick={() => setIs3D(!is3D)}
+          >
+            {is3D ? <Cube className="h-4 w-4" /> : <Square className="h-4 w-4" />}
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            className="bg-background/50 backdrop-blur-sm"
+            onClick={toggleFullscreen}
+          >
+            {isFullscreen ? <Minimize2 /> : <Maximize2 />}
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );
