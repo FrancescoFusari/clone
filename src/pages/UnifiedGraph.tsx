@@ -1,15 +1,28 @@
 
+import { useEffect, useState } from "react";
 import { CenteredLayout } from "@/components/layouts/CenteredLayout";
 import { UnifiedGraphVisualization } from "@/components/UnifiedGraphVisualization";
-import { useEffect } from "react";
+import { NodeObject, LinkObject } from "@/types/graph";
 
 const UnifiedGraph = () => {
-  // Hide TopBar when this component mounts
+  const [nodes, setNodes] = useState<NodeObject[]>([]);
+  const [links, setLinks] = useState<LinkObject[]>([]);
+
   useEffect(() => {
+    // Hide TopBar when this component mounts
     const topBar = document.querySelector('.topbar-container');
     if (topBar) {
       topBar.classList.add('hidden');
     }
+
+    // Example data - replace with your actual data fetching logic
+    setNodes([
+      { id: 'node1', color: '#ff0000' },
+      { id: 'node2', color: '#00ff00' }
+    ]);
+    setLinks([
+      { source: 'node1', target: 'node2' }
+    ]);
 
     // Show TopBar again when component unmounts
     return () => {
@@ -22,7 +35,7 @@ const UnifiedGraph = () => {
 
   return (
     <div className="w-screen h-screen overflow-hidden">
-      <UnifiedGraphVisualization />
+      <UnifiedGraphVisualization nodes={nodes} links={links} />
     </div>
   );
 };

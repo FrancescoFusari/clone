@@ -1,7 +1,7 @@
 
 import React, { useEffect, useRef } from 'react';
-import ForceGraph3D, { ForceGraph3DInstance } from '3d-force-graph';
-import { NodeObject, LinkObject } from '@/integrations/supabase/types';
+import ForceGraph3D from '3d-force-graph';
+import { NodeObject, LinkObject } from '@/types/graph';
 
 interface UnifiedGraphVisualizationProps {
   nodes: NodeObject[];
@@ -10,16 +10,17 @@ interface UnifiedGraphVisualizationProps {
 
 export const UnifiedGraphVisualization: React.FC<UnifiedGraphVisualizationProps> = ({ nodes, links }) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const graphRef = useRef<ForceGraph3DInstance>();
+  const graphRef = useRef<any>();
 
   useEffect(() => {
     if (!containerRef.current) return;
 
     // Initialize the graph
-    graphRef.current = new ForceGraph3D()(containerRef.current)
+    const Graph = ForceGraph3D();
+    graphRef.current = Graph(containerRef.current)
       .graphData({ nodes, links })
       .nodeLabel('id')
-      .nodeColor((node: any) => node.color || '#ffffff')
+      .nodeColor((node: NodeObject) => node.color || '#ffffff')
       .linkColor(() => '#ffffff')
       .backgroundColor('#000000');
 
@@ -33,3 +34,5 @@ export const UnifiedGraphVisualization: React.FC<UnifiedGraphVisualizationProps>
 
   return <div ref={containerRef} style={{ width: '100%', height: '100vh' }} />;
 };
+
+export default UnifiedGraphVisualization;

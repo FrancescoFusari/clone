@@ -7,7 +7,9 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "@/components/ui/use-toast";
 import { Loader2, Save, Trash } from "lucide-react";
 import { supabase } from "@/lib/supabase";
-import { Entry } from "@/integrations/supabase/types";
+import { Database } from "@/integrations/supabase/types";
+
+type Entry = Database['public']['Tables']['entries']['Row'];
 
 export const EntryDetails = () => {
   const { id } = useParams();
@@ -194,3 +196,5 @@ export const EntryDetails = () => {
     </div>
   );
 };
+
+export default EntryDetails;
