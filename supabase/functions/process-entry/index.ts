@@ -266,57 +266,39 @@ async function formatTextAndGenerateComments(content: string, type: "text" | "ur
 
 async function processDocument(url: string): Promise<string> {
   try {
-    console.log('Processing document:', url);
+    console.log('Initiating document processing for URL:', url);
     
-    // Download the document
-    const response = await fetch(url);
+    // Call the process-document function
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    if (!supabaseUrl) {
+      throw new Error('Supabase URL not configured');
+    }
+
+    const response = await fetch(`${supabaseUrl}/functions/v1/process-document`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${Deno.env.get('SUPABASE_ANON_KEY')}`,
+      },
+      body: JSON.stringify({ url })
+    });
+
     if (!response.ok) {
-      throw new Error(`Failed to download document: ${response.statusText}`);
+      const error = await response.json();
+      console.error('Document processing failed:', error);
+      throw new Error(`Document processing failed: ${error.error || 'Unknown error'}`);
     }
-    
-    const buffer = await response.arrayBuffer();
-    const fileExtension = url.split('.').pop()?.toLowerCase();
-    let text = '';
-    
-    switch (fileExtension) {
-      case 'pdf':
-        // Convert ArrayBuffer to Uint8Array for pdf-parse
-        const uint8Array = new Uint8Array(buffer);
-        const pdfData = await readPdf(uint8Array);
-        text = pdfData.text;
-        break;
-        
-      case 'txt':
-        text = new TextDecoder().decode(buffer);
-        break;
-        
-      case 'doc':
-      case 'docx':
-        throw new Error('Word documents are not supported yet. Please convert to PDF first.');
-        
-      default:
-        throw new Error(`Unsupported file type: ${fileExtension}`);
+
+    const { text } = await response.json();
+    if (!text) {
+      throw new Error('No text was extracted from the document');
     }
-    
-    if (!text || text.trim().length === 0) {
-      throw new Error('No text could be extracted from the document');
-    }
-    
-    // Limit extracted text length
-    const MAX_CHARS = 10000;
-    if (text.length > MAX_CHARS) {
-      text = text.substring(0, MAX_CHARS) + "\n\n[Content truncated due to length limitations...]";
-      console.log('Document text truncated:', { 
-        originalLength: text.length, 
-        truncatedLength: MAX_CHARS 
-      });
-    }
-    
-    console.log('Document processed successfully, extracted text length:', text.length);
+
+    console.log('Document processed successfully, text length:', text.length);
     return text;
   } catch (error) {
-    console.error('Error processing document:', error);
-    throw new Error(`Failed to process document: ${error.message}`);
+    console.error('Error in document processing:', error);
+    throw error;
   }
 }
 

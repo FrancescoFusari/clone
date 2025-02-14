@@ -8,16 +8,33 @@ const corsHeaders = {
 
 async function processDocument(url: string): Promise<string> {
   try {
+    if (!url) {
+      throw new Error('Document URL is required');
+    }
+
     console.log('Processing document:', url);
     
-    // Download the document
+    // Download the document with proper error handling
     const response = await fetch(url);
     if (!response.ok) {
-      throw new Error(`Failed to download document: ${response.statusText}`);
+      console.error('Download failed:', {
+        status: response.status,
+        statusText: response.statusText,
+        url
+      });
+      throw new Error(`Failed to download document: Status ${response.status} - ${response.statusText}`);
     }
     
     const buffer = await response.arrayBuffer();
+    if (!buffer || buffer.byteLength === 0) {
+      throw new Error('Downloaded document is empty');
+    }
+
     const fileExtension = url.split('.').pop()?.toLowerCase();
+    if (!fileExtension) {
+      throw new Error('Could not determine file type from URL');
+    }
+
     let text = '';
     
     switch (fileExtension) {
