@@ -15,9 +15,8 @@ export const UnifiedGraphVisualization: React.FC<UnifiedGraphVisualizationProps>
   useEffect(() => {
     if (!containerRef.current) return;
 
-    // Initialize the graph
-    const Graph = ForceGraph3D();
-    graphRef.current = Graph(containerRef.current)
+    // Initialize the graph with the 'new' operator
+    graphRef.current = new ForceGraph3D()(containerRef.current)
       .graphData({ nodes, links })
       .nodeLabel('id')
       .nodeColor((node: NodeObject) => node.color || '#ffffff')
