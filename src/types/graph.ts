@@ -1,12 +1,22 @@
 
-export interface NodeObject {
+export interface GraphNode {
   id: string;
-  color?: string;
-  [key: string]: any;
+  label: string;
+  color: string;
+  type: 'category' | 'subcategory' | 'entry' | 'tag';
+  referenceId?: string;
+  data?: Record<string, any>;
 }
 
-export interface LinkObject {
+export interface GraphEdge {
+  id: string;
   source: string;
   target: string;
-  [key: string]: any;
+  relationshipType: string;
+  weight: number;
+}
+
+export interface GraphData {
+  nodes: GraphNode[];
+  edges: GraphEdge[];
 }

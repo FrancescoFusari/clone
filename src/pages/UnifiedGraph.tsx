@@ -1,41 +1,107 @@
 
 import { useEffect, useState } from "react";
-import { CenteredLayout } from "@/components/layouts/CenteredLayout";
-import { UnifiedGraphVisualization } from "@/components/UnifiedGraphVisualization";
-import { NodeObject, LinkObject } from "@/types/graph";
+import { useAuth } from "@/components/AuthProvider";
+import { supabase } from "@/lib/supabase";
+import { GraphNode, GraphEdge } from "@/types/graph";
+import GraphVisualization from "@/components/GraphVisualization";
+import { useNavigate } from "react-router-dom";
+import { useToast } from "@/components/ui/use-toast";
 
 const UnifiedGraph = () => {
-  const [nodes, setNodes] = useState<NodeObject[]>([]);
-  const [links, setLinks] = useState<LinkObject[]>([]);
+  const [nodes, setNodes] = useState<GraphNode[]>([]);
+  const [edges, setEdges] = useState<GraphEdge[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const { session } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
 
   useEffect(() => {
-    // Hide TopBar when this component mounts
-    const topBar = document.querySelector('.topbar-container');
-    if (topBar) {
-      topBar.classList.add('hidden');
+    if (!session?.user) {
+      navigate('/auth');
+      return;
     }
 
-    // Example data - replace with your actual data fetching logic
-    setNodes([
-      { id: 'node1', color: '#ff0000' },
-      { id: 'node2', color: '#00ff00' }
-    ]);
-    setLinks([
-      { source: 'node1', target: 'node2' }
-    ]);
+    const fetchGraphData = async () => {
+      try {
+        setIsLoading(true);
 
-    // Show TopBar again when component unmounts
-    return () => {
-      const topBar = document.querySelector('.topbar-container');
-      if (topBar) {
-        topBar.classList.remove('hidden');
+        // First, ensure graph data is populated
+        await supabase.rpc('populate_graph_data', {
+          p_user_id: session.user.id
+        });
+
+        // Fetch nodes
+        const { data: nodesData, error: nodesError } = await supabase
+          .from('graph_nodes')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (nodesError) throw nodesError;
+
+        // Fetch edges
+        const { data: edgesData, error: edgesError } = await supabase
+          .from('graph_edges')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (edgesError) throw edgesError;
+
+        // Transform the data to match our GraphNode and GraphEdge interfaces
+        const transformedNodes = nodesData.map((node): GraphNode => ({
+          id: node.id,
+          label: node.label,
+          color: node.color || '#ffffff',
+          type: node.node_type,
+          referenceId: node.reference_id,
+          data: node.data
+        }));
+
+        const transformedEdges = edgesData.map((edge): GraphEdge => ({
+          id: edge.id,
+          source: edge.source_id,
+          target: edge.target_id,
+          relationshipType: edge.relationship_type || 'default',
+          weight: edge.weight || 1
+        }));
+
+        setNodes(transformedNodes);
+        setEdges(transformedEdges);
+      } catch (error) {
+        console.error('Error fetching graph data:', error);
+        toast({
+          variant: "destructive",
+          title: "Error fetching graph data",
+          description: "There was a problem loading the graph. Please try again.",
+        });
+      } finally {
+        setIsLoading(false);
       }
     };
-  }, []);
+
+    fetchGraphData();
+  }, [session, navigate, toast]);
+
+  const handleNodeClick = (node: GraphNode) => {
+    if (node.type === 'entry' && node.referenceId) {
+      navigate(`/entries/${node.referenceId}`);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-zinc-900">
+        <div className="text-zinc-400">Loading graph...</div>
+      </div>
+    );
+  }
 
   return (
-    <div className="w-screen h-screen overflow-hidden">
-      <UnifiedGraphVisualization nodes={nodes} links={links} />
+    <div className="w-screen h-screen overflow-hidden bg-zinc-900">
+      <GraphVisualization 
+        nodes={nodes} 
+        edges={edges} 
+        onNodeClick={handleNodeClick}
+      />
     </div>
   );
 };
