@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef } from 'react';
 import * as d3 from 'd3';
 import { GraphNode, GraphEdge } from '@/types/graph';
@@ -27,14 +26,51 @@ const GraphVisualization: React.FC<GraphVisualizationProps> = ({
     // Clear previous rendering
     d3.select(svgRef.current).selectAll("*").remove();
 
-    // Create the simulation
+    // Find the central user node
+    const userNode = nodes.find(n => n.type === 'user');
+    if (!userNode) return;
+
+    // Create the simulation with custom forces
     const simulation = d3.forceSimulation<any>(nodes)
+      // Link force with different distances based on relationship
       .force("link", d3.forceLink(edges)
         .id((d: any) => d.id)
-        .distance(100))
-      .force("charge", d3.forceManyBody().strength(-1000))
+        .distance(d => {
+          switch (d.relationshipType) {
+            case 'has_category': return 150; // Categories closer to center
+            case 'belongs_to': return 100; // Subcategories closer to categories
+            case 'contains': return 80; // Entries closer to subcategories
+            case 'tagged_with': return 60; // Tags closer to entries
+            default: return 100;
+          }
+        }))
+      // Charge force - nodes repel each other
+      .force("charge", d3.forceManyBody()
+        .strength(d => {
+          switch (d.type) {
+            case 'user': return -1000; // Strong repulsion for center
+            case 'category': return -500;
+            case 'subcategory': return -300;
+            case 'entry': return -200;
+            case 'tag': return -100;
+            default: return -300;
+          }
+        }))
+      // Center force
       .force("center", d3.forceCenter(width / 2, height / 2))
-      .force("collision", d3.forceCollide().radius(50));
+      // Collision force to prevent overlap
+      .force("collision", d3.forceCollide().radius(d => getNodeRadius(d.type) + 10))
+      // Radial force to create circular layout
+      .force("radial", d3.forceRadial(d => {
+        switch (d.type) {
+          case 'user': return 0; // Center
+          case 'category': return 200; // First circle
+          case 'subcategory': return 350; // Second circle
+          case 'entry': return 500; // Third circle
+          case 'tag': return 650; // Outer circle
+          default: return 300;
+        }
+      }, width / 2, height / 2).strength(0.8));
 
     // Create SVG
     const svg = d3.select(svgRef.current)
@@ -129,6 +165,15 @@ const GraphVisualization: React.FC<GraphVisualizationProps> = ({
       node.attr("transform", (d: any) => `translate(${d.x},${d.y})`);
     });
 
+    // Fix user node position at center
+    if (userNode) {
+      const centerNode = simulation.nodes().find((n: any) => n.id === userNode.id);
+      if (centerNode) {
+        centerNode.fx = width / 2;
+        centerNode.fy = height / 2;
+      }
+    }
+
     // Drag functions
     function dragstarted(event: any) {
       if (!event.active) simulation.alphaTarget(0.3).restart();
@@ -143,8 +188,11 @@ const GraphVisualization: React.FC<GraphVisualizationProps> = ({
 
     function dragended(event: any) {
       if (!event.active) simulation.alphaTarget(0);
-      event.subject.fx = null;
-      event.subject.fy = null;
+      // Keep the user node fixed at center
+      if (event.subject.type !== 'user') {
+        event.subject.fx = null;
+        event.subject.fy = null;
+      }
     }
 
     return () => {
@@ -155,6 +203,8 @@ const GraphVisualization: React.FC<GraphVisualizationProps> = ({
   // Helper function to determine node radius based on type
   const getNodeRadius = (type: string) => {
     switch (type) {
+      case 'user':
+        return 40;
       case 'category':
         return 30;
       case 'subcategory':

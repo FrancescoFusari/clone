@@ -3,7 +3,7 @@ export interface GraphNode {
   id: string;
   label: string;
   color: string;
-  type: 'category' | 'subcategory' | 'entry' | 'tag';
+  type: 'user' | 'category' | 'subcategory' | 'entry' | 'tag';
   referenceId?: string;
   data?: Record<string, any>;
 }
@@ -20,3 +20,4 @@ export interface GraphData {
   nodes: GraphNode[];
   edges: GraphEdge[];
 }
+
