@@ -167,6 +167,7 @@ export type Database = {
           tags: string[] | null
           title: string
           user_id: string
+          was_content_truncated: boolean | null
         }
         Insert: {
           analysis_data?: Json | null
@@ -195,6 +196,7 @@ export type Database = {
           tags?: string[] | null
           title: string
           user_id: string
+          was_content_truncated?: boolean | null
         }
         Update: {
           analysis_data?: Json | null
@@ -222,6 +224,91 @@ export type Database = {
           summary?: string | null
           tags?: string[] | null
           title?: string
+          user_id?: string
+          was_content_truncated?: boolean | null
+        }
+        Relationships: []
+      }
+      graph_edges: {
+        Row: {
+          created_at: string | null
+          id: string
+          relationship_type: string | null
+          source_id: string
+          target_id: string
+          updated_at: string | null
+          user_id: string
+          weight: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          relationship_type?: string | null
+          source_id: string
+          target_id: string
+          updated_at?: string | null
+          user_id: string
+          weight?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          relationship_type?: string | null
+          source_id?: string
+          target_id?: string
+          updated_at?: string | null
+          user_id?: string
+          weight?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "graph_edges_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "graph_nodes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "graph_edges_target_id_fkey"
+            columns: ["target_id"]
+            isOneToOne: false
+            referencedRelation: "graph_nodes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      graph_nodes: {
+        Row: {
+          color: string | null
+          created_at: string | null
+          data: Json | null
+          id: string
+          label: string
+          node_type: Database["public"]["Enums"]["graph_node_type"]
+          reference_id: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string | null
+          data?: Json | null
+          id?: string
+          label: string
+          node_type: Database["public"]["Enums"]["graph_node_type"]
+          reference_id?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string | null
+          data?: Json | null
+          id?: string
+          label?: string
+          node_type?: Database["public"]["Enums"]["graph_node_type"]
+          reference_id?: string | null
+          updated_at?: string | null
           user_id?: string
         }
         Relationships: []
@@ -300,7 +387,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      populate_graph_data: {
+        Args: {
+          p_user_id: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       category_analysis_status:
@@ -310,6 +402,7 @@ export type Database = {
         | "failed"
       chat_model: "gpt-4o-mini" | "gpt-4o"
       entry_category: "personal" | "work" | "social" | "interests" | "school"
+      graph_node_type: "category" | "subcategory" | "entry" | "tag"
     }
     CompositeTypes: {
       [_ in never]: never

@@ -1,20 +1,24 @@
-import { useEffect, useRef } from "react";
+
+import { useEffect, useRef, useState } from "react";
 import ForceGraph3D from "3d-force-graph";
+import ForceGraph2D from "force-graph";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "./ui/skeleton";
 import { Card, CardContent } from "./ui/card";
 import { Button } from "./ui/button";
-import { Maximize2, Minimize2 } from "lucide-react";
-import { useState } from "react";
+import { Maximize2, Minimize2, Settings2 } from "lucide-react";
+import { Sheet, SheetTrigger, SheetContent, SheetHeader, SheetTitle } from "./ui/sheet";
+import { ToggleGroup, ToggleGroupItem } from "./ui/toggle-group";
 import type { Database } from "@/integrations/supabase/types";
 
 type EntryCategory = Database["public"]["Enums"]["entry_category"];
+type NodeType = "user" | "category" | "subcategory" | "entry" | "tag";
 
 interface Node {
   id: string;
   name: string;
-  type: "user" | "category" | "subcategory" | "entry" | "tag";
+  type: NodeType;
   val: number;
   x?: number;
   y?: number;
@@ -35,9 +39,17 @@ interface GraphData {
   links: Link[];
 }
 
-export const UnifiedGraphVisualization = () => {
+interface Props {
+  is3D: boolean;
+  setIs3D: (value: boolean) => void;
+}
+
+export const UnifiedGraphVisualization = ({ is3D, setIs3D }: Props) => {
   const graphRef = useRef<HTMLDivElement>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [visibleNodeTypes, setVisibleNodeTypes] = useState<NodeType[]>(["user", "category", "subcategory", "entry", "tag"]);
+  const [visibleCategories, setVisibleCategories] = useState<EntryCategory[]>(["personal", "work", "social", "interests", "school"]);
+
   const { data: entries } = useQuery({
     queryKey: ["all-entries"],
     queryFn: async () => {
@@ -94,19 +106,30 @@ export const UnifiedGraphVisualization = () => {
       links: []
     };
 
-    // Add central user node
-    graphData.nodes.push({
-      id: profile.id,
-      name: profile.username || "User",
-      type: "user",
-      val: 300
-    });
+    // Filter nodes based on visibility settings
+    const shouldShowNode = (type: NodeType, category?: EntryCategory) => {
+      if (!visibleNodeTypes.includes(type)) return false;
+      if (category && !visibleCategories.includes(category)) return false;
+      return true;
+    };
+
+    // Add central user node if user type is visible
+    if (shouldShowNode("user")) {
+      graphData.nodes.push({
+        id: profile.id,
+        name: profile.username || "User",
+        type: "user",
+        val: 300
+      });
+    }
 
     const categories = new Set<EntryCategory>();
     const subcategories = new Set<string>();
     const tags = new Set<string>();
 
     entries.forEach(entry => {
+      if (!shouldShowNode("entry", entry.category)) return;
+      
       categories.add(entry.category);
       
       graphData.nodes.push({
@@ -116,9 +139,8 @@ export const UnifiedGraphVisualization = () => {
         val: 20
       });
 
-      // Get category color before using it
       const categoryColor = getCategoryColor(entry.category);
-      if (categoryColor) {
+      if (categoryColor && shouldShowNode("category", entry.category)) {
         graphData.links.push({
           source: entry.category,
           target: entry.id,
@@ -126,7 +148,7 @@ export const UnifiedGraphVisualization = () => {
         });
       }
 
-      if (entry.subcategory) {
+      if (entry.subcategory && shouldShowNode("subcategory", entry.category)) {
         subcategories.add(entry.subcategory);
         if (categoryColor) {
           graphData.links.push({
@@ -137,19 +159,22 @@ export const UnifiedGraphVisualization = () => {
         }
       }
 
-      entry.tags?.forEach(tag => {
-        tags.add(tag);
-        if (categoryColor) {
-          graphData.links.push({
-            source: entry.id,
-            target: tag,
-            color: categoryColor.link
-          });
-        }
-      });
+      if (shouldShowNode("tag", entry.category)) {
+        entry.tags?.forEach(tag => {
+          tags.add(tag);
+          if (categoryColor) {
+            graphData.links.push({
+              source: entry.id,
+              target: tag,
+              color: categoryColor.link
+            });
+          }
+        });
+      }
     });
 
     categories.forEach(cat => {
+      if (!shouldShowNode("category", cat)) return;
       graphData.nodes.push({
         id: cat,
         name: cat.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '),
@@ -157,7 +182,7 @@ export const UnifiedGraphVisualization = () => {
         val: 100
       });
       const categoryColor = getCategoryColor(cat);
-      if (categoryColor) {
+      if (categoryColor && shouldShowNode("user")) {
         graphData.links.push({
           source: profile.id,
           target: cat,
@@ -167,6 +192,7 @@ export const UnifiedGraphVisualization = () => {
     });
 
     subcategories.forEach(sub => {
+      if (!shouldShowNode("subcategory")) return;
       graphData.nodes.push({
         id: sub,
         name: sub,
@@ -176,6 +202,7 @@ export const UnifiedGraphVisualization = () => {
     });
 
     tags.forEach(tag => {
+      if (!shouldShowNode("tag")) return;
       graphData.nodes.push({
         id: tag,
         name: tag,
@@ -184,7 +211,12 @@ export const UnifiedGraphVisualization = () => {
       });
     });
 
-    const Graph = new ForceGraph3D();
+    // Clear previous graph
+    if (graphRef.current) {
+      graphRef.current.innerHTML = "";
+    }
+
+    const Graph = is3D ? new ForceGraph3D() : new ForceGraph2D();
     const graphInstance = Graph(graphRef.current)
       .graphData(graphData)
       .nodeLabel("name")
@@ -214,19 +246,30 @@ export const UnifiedGraphVisualization = () => {
       .linkColor(link => (link as Link).color || "#ffffff50")
       .backgroundColor("#0f1729")
       .width(window.innerWidth)
-      .height(window.innerHeight)
-      .showNavInfo(false)
-      .onNodeDragEnd(node => {
-        const n = node as Node;
+      .height(window.innerHeight);
+
+    if (is3D) {
+      (graphInstance as any).showNavInfo(false);
+    }
+
+    graphInstance.onNodeDragEnd(node => {
+      const n = node as Node;
+      if (is3D) {
         n.fx = n.x;
         n.fy = n.y;
         n.fz = n.z;
-      })
-      .onNodeClick((node) => {
+      } else {
+        n.fx = n.x;
+        n.fy = n.y;
+      }
+    });
+
+    graphInstance.onNodeClick((node) => {
+      if (is3D) {
         const distance = 150;
         const distRatio = 1 + distance/Math.hypot(node.x || 0, node.y || 0, node.z || 0);
 
-        graphInstance.cameraPosition(
+        (graphInstance as any).cameraPosition(
           { 
             x: (node.x || 0) * distRatio, 
             y: (node.y || 0) * distRatio, 
@@ -235,7 +278,8 @@ export const UnifiedGraphVisualization = () => {
           node as { x: number, y: number, z: number },
           3000
         );
-      });
+      }
+    });
 
     const handleResize = () => {
       graphInstance
@@ -244,7 +288,9 @@ export const UnifiedGraphVisualization = () => {
     };
     window.addEventListener('resize', handleResize);
 
-    graphInstance.cameraPosition({ x: 500, y: 500, z: 800 });
+    if (is3D) {
+      (graphInstance as any).cameraPosition({ x: 500, y: 500, z: 800 });
+    }
 
     const userNode = graphData.nodes.find(node => node.type === "user");
     if (userNode) {
@@ -253,7 +299,9 @@ export const UnifiedGraphVisualization = () => {
       graphInstance.d3Force('link')?.distance(200);
       userNode.fx = 0;
       userNode.fy = 0;
-      userNode.fz = 0;
+      if (is3D) {
+        userNode.fz = 0;
+      }
     }
 
     return () => {
@@ -262,7 +310,7 @@ export const UnifiedGraphVisualization = () => {
         graphRef.current.innerHTML = "";
       }
     };
-  }, [entries, profile]);
+  }, [entries, profile, is3D, visibleNodeTypes, visibleCategories]);
 
   if (!entries || !profile) {
     return <Skeleton className="w-screen h-screen" />;
@@ -272,14 +320,92 @@ export const UnifiedGraphVisualization = () => {
     <Card className="relative w-screen h-screen overflow-hidden">
       <CardContent className="p-0 w-full h-full">
         <div ref={graphRef} className="w-full h-full" />
-        <Button
-          variant="outline"
-          size="icon"
-          className="absolute top-4 right-4 bg-background/50 backdrop-blur-sm"
-          onClick={toggleFullscreen}
-        >
-          {isFullscreen ? <Minimize2 /> : <Maximize2 />}
-        </Button>
+        <div className="absolute top-4 right-4 flex gap-2">
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button
+                variant="outline"
+                size="icon"
+                className="bg-background/50 backdrop-blur-sm"
+              >
+                <Settings2 className="h-4 w-4" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent>
+              <SheetHeader>
+                <SheetTitle>Graph Settings</SheetTitle>
+              </SheetHeader>
+              <div className="py-6 space-y-6">
+                <div className="space-y-2">
+                  <h4 className="text-sm font-medium">Visible Node Types</h4>
+                  <ToggleGroup 
+                    type="multiple" 
+                    className="flex flex-wrap justify-start gap-2"
+                    value={visibleNodeTypes}
+                    onValueChange={(value) => {
+                      if (value.length > 0) {
+                        setVisibleNodeTypes(value as NodeType[]);
+                      }
+                    }}
+                  >
+                    <ToggleGroupItem value="user" aria-label="Toggle User">
+                      User
+                    </ToggleGroupItem>
+                    <ToggleGroupItem value="category" aria-label="Toggle Categories">
+                      Categories
+                    </ToggleGroupItem>
+                    <ToggleGroupItem value="subcategory" aria-label="Toggle Subcategories">
+                      Subcategories
+                    </ToggleGroupItem>
+                    <ToggleGroupItem value="entry" aria-label="Toggle Entries">
+                      Entries
+                    </ToggleGroupItem>
+                    <ToggleGroupItem value="tag" aria-label="Toggle Tags">
+                      Tags
+                    </ToggleGroupItem>
+                  </ToggleGroup>
+                </div>
+                <div className="space-y-2">
+                  <h4 className="text-sm font-medium">Visible Categories</h4>
+                  <ToggleGroup 
+                    type="multiple" 
+                    className="flex flex-wrap justify-start gap-2"
+                    value={visibleCategories}
+                    onValueChange={(value) => {
+                      if (value.length > 0) {
+                        setVisibleCategories(value as EntryCategory[]);
+                      }
+                    }}
+                  >
+                    <ToggleGroupItem value="personal" aria-label="Toggle Personal">
+                      Personal
+                    </ToggleGroupItem>
+                    <ToggleGroupItem value="work" aria-label="Toggle Work">
+                      Work
+                    </ToggleGroupItem>
+                    <ToggleGroupItem value="social" aria-label="Toggle Social">
+                      Social
+                    </ToggleGroupItem>
+                    <ToggleGroupItem value="interests" aria-label="Toggle Interests">
+                      Interests
+                    </ToggleGroupItem>
+                    <ToggleGroupItem value="school" aria-label="Toggle School">
+                      School
+                    </ToggleGroupItem>
+                  </ToggleGroup>
+                </div>
+              </div>
+            </SheetContent>
+          </Sheet>
+          <Button
+            variant="outline"
+            size="icon"
+            className="bg-background/50 backdrop-blur-sm"
+            onClick={toggleFullscreen}
+          >
+            {isFullscreen ? <Minimize2 /> : <Maximize2 />}
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );
