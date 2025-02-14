@@ -15,23 +15,23 @@ export const UnifiedGraphVisualization: React.FC<UnifiedGraphVisualizationProps>
   useEffect(() => {
     if (!containerRef.current) return;
 
-    // Create a new instance of ForceGraph3D
-    const graph = ForceGraph3D();
+    // Create and initialize the graph
+    const graph = ForceGraph3D({
+      extraRendererConfig: { alpha: true }
+    });
     
-    // Configure the graph
+    // Configure the graph properties
     graph
       .width(containerRef.current.clientWidth)
       .height(containerRef.current.clientHeight)
       .backgroundColor('#000000')
       .nodeLabel('id')
       .nodeColor((node: NodeObject) => node.color || '#ffffff')
-      .linkColor(() => '#ffffff');
+      .linkColor(() => '#ffffff')
+      .graphData({ nodes, links });
 
-    // Set the container
-    graph(containerRef.current);
-    
-    // Update graph data
-    graph.graphData({ nodes, links });
+    // Render to container
+    graph.render(containerRef.current);
     
     // Store reference for cleanup
     graphRef.current = graph;
