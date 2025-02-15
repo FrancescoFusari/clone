@@ -300,13 +300,22 @@ export const UnifiedGraphVisualization = () => {
         );
       });
 
-    // Update physics settings
-    graphInstance
-      .d3Force('charge')?.strength(gravity)
-      .d3Force('link')?.strength(linkStrength);
-    
+    // Update physics settings separately
+    const chargeForce = graphInstance.d3Force('charge');
+    if (chargeForce) {
+      chargeForce.strength(gravity);
+    }
+
+    const linkForce = graphInstance.d3Force('link');
+    if (linkForce) {
+      linkForce.strength(linkStrength);
+    }
+
     // Update global simulation parameters
-    (graphInstance as any).d3Force('simulation').velocityDecay(friction);
+    const simulation = graphInstance.d3Force('simulation');
+    if (simulation) {
+      simulation.velocityDecay(friction);
+    }
 
     const handleResize = () => {
       graphInstance
@@ -320,8 +329,6 @@ export const UnifiedGraphVisualization = () => {
     const userNode = graphData.nodes.find(node => node.type === "user");
     if (userNode) {
       graphInstance.d3Force('center', null);
-      graphInstance.d3Force('charge')?.strength(-150);
-      graphInstance.d3Force('link')?.distance(200);
       userNode.fx = 0;
       userNode.fy = 0;
       userNode.fz = 0;
