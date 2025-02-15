@@ -12,6 +12,7 @@ import type { Database } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 
 type EntryCategory = Database["public"]["Enums"]["entry_category"];
+type Json = Database["public"]["Tables"]["profiles"]["Row"]["graph_settings"];
 
 interface GraphSettings {
   linkOpacity: number;
@@ -25,6 +26,19 @@ interface GraphSettings {
     friction: number;
   };
 }
+
+const DEFAULT_SETTINGS: GraphSettings = {
+  linkOpacity: 80,
+  nodeSize: 100,
+  linkWidth: 1,
+  showLabels: true,
+  showArrows: false,
+  graphPhysics: {
+    gravity: -250,
+    linkStrength: 1,
+    friction: 0.8
+  }
+};
 
 interface Node {
   id: string;
@@ -53,14 +67,14 @@ interface GraphData {
 export const UnifiedGraphVisualization = () => {
   const graphRef = useRef<HTMLDivElement>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [linkOpacity, setLinkOpacity] = useState(80);
-  const [nodeSize, setNodeSize] = useState(100);
-  const [linkWidth, setLinkWidth] = useState(1);
-  const [showLabels, setShowLabels] = useState(true);
-  const [showArrows, setShowArrows] = useState(false);
-  const [gravity, setGravity] = useState(-250);
-  const [linkStrength, setLinkStrength] = useState(1);
-  const [friction, setFriction] = useState(0.8);
+  const [linkOpacity, setLinkOpacity] = useState(DEFAULT_SETTINGS.linkOpacity);
+  const [nodeSize, setNodeSize] = useState(DEFAULT_SETTINGS.nodeSize);
+  const [linkWidth, setLinkWidth] = useState(DEFAULT_SETTINGS.linkWidth);
+  const [showLabels, setShowLabels] = useState(DEFAULT_SETTINGS.showLabels);
+  const [showArrows, setShowArrows] = useState(DEFAULT_SETTINGS.showArrows);
+  const [gravity, setGravity] = useState(DEFAULT_SETTINGS.graphPhysics.gravity);
+  const [linkStrength, setLinkStrength] = useState(DEFAULT_SETTINGS.graphPhysics.linkStrength);
+  const [friction, setFriction] = useState(DEFAULT_SETTINGS.graphPhysics.friction);
 
   const { data: entries } = useQuery({
     queryKey: ["all-entries"],
@@ -93,15 +107,19 @@ export const UnifiedGraphVisualization = () => {
 
   useEffect(() => {
     if (profile?.graph_settings) {
-      const settings = profile.graph_settings as GraphSettings;
-      setLinkOpacity(settings.linkOpacity ?? 80);
-      setNodeSize(settings.nodeSize ?? 100);
-      setLinkWidth(settings.linkWidth ?? 1);
-      setShowLabels(settings.showLabels ?? true);
-      setShowArrows(settings.showArrows ?? false);
-      setGravity(settings.graphPhysics?.gravity ?? -250);
-      setLinkStrength(settings.graphPhysics?.linkStrength ?? 1);
-      setFriction(settings.graphPhysics?.friction ?? 0.8);
+      try {
+        const settings = profile.graph_settings as unknown as GraphSettings;
+        setLinkOpacity(settings.linkOpacity ?? DEFAULT_SETTINGS.linkOpacity);
+        setNodeSize(settings.nodeSize ?? DEFAULT_SETTINGS.nodeSize);
+        setLinkWidth(settings.linkWidth ?? DEFAULT_SETTINGS.linkWidth);
+        setShowLabels(settings.showLabels ?? DEFAULT_SETTINGS.showLabels);
+        setShowArrows(settings.showArrows ?? DEFAULT_SETTINGS.showArrows);
+        setGravity(settings.graphPhysics?.gravity ?? DEFAULT_SETTINGS.graphPhysics.gravity);
+        setLinkStrength(settings.graphPhysics?.linkStrength ?? DEFAULT_SETTINGS.graphPhysics.linkStrength);
+        setFriction(settings.graphPhysics?.friction ?? DEFAULT_SETTINGS.graphPhysics.friction);
+      } catch (error) {
+        console.error("Error parsing graph settings:", error);
+      }
     }
   }, [profile]);
 
@@ -112,40 +130,36 @@ export const UnifiedGraphVisualization = () => {
   ) => {
     if (!profile?.id) return;
 
-    const currentSettings = (profile.graph_settings as GraphSettings) || {
-      linkOpacity: 80,
-      nodeSize: 100,
-      linkWidth: 1,
-      showLabels: true,
-      showArrows: false,
-      graphPhysics: {
-        gravity: -250,
-        linkStrength: 1,
-        friction: 0.8
-      }
-    };
+    try {
+      const currentSettings = ((profile.graph_settings as unknown as GraphSettings) || DEFAULT_SETTINGS);
 
-    const newSettings: GraphSettings = category === "graphPhysics" 
-      ? {
-          ...currentSettings,
-          graphPhysics: {
-            ...currentSettings.graphPhysics,
-            [setting]: value
+      const newSettings: GraphSettings = category === "graphPhysics" 
+        ? {
+            ...currentSettings,
+            graphPhysics: {
+              ...currentSettings.graphPhysics,
+              [setting]: value
+            }
           }
-        }
-      : {
-          ...currentSettings,
-          [setting]: value
-        };
+        : {
+            ...currentSettings,
+            [setting]: value
+          };
 
-    const { error } = await supabase
-      .from('profiles')
-      .update({ graph_settings: newSettings })
-      .eq('id', profile.id);
+      const { error } = await supabase
+        .from('profiles')
+        .update({ 
+          graph_settings: newSettings as unknown as Json 
+        })
+        .eq('id', profile.id);
 
-    if (error) {
-      toast.error("Failed to save graph settings");
-      console.error("Error saving graph settings:", error);
+      if (error) {
+        toast.error("Failed to save graph settings");
+        console.error("Error saving graph settings:", error);
+      }
+    } catch (error) {
+      console.error("Error updating graph settings:", error);
+      toast.error("Failed to update graph settings");
     }
   };
 
@@ -266,7 +280,9 @@ export const UnifiedGraphVisualization = () => {
       });
     });
 
-    const graphInstance = new ForceGraph3D()(graphRef.current);
+    const graph = ForceGraph3D();
+    const graphInstance = graph(graphRef.current);
+    
     graphInstance
       .graphData(graphData)
       .nodeLabel("name")
