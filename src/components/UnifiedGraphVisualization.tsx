@@ -1,4 +1,3 @@
-
 import { useEffect, useRef, useState } from "react";
 import ForceGraph3D from "3d-force-graph";
 import { useQuery } from "@tanstack/react-query";
@@ -69,14 +68,13 @@ export const UnifiedGraphVisualization = () => {
       if (error) throw error;
       return data;
     },
-    onSuccess: (data) => {
-      // Load saved opacity setting
-      const savedOpacity = data.graph_settings?.linkOpacity;
-      if (typeof savedOpacity === 'number') {
-        setLinkOpacity(savedOpacity);
-      }
-    },
   });
+
+  useEffect(() => {
+    if (profile?.graph_settings?.linkOpacity) {
+      setLinkOpacity(profile.graph_settings.linkOpacity);
+    }
+  }, [profile]);
 
   const handleOpacityChange = async (value: number) => {
     setLinkOpacity(value);
@@ -87,7 +85,6 @@ export const UnifiedGraphVisualization = () => {
       .from('profiles')
       .update({
         graph_settings: {
-          ...profile.graph_settings,
           linkOpacity: value
         }
       })
@@ -95,6 +92,7 @@ export const UnifiedGraphVisualization = () => {
 
     if (error) {
       toast.error("Failed to save graph settings");
+      console.error("Error saving graph settings:", error);
     }
   };
 
