@@ -5,8 +5,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "./ui/skeleton";
 import { Card, CardContent } from "./ui/card";
 import { Button } from "./ui/button";
-import { Maximize2, Minimize2 } from "lucide-react";
+import { Maximize2, Minimize2, Eye, EyeOff, ArrowRight } from "lucide-react";
 import { Slider } from "./ui/slider";
+import { Switch } from "./ui/switch";
 import type { Database } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 
@@ -40,6 +41,13 @@ export const UnifiedGraphVisualization = () => {
   const graphRef = useRef<HTMLDivElement>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [linkOpacity, setLinkOpacity] = useState(80);
+  const [nodeSize, setNodeSize] = useState(100);
+  const [linkWidth, setLinkWidth] = useState(1);
+  const [showLabels, setShowLabels] = useState(true);
+  const [showArrows, setShowArrows] = useState(false);
+  const [gravity, setGravity] = useState(-250);
+  const [linkStrength, setLinkStrength] = useState(1);
+  const [friction, setFriction] = useState(0.8);
 
   const { data: entries } = useQuery({
     queryKey: ["all-entries"],
@@ -71,23 +79,40 @@ export const UnifiedGraphVisualization = () => {
   });
 
   useEffect(() => {
-    if (profile?.graph_settings?.linkOpacity) {
-      setLinkOpacity(profile.graph_settings.linkOpacity);
+    if (profile?.graph_settings) {
+      const settings = profile.graph_settings;
+      setLinkOpacity(settings.linkOpacity ?? 80);
+      setNodeSize(settings.nodeSize ?? 100);
+      setLinkWidth(settings.linkWidth ?? 1);
+      setShowLabels(settings.showLabels ?? true);
+      setShowArrows(settings.showArrows ?? false);
+      setGravity(settings.graphPhysics?.gravity ?? -250);
+      setLinkStrength(settings.graphPhysics?.linkStrength ?? 1);
+      setFriction(settings.graphPhysics?.friction ?? 0.8);
     }
   }, [profile]);
 
-  const handleOpacityChange = async (value: number) => {
-    setLinkOpacity(value);
-    
+  const handleSettingChange = async (
+    setting: string,
+    value: number | boolean,
+    category?: string
+  ) => {
     if (!profile?.id) return;
+
+    const newSettings = { ...profile.graph_settings };
+    
+    if (category) {
+      newSettings[category] = {
+        ...newSettings[category],
+        [setting]: value
+      };
+    } else {
+      newSettings[setting] = value;
+    }
 
     const { error } = await supabase
       .from('profiles')
-      .update({
-        graph_settings: {
-          linkOpacity: value
-        }
-      })
+      .update({ graph_settings: newSettings })
       .eq('id', profile.id);
 
     if (error) {
@@ -217,6 +242,11 @@ export const UnifiedGraphVisualization = () => {
     const graphInstance = Graph(graphRef.current)
       .graphData(graphData)
       .nodeLabel("name")
+      .nodeVal(node => ((node as Node).val * nodeSize) / 100)
+      .linkWidth(linkWidth)
+      .showNavInfo(false)
+      .linkDirectionalArrowLength(showArrows ? 3.5 : 0)
+      .linkDirectionalArrowRelPos(1)
       .nodeColor(node => {
         const n = node as Node;
         switch (n.type) {
@@ -238,12 +268,9 @@ export const UnifiedGraphVisualization = () => {
             return "#F5F3F2";
         }
       })
-      .nodeVal(node => (node as Node).val)
-      .linkWidth(0.8)
       .linkColor(link => {
         const l = link as Link;
         if (l.color) {
-          // Convert rgba color to use custom opacity
           const rgbaMatch = l.color.match(/rgba\((\d+),\s*(\d+),\s*(\d+),\s*[\d.]+\)/);
           if (rgbaMatch) {
             return `rgba(${rgbaMatch[1]}, ${rgbaMatch[2]}, ${rgbaMatch[3]}, ${linkOpacity / 100})`;
@@ -251,10 +278,7 @@ export const UnifiedGraphVisualization = () => {
         }
         return `rgba(255, 255, 255, ${linkOpacity / 100})`;
       })
-      .backgroundColor("#000000")
-      .width(window.innerWidth)
-      .height(window.innerHeight)
-      .showNavInfo(false)
+      .nodeThreeObject(showLabels ? undefined : () => {})
       .onNodeDragEnd(node => {
         const n = node as Node;
         n.fx = n.x;
@@ -275,6 +299,14 @@ export const UnifiedGraphVisualization = () => {
           3000
         );
       });
+
+    // Update physics settings
+    graphInstance
+      .d3Force('charge')?.strength(gravity)
+      .d3Force('link')?.strength(linkStrength);
+    
+    // Update global simulation parameters
+    (graphInstance as any).d3Force('simulation').velocityDecay(friction);
 
     const handleResize = () => {
       graphInstance
@@ -301,7 +333,7 @@ export const UnifiedGraphVisualization = () => {
         graphRef.current.innerHTML = "";
       }
     };
-  }, [entries, profile, linkOpacity]);
+  }, [entries, profile, linkOpacity, nodeSize, linkWidth, showLabels, showArrows, gravity, linkStrength, friction]);
 
   if (!entries || !profile) {
     return <Skeleton className="w-screen h-screen" />;
@@ -312,17 +344,119 @@ export const UnifiedGraphVisualization = () => {
       <CardContent className="p-0 w-full h-full">
         <div ref={graphRef} className="w-full h-full" />
         <div className="absolute top-4 right-4 flex gap-2">
-          <Card className="p-4 bg-background/50 backdrop-blur-sm w-64">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Link Opacity</label>
-              <Slider
-                value={[linkOpacity]}
-                onValueChange={([value]) => handleOpacityChange(value)}
-                max={100}
-                min={0}
-                step={25}
-              />
-              <span className="text-xs text-muted-foreground">{linkOpacity}%</span>
+          <Card className="p-4 bg-background/50 backdrop-blur-sm w-80">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Node Size</label>
+                <Slider
+                  value={[nodeSize]}
+                  onValueChange={([value]) => {
+                    setNodeSize(value);
+                    handleSettingChange('nodeSize', value);
+                  }}
+                  max={200}
+                  min={50}
+                  step={10}
+                />
+                <span className="text-xs text-muted-foreground">{nodeSize}%</span>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Link Opacity</label>
+                <Slider
+                  value={[linkOpacity]}
+                  onValueChange={([value]) => {
+                    setLinkOpacity(value);
+                    handleSettingChange('linkOpacity', value);
+                  }}
+                  max={100}
+                  min={0}
+                  step={10}
+                />
+                <span className="text-xs text-muted-foreground">{linkOpacity}%</span>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Link Width</label>
+                <Slider
+                  value={[linkWidth]}
+                  onValueChange={([value]) => {
+                    setLinkWidth(value);
+                    handleSettingChange('linkWidth', value);
+                  }}
+                  max={3}
+                  min={0.5}
+                  step={0.5}
+                />
+                <span className="text-xs text-muted-foreground">{linkWidth}</span>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium">Show Labels</label>
+                <Switch
+                  checked={showLabels}
+                  onCheckedChange={(checked) => {
+                    setShowLabels(checked);
+                    handleSettingChange('showLabels', checked);
+                  }}
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium">Show Arrows</label>
+                <Switch
+                  checked={showArrows}
+                  onCheckedChange={(checked) => {
+                    setShowArrows(checked);
+                    handleSettingChange('showArrows', checked);
+                  }}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Gravity</label>
+                <Slider
+                  value={[Math.abs(gravity)]}
+                  onValueChange={([value]) => {
+                    setGravity(-value);
+                    handleSettingChange('gravity', -value, 'graphPhysics');
+                  }}
+                  max={500}
+                  min={100}
+                  step={50}
+                />
+                <span className="text-xs text-muted-foreground">{Math.abs(gravity)}</span>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Link Strength</label>
+                <Slider
+                  value={[linkStrength]}
+                  onValueChange={([value]) => {
+                    setLinkStrength(value);
+                    handleSettingChange('linkStrength', value, 'graphPhysics');
+                  }}
+                  max={2}
+                  min={0.1}
+                  step={0.1}
+                />
+                <span className="text-xs text-muted-foreground">{linkStrength}</span>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Friction</label>
+                <Slider
+                  value={[friction]}
+                  onValueChange={([value]) => {
+                    setFriction(value);
+                    handleSettingChange('friction', value, 'graphPhysics');
+                  }}
+                  max={0.9}
+                  min={0.1}
+                  step={0.1}
+                />
+                <span className="text-xs text-muted-foreground">{friction}</span>
+              </div>
             </div>
           </Card>
           <Button
