@@ -1,5 +1,6 @@
+
 import { useEffect, useRef, useState } from "react";
-import ForceGraph3D, { ForceGraph3DInstance } from "3d-force-graph";
+import ForceGraph3D from "3d-force-graph";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "./ui/skeleton";
@@ -286,7 +287,7 @@ export const UnifiedGraphVisualization = () => {
     
     graphInstance
       .graphData(graphData)
-      .nodeLabel("name")
+      .nodeLabel(node => showLabels ? (node as Node).name : null)
       .nodeVal(node => ((node as Node).val * nodeSize) / 100)
       .linkWidth(linkWidth)
       .showNavInfo(false)
@@ -323,7 +324,6 @@ export const UnifiedGraphVisualization = () => {
         }
         return `rgba(255, 255, 255, ${linkOpacity / 100})`;
       })
-      .nodeThreeObject(showLabels ? undefined : () => {})
       .onNodeDragEnd(node => {
         const n = node as Node;
         n.fx = n.x;
