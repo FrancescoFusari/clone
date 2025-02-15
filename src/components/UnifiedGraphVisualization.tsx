@@ -282,7 +282,8 @@ export const UnifiedGraphVisualization = () => {
       });
     });
 
-    const graphInstance = ForceGraph3D()(graphRef.current);
+    const Graph = ForceGraph3D();
+    const graphInstance = Graph(graphRef.current);
     
     graphInstance
       .graphData(graphData)
@@ -295,34 +296,67 @@ export const UnifiedGraphVisualization = () => {
         const n = node as Node;
         if (!showLabels) return undefined;
 
-        // Create a canvas texture for the label
+        // Create a high-resolution canvas texture for the label
         const canvas = document.createElement('canvas');
         const context = canvas.getContext('2d');
         if (!context) return undefined;
 
-        // Set up text properties
-        const fontSize = 8;
+        // Set up text properties with higher resolution
+        const fontSize = 48; // Increased font size for better resolution
+        const devicePixelRatio = window.devicePixelRatio || 1;
+        context.scale(devicePixelRatio, devicePixelRatio);
+        
         context.font = `${fontSize}px Sans-Serif`;
         const textWidth = context.measureText(n.name).width;
-        const padding = 2;
+        const padding = 16; // Increased padding for higher resolution
 
-        // Set canvas dimensions
-        canvas.width = textWidth + padding * 2;
-        canvas.height = fontSize + padding * 2;
+        // Set canvas dimensions with higher resolution
+        canvas.width = (textWidth + padding * 2) * devicePixelRatio;
+        canvas.height = (fontSize + padding * 2) * devicePixelRatio;
 
-        // Draw text
-        context.font = `${fontSize}px Sans-Serif`;
-        context.fillStyle = '#ffffff';
+        // Clear and set background (optional)
+        context.fillStyle = 'transparent';
+        context.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Draw text with anti-aliasing
         context.textAlign = 'center';
         context.textBaseline = 'middle';
-        context.fillText(n.name, canvas.width / 2, canvas.height / 2);
+        context.fillStyle = '#ffffff';
+        context.font = `${fontSize}px Sans-Serif`;
+        
+        // Enable text anti-aliasing
+        context.imageSmoothingEnabled = true;
+        context.imageSmoothingQuality = 'high';
+        
+        // Draw the text at the center of the canvas
+        context.fillText(
+          n.name,
+          canvas.width / (2 * devicePixelRatio),
+          canvas.height / (2 * devicePixelRatio)
+        );
 
-        // Create sprite material
+        // Create sprite material with the high-res texture
         const texture = new THREE.CanvasTexture(canvas);
-        const spriteMaterial = new THREE.SpriteMaterial({ map: texture });
+        texture.needsUpdate = true;
+        
+        // Use nearest filter for sharper text
+        texture.minFilter = THREE.LinearFilter;
+        texture.magFilter = THREE.LinearFilter;
+        
+        const spriteMaterial = new THREE.SpriteMaterial({
+          map: texture,
+          transparent: true
+        });
+        
         const sprite = new THREE.Sprite(spriteMaterial);
         
-        sprite.scale.set(20, 10, 1);
+        // Adjust scale to account for the higher resolution
+        sprite.scale.set(
+          (canvas.width / devicePixelRatio) / 4,
+          (canvas.height / devicePixelRatio) / 4,
+          1
+        );
+        
         return sprite;
       })
       .nodeColor(node => {
