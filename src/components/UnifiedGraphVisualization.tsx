@@ -67,7 +67,7 @@ interface GraphData {
 export const UnifiedGraphVisualization = () => {
   const graphRef = useRef<HTMLDivElement>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [showSettings, setShowSettings] = useState(true);
+  const [showSettings, setShowSettings] = useState(false);
   const [linkOpacity, setLinkOpacity] = useState(DEFAULT_SETTINGS.linkOpacity);
   const [nodeSize, setNodeSize] = useState(DEFAULT_SETTINGS.nodeSize);
   const [linkWidth, setLinkWidth] = useState(DEFAULT_SETTINGS.linkWidth);
