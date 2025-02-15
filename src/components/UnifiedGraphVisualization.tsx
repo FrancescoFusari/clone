@@ -1,3 +1,4 @@
+
 import { useEffect, useRef } from "react";
 import ForceGraph3D from "3d-force-graph";
 import { useQuery } from "@tanstack/react-query";
@@ -5,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "./ui/skeleton";
 import { Card, CardContent } from "./ui/card";
 import { Button } from "./ui/button";
-import { Maximize2, Minimize2 } from "lucide-react";
+import { Maximize2, Minimize2, Settings2 } from "lucide-react";
 import { useState } from "react";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -184,7 +185,7 @@ export const UnifiedGraphVisualization = () => {
       });
     });
 
-    const Graph = new ForceGraph3D();
+    const Graph = ForceGraph3D();
     const graphInstance = Graph(graphRef.current)
       .graphData(graphData)
       .nodeLabel("name")
@@ -212,7 +213,7 @@ export const UnifiedGraphVisualization = () => {
       .nodeVal(node => (node as Node).val)
       .linkWidth(0.8)
       .linkColor(link => (link as Link).color || "#ffffff50")
-      .backgroundColor("#0f1729")
+      .backgroundColor("#000000") // Changed to match the dark theme background
       .width(window.innerWidth)
       .height(window.innerHeight)
       .showNavInfo(false)
