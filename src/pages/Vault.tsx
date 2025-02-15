@@ -145,24 +145,25 @@ const Test = () => {
   }
 
   return (
-    <>
-      <div className="min-h-screen bg-zinc-900 text-zinc-100">
-        <div className="flex justify-between items-start p-4">
-          <div className="space-y-2">
-            <h1 className="text-4xl font-light text-zinc-50">My Entries</h1>
-            <p className="text-zinc-400">Browse and manage your entries</p>
-          </div>
-          <List className="w-6 h-6 text-zinc-400" />
+    <div className="min-h-screen bg-zinc-900 text-zinc-100 max-w-full overflow-hidden">
+      <div className="flex justify-between items-start p-4 max-w-full">
+        <div className="space-y-2 min-w-0"> {/* Add min-w-0 to allow text wrapping */}
+          <h1 className="text-4xl font-light text-zinc-50 break-words">My Entries</h1>
+          <p className="text-zinc-400 break-words">Browse and manage your entries</p>
         </div>
+        <List className="w-6 h-6 text-zinc-400 flex-shrink-0" /> {/* Add flex-shrink-0 */}
+      </div>
 
-        <div className="flex gap-2 mb-6 overflow-x-auto px-4 py-1 no-scrollbar touch-pan-x">
+      {/* Categories scrollbar with improved mobile handling */}
+      <div className="relative mb-6 w-full">
+        <div className="flex gap-2 overflow-x-auto px-4 py-1 no-scrollbar touch-pan-x scrollbar-hide max-w-full">
           <button
             onClick={() => {
               setSelectedCategory(null);
               setPage(0);
               setEntries([]);
             }}
-            className={`flex items-center px-4 py-1.5 rounded-full text-base transition-colors shrink-0 ${
+            className={`flex items-center px-4 py-1.5 rounded-full text-sm transition-colors shrink-0 whitespace-nowrap ${
               selectedCategory === null 
                 ? 'bg-zinc-100 text-zinc-900 font-medium' 
                 : 'bg-zinc-800/80 text-zinc-300 hover:bg-zinc-700/80'
@@ -178,7 +179,7 @@ const Test = () => {
                 setPage(0);
                 setEntries([]);
               }}
-              className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-base transition-colors shrink-0 ${
+              className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-sm transition-colors shrink-0 whitespace-nowrap ${
                 selectedCategory === category
                   ? 'bg-zinc-100 text-zinc-900 font-medium'
                   : 'bg-zinc-800/80 text-zinc-300 hover:bg-zinc-700/80'
@@ -189,90 +190,90 @@ const Test = () => {
             </button>
           ))}
         </div>
+      </div>
 
-        <div className="px-4">
-          {entries.length === 0 && !isLoading ? (
-            <div className="flex justify-center items-center h-64">
-              <div className="text-zinc-500">No entries found</div>
-            </div>
-          ) : (
-            <div className="grid gap-4 pb-24">
-              {entries.map((entry, index) => (
-                <div
-                  key={entry.id}
-                  ref={index === entries.length - 1 ? lastEntryElementRef : undefined}
-                  className="bg-zinc-800/40 rounded-xl p-4 hover:bg-zinc-800/60 transition-colors relative border border-white/10"
-                >
-                  <div className="absolute top-4 right-4 flex flex-col items-center gap-2">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-zinc-400 hover:text-zinc-100 hover:bg-zinc-700/50"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        navigate(`/entries/${entry.id}`);
-                      }}
-                    >
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                    {getEntryTypeIcon(entry)}
+      <div className="px-4 max-w-full">
+        {entries.length === 0 && !isLoading ? (
+          <div className="flex justify-center items-center h-64">
+            <div className="text-zinc-500">No entries found</div>
+          </div>
+        ) : (
+          <div className="grid gap-4 pb-24">
+            {entries.map((entry, index) => (
+              <div
+                key={entry.id}
+                ref={index === entries.length - 1 ? lastEntryElementRef : undefined}
+                className="bg-zinc-800/40 rounded-xl p-4 hover:bg-zinc-800/60 transition-colors relative border border-white/10 break-words overflow-hidden"
+              >
+                <div className="absolute top-4 right-4 flex flex-col items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-zinc-400 hover:text-zinc-100 hover:bg-zinc-700/50"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      navigate(`/entries/${entry.id}`);
+                    }}
+                  >
+                    <Eye className="h-4 w-4" />
+                  </Button>
+                  {getEntryTypeIcon(entry)}
+                </div>
+
+                <div className="flex justify-between items-start mb-4 pr-12">
+                  <div className="space-y-1 min-w-0"> {/* Add min-w-0 */}
+                    <h3 className="text-xl font-medium text-zinc-100 break-words">
+                      {entry.title}
+                    </h3>
+                    <p className="text-sm text-zinc-500">
+                      {format(new Date(entry.created_at), "MMM d, yyyy")}
+                    </p>
                   </div>
+                </div>
+                
+                <p className="text-zinc-300/80 mb-4 leading-relaxed break-words">
+                  {truncateContent(entry.content)}
+                </p>
 
-                  <div className="flex justify-between items-start mb-4 pr-12">
-                    <div className="space-y-1">
-                      <h3 className="text-xl font-medium text-zinc-100">
-                        {entry.title}
-                      </h3>
-                      <p className="text-sm text-zinc-500">
-                        {format(new Date(entry.created_at), "MMM d, yyyy")}
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <p className="text-zinc-300/80 mb-4 leading-relaxed">
-                    {truncateContent(entry.content)}
-                  </p>
-
-                  <div className="flex flex-col gap-3 pt-4 border-t border-zinc-700/50">
-                    <div className="flex items-center justify-between">
-                      <span className={`flex items-center gap-2 text-sm ${getCategoryAccentColor(entry.category)}`}>
-                        {getCategoryIcon(entry.category)}
-                        <span>{entry.category.charAt(0).toUpperCase() + entry.category.slice(1)}</span>
+                <div className="flex flex-col gap-3 pt-4 border-t border-zinc-700/50">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <span className={`flex items-center gap-2 text-sm ${getCategoryAccentColor(entry.category)}`}>
+                      {getCategoryIcon(entry.category)}
+                      <span className="break-words">{entry.category.charAt(0).toUpperCase() + entry.category.slice(1)}</span>
+                    </span>
+                    {entry.subcategory && (
+                      <span className="text-sm text-zinc-500 break-words">
+                        {entry.subcategory}
                       </span>
-                      {entry.subcategory && (
-                        <span className="text-sm text-zinc-500">
-                          {entry.subcategory}
-                        </span>
-                      )}
-                    </div>
-                    
-                    {entry.tags && entry.tags.length > 0 && (
-                      <div className="flex flex-wrap gap-2">
-                        {entry.tags.map((tag, i) => (
-                          <span
-                            key={i}
-                            className="px-2 py-1 rounded-md text-xs bg-zinc-800/80 text-zinc-400 border border-zinc-700/50"
-                          >
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
                     )}
                   </div>
+                  
+                  {entry.tags && entry.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {entry.tags.map((tag, i) => (
+                        <span
+                          key={i}
+                          className="px-2 py-1 rounded-md text-xs bg-zinc-800/80 text-zinc-400 border border-zinc-700/50 break-words"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              ))}
-              {isLoading && (
-                <div className="flex justify-center items-center py-4">
-                  <div className="animate-pulse text-zinc-500">Loading more entries...</div>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
+              </div>
+            ))}
+            {isLoading && (
+              <div className="flex justify-center items-center py-4">
+                <div className="animate-pulse text-zinc-500">Loading more entries...</div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
       <Navigation />
-    </>
+    </div>
   );
 };
 
