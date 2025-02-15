@@ -1,4 +1,3 @@
-
 import { useEffect, useRef, useState } from "react";
 import ForceGraph3D from "3d-force-graph";
 import { useQuery } from "@tanstack/react-query";
@@ -293,6 +292,38 @@ export const UnifiedGraphVisualization = () => {
       .showNavInfo(false)
       .linkDirectionalArrowLength(showArrows ? 3.5 : 0)
       .linkDirectionalArrowRelPos(1)
+      .nodeThreeObject(node => {
+        const n = node as Node;
+        if (!showLabels) return undefined;
+
+        const sprite = new (window as any).THREE.Sprite(
+          new (window as any).THREE.SpriteMaterial({
+            map: new (window as any).THREE.CanvasTexture((() => {
+              const canvas = document.createElement('canvas');
+              const context = canvas.getContext('2d');
+              if (!context) return canvas;
+
+              const fontSize = 8;
+              context.font = `${fontSize}px Sans-Serif`;
+              const textWidth = context.measureText(n.name).width;
+              const padding = 2;
+
+              canvas.width = textWidth + padding * 2;
+              canvas.height = fontSize + padding * 2;
+
+              context.font = `${fontSize}px Sans-Serif`;
+              context.fillStyle = '#ffffff';
+              context.textAlign = 'center';
+              context.textBaseline = 'middle';
+              context.fillText(n.name, canvas.width / 2, canvas.height / 2);
+
+              return canvas;
+            })())
+          })
+        );
+        sprite.scale.set(20, 10, 1);
+        return sprite;
+      })
       .nodeColor(node => {
         const n = node as Node;
         switch (n.type) {
