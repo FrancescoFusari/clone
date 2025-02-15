@@ -1,3 +1,4 @@
+
 import { useEffect, useRef, useState } from "react";
 import ForceGraph3D from "3d-force-graph";
 import { useQuery } from "@tanstack/react-query";
@@ -5,9 +6,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "./ui/skeleton";
 import { Card, CardContent } from "./ui/card";
 import { Button } from "./ui/button";
-import { Maximize2, Minimize2, Settings2 } from "lucide-react";
+import { Maximize2, Minimize2 } from "lucide-react";
 import { Slider } from "./ui/slider";
 import type { Database } from "@/integrations/supabase/types";
+import { toast } from "sonner";
 
 type EntryCategory = Database["public"]["Enums"]["entry_category"];
 
@@ -38,7 +40,7 @@ interface GraphData {
 export const UnifiedGraphVisualization = () => {
   const graphRef = useRef<HTMLDivElement>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [linkOpacity, setLinkOpacity] = useState(80); // Default opacity 0.8 * 100
+  const [linkOpacity, setLinkOpacity] = useState(80);
 
   const { data: entries } = useQuery({
     queryKey: ["all-entries"],
@@ -67,7 +69,34 @@ export const UnifiedGraphVisualization = () => {
       if (error) throw error;
       return data;
     },
+    onSuccess: (data) => {
+      // Load saved opacity setting
+      const savedOpacity = data.graph_settings?.linkOpacity;
+      if (typeof savedOpacity === 'number') {
+        setLinkOpacity(savedOpacity);
+      }
+    },
   });
+
+  const handleOpacityChange = async (value: number) => {
+    setLinkOpacity(value);
+    
+    if (!profile?.id) return;
+
+    const { error } = await supabase
+      .from('profiles')
+      .update({
+        graph_settings: {
+          ...profile.graph_settings,
+          linkOpacity: value
+        }
+      })
+      .eq('id', profile.id);
+
+    if (error) {
+      toast.error("Failed to save graph settings");
+    }
+  };
 
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
@@ -290,10 +319,10 @@ export const UnifiedGraphVisualization = () => {
               <label className="text-sm font-medium">Link Opacity</label>
               <Slider
                 value={[linkOpacity]}
-                onValueChange={([value]) => setLinkOpacity(value)}
+                onValueChange={([value]) => handleOpacityChange(value)}
                 max={100}
                 min={0}
-                step={1}
+                step={25}
               />
               <span className="text-xs text-muted-foreground">{linkOpacity}%</span>
             </div>
