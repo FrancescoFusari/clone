@@ -283,7 +283,7 @@ export const UnifiedGraphVisualization = () => {
     });
 
     const Graph = ForceGraph3D;
-    const graphInstance = Graph(graphRef.current);
+    const graphInstance = new Graph()(graphRef.current);
     
     const getNodeColor = (node: Node) => {
       switch (node.type) {
@@ -305,16 +305,7 @@ export const UnifiedGraphVisualization = () => {
           return "#F5F3F2";
       }
     };
-
-    const isLightColor = (color: string) => {
-      const hex = color.replace('#', '');
-      const r = parseInt(hex.substr(0, 2), 16);
-      const g = parseInt(hex.substr(2, 2), 16);
-      const b = parseInt(hex.substr(4, 2), 16);
-      const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-      return brightness > 155;
-    };
-
+    
     graphInstance
       .graphData(graphData)
       .nodeVal(node => ((node as Node).val * nodeSize) / 100)
@@ -341,7 +332,6 @@ export const UnifiedGraphVisualization = () => {
         const textWidth = textMetrics.width;
         const textHeight = fontSize;
         const padding = 16;
-        const borderRadius = 12 * devicePixelRatio; // Rounded corners radius
 
         // Set canvas dimensions with higher resolution and proper centering
         const canvasWidth = (textWidth + padding * 2) * devicePixelRatio;
@@ -349,33 +339,16 @@ export const UnifiedGraphVisualization = () => {
         canvas.width = canvasWidth;
         canvas.height = canvasHeight;
 
-        // Clear canvas
-        context.clearRect(0, 0, canvasWidth, canvasHeight);
-
-        // Draw rounded rectangle background
-        const nodeColor = getNodeColor(n);
-        context.fillStyle = nodeColor;
-        context.beginPath();
-        context.moveTo(borderRadius, 0);
-        context.lineTo(canvasWidth - borderRadius, 0);
-        context.quadraticCurveTo(canvasWidth, 0, canvasWidth, borderRadius);
-        context.lineTo(canvasWidth, canvasHeight - borderRadius);
-        context.quadraticCurveTo(canvasWidth, canvasHeight, canvasWidth - borderRadius, canvasHeight);
-        context.lineTo(borderRadius, canvasHeight);
-        context.quadraticCurveTo(0, canvasHeight, 0, canvasHeight - borderRadius);
-        context.lineTo(0, borderRadius);
-        context.quadraticCurveTo(0, 0, borderRadius, 0);
-        context.closePath();
-        context.fill();
+        // Clear and set background
+        context.fillStyle = getNodeColor(n);
+        context.fillRect(0, 0, canvasWidth, canvasHeight);
 
         // Reset context after resize
         context.scale(devicePixelRatio, devicePixelRatio);
         context.font = `${fontSize}px Sans-Serif`;
         context.textAlign = 'center';
         context.textBaseline = 'middle';
-        
-        // Set text color based on background brightness
-        context.fillStyle = isLightColor(nodeColor) ? '#000000' : '#ffffff';
+        context.fillStyle = '#ffffff';
         
         // Enable text anti-aliasing
         context.imageSmoothingEnabled = true;
