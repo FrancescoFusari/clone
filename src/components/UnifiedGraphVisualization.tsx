@@ -10,6 +10,7 @@ import { Slider } from "./ui/slider";
 import { Switch } from "./ui/switch";
 import type { Database } from "@/integrations/supabase/types";
 import { toast } from "sonner";
+import * as THREE from 'three';
 
 type EntryCategory = Database["public"]["Enums"]["entry_category"];
 type Json = Database["public"]["Tables"]["profiles"]["Row"]["graph_settings"];
@@ -281,12 +282,10 @@ export const UnifiedGraphVisualization = () => {
       });
     });
 
-    const graph = ForceGraph3D();
-    const graphInstance = graph(graphRef.current);
+    const graphInstance = ForceGraph3D()(graphRef.current);
     
     graphInstance
       .graphData(graphData)
-      .nodeLabel(node => showLabels ? (node as Node).name : null)
       .nodeVal(node => ((node as Node).val * nodeSize) / 100)
       .linkWidth(linkWidth)
       .showNavInfo(false)
@@ -296,31 +295,33 @@ export const UnifiedGraphVisualization = () => {
         const n = node as Node;
         if (!showLabels) return undefined;
 
-        const sprite = new (window as any).THREE.Sprite(
-          new (window as any).THREE.SpriteMaterial({
-            map: new (window as any).THREE.CanvasTexture((() => {
-              const canvas = document.createElement('canvas');
-              const context = canvas.getContext('2d');
-              if (!context) return canvas;
+        // Create a canvas texture for the label
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        if (!context) return undefined;
 
-              const fontSize = 8;
-              context.font = `${fontSize}px Sans-Serif`;
-              const textWidth = context.measureText(n.name).width;
-              const padding = 2;
+        // Set up text properties
+        const fontSize = 8;
+        context.font = `${fontSize}px Sans-Serif`;
+        const textWidth = context.measureText(n.name).width;
+        const padding = 2;
 
-              canvas.width = textWidth + padding * 2;
-              canvas.height = fontSize + padding * 2;
+        // Set canvas dimensions
+        canvas.width = textWidth + padding * 2;
+        canvas.height = fontSize + padding * 2;
 
-              context.font = `${fontSize}px Sans-Serif`;
-              context.fillStyle = '#ffffff';
-              context.textAlign = 'center';
-              context.textBaseline = 'middle';
-              context.fillText(n.name, canvas.width / 2, canvas.height / 2);
+        // Draw text
+        context.font = `${fontSize}px Sans-Serif`;
+        context.fillStyle = '#ffffff';
+        context.textAlign = 'center';
+        context.textBaseline = 'middle';
+        context.fillText(n.name, canvas.width / 2, canvas.height / 2);
 
-              return canvas;
-            })())
-          })
-        );
+        // Create sprite material
+        const texture = new THREE.CanvasTexture(canvas);
+        const spriteMaterial = new THREE.SpriteMaterial({ map: texture });
+        const sprite = new THREE.Sprite(spriteMaterial);
+        
         sprite.scale.set(20, 10, 1);
         return sprite;
       })
