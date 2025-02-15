@@ -1,17 +1,30 @@
 import { useEffect, useRef, useState } from "react";
-import ForceGraph3D from "3d-force-graph";
+import ForceGraph3D, { ForceGraph3DInstance } from "3d-force-graph";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "./ui/skeleton";
 import { Card, CardContent } from "./ui/card";
 import { Button } from "./ui/button";
-import { Maximize2, Minimize2, Eye, EyeOff, ArrowRight } from "lucide-react";
+import { Maximize2, Minimize2 } from "lucide-react";
 import { Slider } from "./ui/slider";
 import { Switch } from "./ui/switch";
 import type { Database } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 
 type EntryCategory = Database["public"]["Enums"]["entry_category"];
+
+interface GraphSettings {
+  linkOpacity: number;
+  nodeSize: number;
+  linkWidth: number;
+  showLabels: boolean;
+  showArrows: boolean;
+  graphPhysics: {
+    gravity: number;
+    linkStrength: number;
+    friction: number;
+  };
+}
 
 interface Node {
   id: string;
@@ -80,7 +93,7 @@ export const UnifiedGraphVisualization = () => {
 
   useEffect(() => {
     if (profile?.graph_settings) {
-      const settings = profile.graph_settings;
+      const settings = profile.graph_settings as GraphSettings;
       setLinkOpacity(settings.linkOpacity ?? 80);
       setNodeSize(settings.nodeSize ?? 100);
       setLinkWidth(settings.linkWidth ?? 1);
@@ -93,22 +106,37 @@ export const UnifiedGraphVisualization = () => {
   }, [profile]);
 
   const handleSettingChange = async (
-    setting: string,
+    setting: keyof GraphSettings | keyof GraphSettings["graphPhysics"],
     value: number | boolean,
-    category?: string
+    category?: "graphPhysics"
   ) => {
     if (!profile?.id) return;
 
-    const newSettings = { ...profile.graph_settings };
-    
-    if (category) {
-      newSettings[category] = {
-        ...newSettings[category],
-        [setting]: value
-      };
-    } else {
-      newSettings[setting] = value;
-    }
+    const currentSettings = (profile.graph_settings as GraphSettings) || {
+      linkOpacity: 80,
+      nodeSize: 100,
+      linkWidth: 1,
+      showLabels: true,
+      showArrows: false,
+      graphPhysics: {
+        gravity: -250,
+        linkStrength: 1,
+        friction: 0.8
+      }
+    };
+
+    const newSettings: GraphSettings = category === "graphPhysics" 
+      ? {
+          ...currentSettings,
+          graphPhysics: {
+            ...currentSettings.graphPhysics,
+            [setting]: value
+          }
+        }
+      : {
+          ...currentSettings,
+          [setting]: value
+        };
 
     const { error } = await supabase
       .from('profiles')
@@ -238,8 +266,8 @@ export const UnifiedGraphVisualization = () => {
       });
     });
 
-    const Graph = ForceGraph3D({});
-    const graphInstance = Graph(graphRef.current)
+    const graphInstance = new ForceGraph3D()(graphRef.current);
+    graphInstance
       .graphData(graphData)
       .nodeLabel("name")
       .nodeVal(node => ((node as Node).val * nodeSize) / 100)
