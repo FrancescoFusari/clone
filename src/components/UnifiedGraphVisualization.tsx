@@ -307,39 +307,42 @@ export const UnifiedGraphVisualization = () => {
         context.scale(devicePixelRatio, devicePixelRatio);
         
         context.font = `${fontSize}px Sans-Serif`;
-        const textWidth = context.measureText(n.name).width;
+        const textMetrics = context.measureText(n.name);
+        const textWidth = textMetrics.width;
+        const textHeight = fontSize;
         const padding = 16; // Increased padding for higher resolution
 
-        // Set canvas dimensions with higher resolution
-        canvas.width = (textWidth + padding * 2) * devicePixelRatio;
-        canvas.height = (fontSize + padding * 2) * devicePixelRatio;
+        // Set canvas dimensions with higher resolution and proper centering
+        const canvasWidth = (textWidth + padding * 2) * devicePixelRatio;
+        const canvasHeight = (textHeight + padding * 2) * devicePixelRatio;
+        canvas.width = canvasWidth;
+        canvas.height = canvasHeight;
 
         // Clear and set background (optional)
         context.fillStyle = 'transparent';
-        context.fillRect(0, 0, canvas.width, canvas.height);
+        context.fillRect(0, 0, canvasWidth, canvasHeight);
 
-        // Draw text with anti-aliasing
+        // Reset context after resize
+        context.scale(devicePixelRatio, devicePixelRatio);
+        context.font = `${fontSize}px Sans-Serif`;
         context.textAlign = 'center';
         context.textBaseline = 'middle';
         context.fillStyle = '#ffffff';
-        context.font = `${fontSize}px Sans-Serif`;
         
         // Enable text anti-aliasing
         context.imageSmoothingEnabled = true;
         context.imageSmoothingQuality = 'high';
         
-        // Draw the text at the center of the canvas
-        context.fillText(
-          n.name,
-          canvas.width / (2 * devicePixelRatio),
-          canvas.height / (2 * devicePixelRatio)
-        );
+        // Draw the text at the exact center of the canvas
+        const centerX = canvasWidth / (2 * devicePixelRatio);
+        const centerY = canvasHeight / (2 * devicePixelRatio);
+        context.fillText(n.name, centerX, centerY);
 
         // Create sprite material with the high-res texture
         const texture = new THREE.CanvasTexture(canvas);
         texture.needsUpdate = true;
         
-        // Use nearest filter for sharper text
+        // Use linear filter for sharper text
         texture.minFilter = THREE.LinearFilter;
         texture.magFilter = THREE.LinearFilter;
         
@@ -352,8 +355,8 @@ export const UnifiedGraphVisualization = () => {
         
         // Adjust scale to account for the higher resolution
         sprite.scale.set(
-          (canvas.width / devicePixelRatio) / 4,
-          (canvas.height / devicePixelRatio) / 4,
+          (canvasWidth / devicePixelRatio) / 4,
+          (canvasHeight / devicePixelRatio) / 4,
           1
         );
         
