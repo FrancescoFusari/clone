@@ -1,22 +1,20 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import ForceGraph3D from "3d-force-graph";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "./ui/skeleton";
 import { Card, CardContent } from "./ui/card";
 import { Button } from "./ui/button";
-import { Maximize2, Minimize2, Settings2 } from "lucide-react";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "./ui/sheet";
-import { ToggleGroup, ToggleGroupItem } from "./ui/toggle-group";
+import { Maximize2, Minimize2 } from "lucide-react";
+import { useState } from "react";
 import type { Database } from "@/integrations/supabase/types";
 
 type EntryCategory = Database["public"]["Enums"]["entry_category"];
-type NodeType = "user" | "category" | "subcategory" | "entry" | "tag";
 
 interface Node {
   id: string;
   name: string;
-  type: NodeType;
+  type: "user" | "category" | "subcategory" | "entry" | "tag";
   val: number;
   x?: number;
   y?: number;
@@ -37,31 +35,9 @@ interface GraphData {
   links: Link[];
 }
 
-interface Props {
-  is3D: boolean;
-  setIs3D: (value: boolean) => void;
-}
-
-interface LinkDistances {
-  userToCategory: number;
-  categoryToEntry: number;
-  entryToSubcategory: number;
-  entryToTag: number;
-}
-
-export const UnifiedGraphVisualization = ({ is3D, setIs3D }: Props) => {
+export const UnifiedGraphVisualization = () => {
   const graphRef = useRef<HTMLDivElement>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [visibleNodeTypes, setVisibleNodeTypes] = useState<NodeType[]>(["user", "category", "subcategory", "entry", "tag"]);
-  const [visibleCategories, setVisibleCategories] = useState<EntryCategory[]>(["personal", "work", "social", "interests", "school"]);
-  const [linkDistances, setLinkDistances] = useState<LinkDistances>({
-    userToCategory: 200,
-    categoryToEntry: 150,
-    entryToSubcategory: 100,
-    entryToTag: 80
-  });
-  const [visibleLabels, setVisibleLabels] = useState<NodeType[]>(["user", "category", "subcategory", "entry", "tag"]);
-
   const { data: entries } = useQuery({
     queryKey: ["all-entries"],
     queryFn: async () => {
@@ -118,28 +94,19 @@ export const UnifiedGraphVisualization = ({ is3D, setIs3D }: Props) => {
       links: []
     };
 
-    const shouldShowNode = (type: NodeType, category?: EntryCategory) => {
-      if (!visibleNodeTypes.includes(type)) return false;
-      if (category && !visibleCategories.includes(category)) return false;
-      return true;
-    };
-
-    if (shouldShowNode("user")) {
-      graphData.nodes.push({
-        id: profile.id,
-        name: profile.username || "User",
-        type: "user",
-        val: 300
-      });
-    }
+    // Add central user node
+    graphData.nodes.push({
+      id: profile.id,
+      name: profile.username || "User",
+      type: "user",
+      val: 300
+    });
 
     const categories = new Set<EntryCategory>();
     const subcategories = new Set<string>();
     const tags = new Set<string>();
 
     entries.forEach(entry => {
-      if (!shouldShowNode("entry", entry.category)) return;
-      
       categories.add(entry.category);
       
       graphData.nodes.push({
@@ -149,8 +116,9 @@ export const UnifiedGraphVisualization = ({ is3D, setIs3D }: Props) => {
         val: 20
       });
 
+      // Get category color before using it
       const categoryColor = getCategoryColor(entry.category);
-      if (categoryColor && shouldShowNode("category", entry.category)) {
+      if (categoryColor) {
         graphData.links.push({
           source: entry.category,
           target: entry.id,
@@ -158,7 +126,7 @@ export const UnifiedGraphVisualization = ({ is3D, setIs3D }: Props) => {
         });
       }
 
-      if (entry.subcategory && shouldShowNode("subcategory", entry.category)) {
+      if (entry.subcategory) {
         subcategories.add(entry.subcategory);
         if (categoryColor) {
           graphData.links.push({
@@ -169,22 +137,19 @@ export const UnifiedGraphVisualization = ({ is3D, setIs3D }: Props) => {
         }
       }
 
-      if (shouldShowNode("tag", entry.category)) {
-        entry.tags?.forEach(tag => {
-          tags.add(tag);
-          if (categoryColor) {
-            graphData.links.push({
-              source: entry.id,
-              target: tag,
-              color: categoryColor.link
-            });
-          }
-        });
-      }
+      entry.tags?.forEach(tag => {
+        tags.add(tag);
+        if (categoryColor) {
+          graphData.links.push({
+            source: entry.id,
+            target: tag,
+            color: categoryColor.link
+          });
+        }
+      });
     });
 
     categories.forEach(cat => {
-      if (!shouldShowNode("category", cat)) return;
       graphData.nodes.push({
         id: cat,
         name: cat.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '),
@@ -192,7 +157,7 @@ export const UnifiedGraphVisualization = ({ is3D, setIs3D }: Props) => {
         val: 100
       });
       const categoryColor = getCategoryColor(cat);
-      if (categoryColor && shouldShowNode("user")) {
+      if (categoryColor) {
         graphData.links.push({
           source: profile.id,
           target: cat,
@@ -202,7 +167,6 @@ export const UnifiedGraphVisualization = ({ is3D, setIs3D }: Props) => {
     });
 
     subcategories.forEach(sub => {
-      if (!shouldShowNode("subcategory")) return;
       graphData.nodes.push({
         id: sub,
         name: sub,
@@ -212,7 +176,6 @@ export const UnifiedGraphVisualization = ({ is3D, setIs3D }: Props) => {
     });
 
     tags.forEach(tag => {
-      if (!shouldShowNode("tag")) return;
       graphData.nodes.push({
         id: tag,
         name: tag,
@@ -224,10 +187,7 @@ export const UnifiedGraphVisualization = ({ is3D, setIs3D }: Props) => {
     const Graph = new ForceGraph3D();
     const graphInstance = Graph(graphRef.current)
       .graphData(graphData)
-      .nodeLabel(node => {
-        const n = node as Node;
-        return visibleLabels.includes(n.type) ? n.name : '';
-      })
+      .nodeLabel("name")
       .nodeColor(node => {
         const n = node as Node;
         switch (n.type) {
@@ -277,31 +237,6 @@ export const UnifiedGraphVisualization = ({ is3D, setIs3D }: Props) => {
         );
       });
 
-    graphInstance.d3Force('link')?.distance((link: any) => {
-      const sourceNode = graphData.nodes.find(n => n.id === link.source.id);
-      const targetNode = graphData.nodes.find(n => n.id === link.target.id);
-      
-      if (!sourceNode || !targetNode) return 150;
-
-      if (sourceNode.type === 'user' && targetNode.type === 'category') {
-        return linkDistances.userToCategory;
-      }
-      if (sourceNode.type === 'category' && targetNode.type === 'entry' ||
-          targetNode.type === 'category' && sourceNode.type === 'entry') {
-        return linkDistances.categoryToEntry;
-      }
-      if (sourceNode.type === 'entry' && targetNode.type === 'subcategory' ||
-          targetNode.type === 'entry' && sourceNode.type === 'subcategory') {
-        return linkDistances.entryToSubcategory;
-      }
-      if (sourceNode.type === 'entry' && targetNode.type === 'tag' ||
-          targetNode.type === 'entry' && sourceNode.type === 'tag') {
-        return linkDistances.entryToTag;
-      }
-
-      return 150;
-    });
-
     const handleResize = () => {
       graphInstance
         .width(window.innerWidth)
@@ -327,7 +262,7 @@ export const UnifiedGraphVisualization = ({ is3D, setIs3D }: Props) => {
         graphRef.current.innerHTML = "";
       }
     };
-  }, [entries, profile, visibleNodeTypes, visibleCategories, linkDistances, visibleLabels]);
+  }, [entries, profile]);
 
   if (!entries || !profile) {
     return <Skeleton className="w-screen h-screen" />;
@@ -337,184 +272,14 @@ export const UnifiedGraphVisualization = ({ is3D, setIs3D }: Props) => {
     <Card className="relative w-screen h-screen overflow-hidden">
       <CardContent className="p-0 w-full h-full">
         <div ref={graphRef} className="w-full h-full" />
-        <div className="absolute top-4 right-4 flex gap-2">
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button
-                variant="outline"
-                size="icon"
-                className="bg-background/50 backdrop-blur-sm"
-              >
-                <Settings2 className="h-4 w-4" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent>
-              <SheetHeader>
-                <SheetTitle>Graph Settings</SheetTitle>
-              </SheetHeader>
-              <div className="py-6 space-y-6">
-                <div className="space-y-2">
-                  <h4 className="text-sm font-medium">Visible Node Types</h4>
-                  <ToggleGroup 
-                    type="multiple" 
-                    className="flex flex-wrap justify-start gap-2"
-                    value={visibleNodeTypes}
-                    onValueChange={(value) => {
-                      if (value.length > 0) {
-                        setVisibleNodeTypes(value as NodeType[]);
-                      }
-                    }}
-                  >
-                    <ToggleGroupItem value="user" aria-label="Toggle User">
-                      User
-                    </ToggleGroupItem>
-                    <ToggleGroupItem value="category" aria-label="Toggle Categories">
-                      Categories
-                    </ToggleGroupItem>
-                    <ToggleGroupItem value="subcategory" aria-label="Toggle Subcategories">
-                      Subcategories
-                    </ToggleGroupItem>
-                    <ToggleGroupItem value="entry" aria-label="Toggle Entries">
-                      Entries
-                    </ToggleGroupItem>
-                    <ToggleGroupItem value="tag" aria-label="Toggle Tags">
-                      Tags
-                    </ToggleGroupItem>
-                  </ToggleGroup>
-                </div>
-                <div className="space-y-2">
-                  <h4 className="text-sm font-medium">Node Labels</h4>
-                  <ToggleGroup 
-                    type="multiple" 
-                    className="flex flex-wrap justify-start gap-2"
-                    value={visibleLabels}
-                    onValueChange={(value) => {
-                      setVisibleLabels(value as NodeType[]);
-                    }}
-                  >
-                    <ToggleGroupItem value="user" aria-label="Toggle User Labels">
-                      User
-                    </ToggleGroupItem>
-                    <ToggleGroupItem value="category" aria-label="Toggle Category Labels">
-                      Categories
-                    </ToggleGroupItem>
-                    <ToggleGroupItem value="subcategory" aria-label="Toggle Subcategory Labels">
-                      Subcategories
-                    </ToggleGroupItem>
-                    <ToggleGroupItem value="entry" aria-label="Toggle Entry Labels">
-                      Entries
-                    </ToggleGroupItem>
-                    <ToggleGroupItem value="tag" aria-label="Toggle Tag Labels">
-                      Tags
-                    </ToggleGroupItem>
-                  </ToggleGroup>
-                </div>
-                <div className="space-y-2">
-                  <h4 className="text-sm font-medium">Visible Categories</h4>
-                  <ToggleGroup 
-                    type="multiple" 
-                    className="flex flex-wrap justify-start gap-2"
-                    value={visibleCategories}
-                    onValueChange={(value) => {
-                      if (value.length > 0) {
-                        setVisibleCategories(value as EntryCategory[]);
-                      }
-                    }}
-                  >
-                    <ToggleGroupItem value="personal" aria-label="Toggle Personal">
-                      Personal
-                    </ToggleGroupItem>
-                    <ToggleGroupItem value="work" aria-label="Toggle Work">
-                      Work
-                    </ToggleGroupItem>
-                    <ToggleGroupItem value="social" aria-label="Toggle Social">
-                      Social
-                    </ToggleGroupItem>
-                    <ToggleGroupItem value="interests" aria-label="Toggle Interests">
-                      Interests
-                    </ToggleGroupItem>
-                    <ToggleGroupItem value="school" aria-label="Toggle School">
-                      School
-                    </ToggleGroupItem>
-                  </ToggleGroup>
-                </div>
-                <div className="space-y-4">
-                  <h4 className="text-sm font-medium">Link Distances</h4>
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <label className="text-sm text-muted-foreground">User to Category</label>
-                      <input
-                        type="range"
-                        min="50"
-                        max="500"
-                        value={linkDistances.userToCategory}
-                        onChange={(e) => setLinkDistances(prev => ({
-                          ...prev,
-                          userToCategory: parseInt(e.target.value)
-                        }))}
-                        className="w-full"
-                      />
-                      <span className="text-xs text-muted-foreground">{linkDistances.userToCategory}px</span>
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm text-muted-foreground">Category to Entry</label>
-                      <input
-                        type="range"
-                        min="50"
-                        max="500"
-                        value={linkDistances.categoryToEntry}
-                        onChange={(e) => setLinkDistances(prev => ({
-                          ...prev,
-                          categoryToEntry: parseInt(e.target.value)
-                        }))}
-                        className="w-full"
-                      />
-                      <span className="text-xs text-muted-foreground">{linkDistances.categoryToEntry}px</span>
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm text-muted-foreground">Entry to Subcategory</label>
-                      <input
-                        type="range"
-                        min="50"
-                        max="500"
-                        value={linkDistances.entryToSubcategory}
-                        onChange={(e) => setLinkDistances(prev => ({
-                          ...prev,
-                          entryToSubcategory: parseInt(e.target.value)
-                        }))}
-                        className="w-full"
-                      />
-                      <span className="text-xs text-muted-foreground">{linkDistances.entryToSubcategory}px</span>
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm text-muted-foreground">Entry to Tag</label>
-                      <input
-                        type="range"
-                        min="50"
-                        max="500"
-                        value={linkDistances.entryToTag}
-                        onChange={(e) => setLinkDistances(prev => ({
-                          ...prev,
-                          entryToTag: parseInt(e.target.value)
-                        }))}
-                        className="w-full"
-                      />
-                      <span className="text-xs text-muted-foreground">{linkDistances.entryToTag}px</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </SheetContent>
-          </Sheet>
-          <Button
-            variant="outline"
-            size="icon"
-            className="bg-background/50 backdrop-blur-sm"
-            onClick={toggleFullscreen}
-          >
-            {isFullscreen ? <Minimize2 /> : <Maximize2 />}
-          </Button>
-        </div>
+        <Button
+          variant="outline"
+          size="icon"
+          className="absolute top-4 right-4 bg-background/50 backdrop-blur-sm"
+          onClick={toggleFullscreen}
+        >
+          {isFullscreen ? <Minimize2 /> : <Maximize2 />}
+        </Button>
       </CardContent>
     </Card>
   );
