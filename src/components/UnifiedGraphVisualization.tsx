@@ -282,8 +282,29 @@ export const UnifiedGraphVisualization = () => {
       });
     });
 
-    const Graph = ForceGraph3D();
-    const graphInstance = Graph(graphRef.current);
+    const Graph = ForceGraph3D;
+    const graphInstance = new Graph()(graphRef.current);
+    
+    const getNodeColor = (node: Node) => {
+      switch (node.type) {
+        case "user":
+          return "#9b87f5";
+        case "category":
+          const catColor = getCategoryColor(node.id as EntryCategory);
+          return catColor ? catColor.primary : "#F5F3F2";
+        case "subcategory":
+          const subCatColor = getCategoryColor(getNodeCategory(node.id, graphData) as EntryCategory);
+          return subCatColor ? subCatColor.secondary : "#F5F3F2";
+        case "entry":
+          const entryColor = getCategoryColor(getNodeCategory(node.id, graphData) as EntryCategory);
+          return entryColor ? entryColor.tertiary : "#F5F3F2";
+        case "tag":
+          const tagColor = getCategoryColor(getNodeCategory(node.id, graphData) as EntryCategory);
+          return tagColor ? tagColor.soft : "#F5F3F2";
+        default:
+          return "#F5F3F2";
+      }
+    };
     
     graphInstance
       .graphData(graphData)
@@ -302,7 +323,7 @@ export const UnifiedGraphVisualization = () => {
         if (!context) return undefined;
 
         // Set up text properties with higher resolution
-        const fontSize = 48; // Increased font size for better resolution
+        const fontSize = 48;
         const devicePixelRatio = window.devicePixelRatio || 1;
         context.scale(devicePixelRatio, devicePixelRatio);
         
@@ -310,7 +331,7 @@ export const UnifiedGraphVisualization = () => {
         const textMetrics = context.measureText(n.name);
         const textWidth = textMetrics.width;
         const textHeight = fontSize;
-        const padding = 16; // Increased padding for higher resolution
+        const padding = 16;
 
         // Set canvas dimensions with higher resolution and proper centering
         const canvasWidth = (textWidth + padding * 2) * devicePixelRatio;
@@ -318,8 +339,8 @@ export const UnifiedGraphVisualization = () => {
         canvas.width = canvasWidth;
         canvas.height = canvasHeight;
 
-        // Clear and set background (optional)
-        context.fillStyle = 'transparent';
+        // Clear and set background
+        context.fillStyle = getNodeColor(n);
         context.fillRect(0, 0, canvasWidth, canvasHeight);
 
         // Reset context after resize
@@ -348,7 +369,7 @@ export const UnifiedGraphVisualization = () => {
         
         const spriteMaterial = new THREE.SpriteMaterial({
           map: texture,
-          transparent: true
+          transparent: false
         });
         
         const sprite = new THREE.Sprite(spriteMaterial);
@@ -362,27 +383,7 @@ export const UnifiedGraphVisualization = () => {
         
         return sprite;
       })
-      .nodeColor(node => {
-        const n = node as Node;
-        switch (n.type) {
-          case "user":
-            return "#9b87f5";
-          case "category":
-            const catColor = getCategoryColor(n.id as EntryCategory);
-            return catColor ? catColor.primary : "#F5F3F2";
-          case "subcategory":
-            const subCatColor = getCategoryColor(getNodeCategory(n.id, graphData) as EntryCategory);
-            return subCatColor ? subCatColor.secondary : "#F5F3F2";
-          case "entry":
-            const entryColor = getCategoryColor(getNodeCategory(n.id, graphData) as EntryCategory);
-            return entryColor ? entryColor.tertiary : "#F5F3F2";
-          case "tag":
-            const tagColor = getCategoryColor(getNodeCategory(n.id, graphData) as EntryCategory);
-            return tagColor ? tagColor.soft : "#F5F3F2";
-          default:
-            return "#F5F3F2";
-        }
-      })
+      .nodeColor(getNodeColor)
       .linkColor(link => {
         const l = link as Link;
         if (l.color) {
