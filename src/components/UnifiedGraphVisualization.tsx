@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import ForceGraph3D from "3d-force-graph";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,7 +6,7 @@ import { Skeleton } from "./ui/skeleton";
 import { Card, CardContent } from "./ui/card";
 import { Button } from "./ui/button";
 import { Maximize2, Minimize2, Settings2 } from "lucide-react";
-import { useState } from "react";
+import { Slider } from "./ui/slider";
 import type { Database } from "@/integrations/supabase/types";
 
 type EntryCategory = Database["public"]["Enums"]["entry_category"];
@@ -38,6 +38,8 @@ interface GraphData {
 export const UnifiedGraphVisualization = () => {
   const graphRef = useRef<HTMLDivElement>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [linkOpacity, setLinkOpacity] = useState(80); // Default opacity 0.8 * 100
+
   const { data: entries } = useQuery({
     queryKey: ["all-entries"],
     queryFn: async () => {
@@ -184,7 +186,7 @@ export const UnifiedGraphVisualization = () => {
       });
     });
 
-    const Graph = new ForceGraph3D();
+    const Graph = ForceGraph3D({});
     const graphInstance = Graph(graphRef.current)
       .graphData(graphData)
       .nodeLabel("name")
@@ -211,7 +213,17 @@ export const UnifiedGraphVisualization = () => {
       })
       .nodeVal(node => (node as Node).val)
       .linkWidth(0.8)
-      .linkColor(link => (link as Link).color || "#ffffff80")
+      .linkColor(link => {
+        const l = link as Link;
+        if (l.color) {
+          // Convert rgba color to use custom opacity
+          const rgbaMatch = l.color.match(/rgba\((\d+),\s*(\d+),\s*(\d+),\s*[\d.]+\)/);
+          if (rgbaMatch) {
+            return `rgba(${rgbaMatch[1]}, ${rgbaMatch[2]}, ${rgbaMatch[3]}, ${linkOpacity / 100})`;
+          }
+        }
+        return `rgba(255, 255, 255, ${linkOpacity / 100})`;
+      })
       .backgroundColor("#000000")
       .width(window.innerWidth)
       .height(window.innerHeight)
@@ -262,7 +274,7 @@ export const UnifiedGraphVisualization = () => {
         graphRef.current.innerHTML = "";
       }
     };
-  }, [entries, profile]);
+  }, [entries, profile, linkOpacity]);
 
   if (!entries || !profile) {
     return <Skeleton className="w-screen h-screen" />;
@@ -272,14 +284,29 @@ export const UnifiedGraphVisualization = () => {
     <Card className="relative w-screen h-screen overflow-hidden">
       <CardContent className="p-0 w-full h-full">
         <div ref={graphRef} className="w-full h-full" />
-        <Button
-          variant="outline"
-          size="icon"
-          className="absolute top-4 right-4 bg-background/50 backdrop-blur-sm"
-          onClick={toggleFullscreen}
-        >
-          {isFullscreen ? <Minimize2 /> : <Maximize2 />}
-        </Button>
+        <div className="absolute top-4 right-4 flex gap-2">
+          <Card className="p-4 bg-background/50 backdrop-blur-sm w-64">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Link Opacity</label>
+              <Slider
+                value={[linkOpacity]}
+                onValueChange={([value]) => setLinkOpacity(value)}
+                max={100}
+                min={0}
+                step={1}
+              />
+              <span className="text-xs text-muted-foreground">{linkOpacity}%</span>
+            </div>
+          </Card>
+          <Button
+            variant="outline"
+            size="icon"
+            className="bg-background/50 backdrop-blur-sm"
+            onClick={toggleFullscreen}
+          >
+            {isFullscreen ? <Minimize2 /> : <Maximize2 />}
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );
@@ -288,39 +315,39 @@ export const UnifiedGraphVisualization = () => {
 const getCategoryColor = (category: EntryCategory) => {
   const palettes = {
     personal: {
-      primary: "#9b87f5",    // Primary purple
-      secondary: "#7E69AB",  // Secondary purple
-      tertiary: "#6E59A5",   // Tertiary purple
-      soft: "#E5DEFF",       // Soft purple
-      link: "rgba(229, 222, 255, 0.8)" // Increased opacity from 0.5 to 0.8
+      primary: "#9b87f5",
+      secondary: "#7E69AB",
+      tertiary: "#6E59A5",
+      soft: "#E5DEFF",
+      link: "rgba(229, 222, 255, 0.8)"
     },
     work: {
-      primary: "#60a5fa",    // Primary blue
-      secondary: "#3b82f6",  // Secondary blue
-      tertiary: "#2563eb",   // Tertiary blue
-      soft: "#dbeafe",       // Soft blue
-      link: "rgba(219, 234, 254, 0.8)" // Increased opacity from 0.5 to 0.8
+      primary: "#60a5fa",
+      secondary: "#3b82f6",
+      tertiary: "#2563eb",
+      soft: "#dbeafe",
+      link: "rgba(219, 234, 254, 0.8)"
     },
     social: {
-      primary: "#f472b6",    // Primary pink
-      secondary: "#ec4899",  // Secondary pink
-      tertiary: "#db2777",   // Tertiary pink
-      soft: "#fce7f3",       // Soft pink
-      link: "rgba(252, 231, 243, 0.8)" // Increased opacity from 0.5 to 0.8
+      primary: "#f472b6",
+      secondary: "#ec4899",
+      tertiary: "#db2777",
+      soft: "#fce7f3",
+      link: "rgba(252, 231, 243, 0.8)"
     },
     interests: {
-      primary: "#4ade80",    // Primary green
-      secondary: "#22c55e",  // Secondary green
-      tertiary: "#16a34a",   // Tertiary green
-      soft: "#dcfce7",       // Soft green
-      link: "rgba(220, 252, 231, 0.8)" // Increased opacity from 0.5 to 0.8
+      primary: "#4ade80",
+      secondary: "#22c55e",
+      tertiary: "#16a34a",
+      soft: "#dcfce7",
+      link: "rgba(220, 252, 231, 0.8)"
     },
     school: {
-      primary: "#fb923c",    // Primary orange
-      secondary: "#f97316",  // Secondary orange
-      tertiary: "#ea580c",   // Tertiary orange
-      soft: "#ffedd5",       // Soft orange
-      link: "rgba(255, 237, 213, 0.8)" // Increased opacity from 0.5 to 0.8
+      primary: "#fb923c",
+      secondary: "#f97316",
+      tertiary: "#ea580c",
+      soft: "#ffedd5",
+      link: "rgba(255, 237, 213, 0.8)"
     }
   };
   
