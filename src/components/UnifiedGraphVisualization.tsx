@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "./ui/skeleton";
 import { Card, CardContent } from "./ui/card";
 import { Button } from "./ui/button";
-import { Maximize2, Minimize2 } from "lucide-react";
+import { Maximize2, Minimize2, Settings2, X } from "lucide-react";
 import { Slider } from "./ui/slider";
 import { Switch } from "./ui/switch";
 import type { Database } from "@/integrations/supabase/types";
@@ -67,6 +67,7 @@ interface GraphData {
 export const UnifiedGraphVisualization = () => {
   const graphRef = useRef<HTMLDivElement>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showSettings, setShowSettings] = useState(true);
   const [linkOpacity, setLinkOpacity] = useState(DEFAULT_SETTINGS.linkOpacity);
   const [nodeSize, setNodeSize] = useState(DEFAULT_SETTINGS.nodeSize);
   const [linkWidth, setLinkWidth] = useState(DEFAULT_SETTINGS.linkWidth);
@@ -395,121 +396,144 @@ export const UnifiedGraphVisualization = () => {
       <CardContent className="p-0 w-full h-full">
         <div ref={graphRef} className="w-full h-full" />
         <div className="absolute top-4 right-4 flex gap-2">
-          <Card className="p-4 bg-background/50 backdrop-blur-sm w-80">
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Node Size</label>
-                <Slider
-                  value={[nodeSize]}
-                  onValueChange={([value]) => {
-                    setNodeSize(value);
-                    handleSettingChange('nodeSize', value);
-                  }}
-                  max={200}
-                  min={50}
-                  step={10}
-                />
-                <span className="text-xs text-muted-foreground">{nodeSize}%</span>
+          {showSettings && (
+            <Card className="p-4 bg-background/50 backdrop-blur-sm w-80">
+              <div className="flex justify-between items-center mb-4">
+                <span className="text-sm font-medium">Graph Settings</span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setShowSettings(false)}
+                  className="h-8 w-8"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
               </div>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Node Size</label>
+                  <Slider
+                    value={[nodeSize]}
+                    onValueChange={([value]) => {
+                      setNodeSize(value);
+                      handleSettingChange('nodeSize', value);
+                    }}
+                    max={200}
+                    min={50}
+                    step={10}
+                  />
+                  <span className="text-xs text-muted-foreground">{nodeSize}%</span>
+                </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Link Opacity</label>
-                <Slider
-                  value={[linkOpacity]}
-                  onValueChange={([value]) => {
-                    setLinkOpacity(value);
-                    handleSettingChange('linkOpacity', value);
-                  }}
-                  max={100}
-                  min={0}
-                  step={10}
-                />
-                <span className="text-xs text-muted-foreground">{linkOpacity}%</span>
-              </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Link Opacity</label>
+                  <Slider
+                    value={[linkOpacity]}
+                    onValueChange={([value]) => {
+                      setLinkOpacity(value);
+                      handleSettingChange('linkOpacity', value);
+                    }}
+                    max={100}
+                    min={0}
+                    step={10}
+                  />
+                  <span className="text-xs text-muted-foreground">{linkOpacity}%</span>
+                </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Link Width</label>
-                <Slider
-                  value={[linkWidth]}
-                  onValueChange={([value]) => {
-                    setLinkWidth(value);
-                    handleSettingChange('linkWidth', value);
-                  }}
-                  max={3}
-                  min={0.5}
-                  step={0.5}
-                />
-                <span className="text-xs text-muted-foreground">{linkWidth}</span>
-              </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Link Width</label>
+                  <Slider
+                    value={[linkWidth]}
+                    onValueChange={([value]) => {
+                      setLinkWidth(value);
+                      handleSettingChange('linkWidth', value);
+                    }}
+                    max={3}
+                    min={0.5}
+                    step={0.5}
+                  />
+                  <span className="text-xs text-muted-foreground">{linkWidth}</span>
+                </div>
 
-              <div className="flex items-center justify-between">
-                <label className="text-sm font-medium">Show Labels</label>
-                <Switch
-                  checked={showLabels}
-                  onCheckedChange={(checked) => {
-                    setShowLabels(checked);
-                    handleSettingChange('showLabels', checked);
-                  }}
-                />
-              </div>
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium">Show Labels</label>
+                  <Switch
+                    checked={showLabels}
+                    onCheckedChange={(checked) => {
+                      setShowLabels(checked);
+                      handleSettingChange('showLabels', checked);
+                    }}
+                  />
+                </div>
 
-              <div className="flex items-center justify-between">
-                <label className="text-sm font-medium">Show Arrows</label>
-                <Switch
-                  checked={showArrows}
-                  onCheckedChange={(checked) => {
-                    setShowArrows(checked);
-                    handleSettingChange('showArrows', checked);
-                  }}
-                />
-              </div>
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium">Show Arrows</label>
+                  <Switch
+                    checked={showArrows}
+                    onCheckedChange={(checked) => {
+                      setShowArrows(checked);
+                      handleSettingChange('showArrows', checked);
+                    }}
+                  />
+                </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Gravity</label>
-                <Slider
-                  value={[Math.abs(gravity)]}
-                  onValueChange={([value]) => {
-                    setGravity(-value);
-                    handleSettingChange('gravity', -value, 'graphPhysics');
-                  }}
-                  max={500}
-                  min={100}
-                  step={50}
-                />
-                <span className="text-xs text-muted-foreground">{Math.abs(gravity)}</span>
-              </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Gravity</label>
+                  <Slider
+                    value={[Math.abs(gravity)]}
+                    onValueChange={([value]) => {
+                      setGravity(-value);
+                      handleSettingChange('gravity', -value, 'graphPhysics');
+                    }}
+                    max={500}
+                    min={100}
+                    step={50}
+                  />
+                  <span className="text-xs text-muted-foreground">{Math.abs(gravity)}</span>
+                </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Link Strength</label>
-                <Slider
-                  value={[linkStrength]}
-                  onValueChange={([value]) => {
-                    setLinkStrength(value);
-                    handleSettingChange('linkStrength', value, 'graphPhysics');
-                  }}
-                  max={2}
-                  min={0.1}
-                  step={0.1}
-                />
-                <span className="text-xs text-muted-foreground">{linkStrength}</span>
-              </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Link Strength</label>
+                  <Slider
+                    value={[linkStrength]}
+                    onValueChange={([value]) => {
+                      setLinkStrength(value);
+                      handleSettingChange('linkStrength', value, 'graphPhysics');
+                    }}
+                    max={2}
+                    min={0.1}
+                    step={0.1}
+                  />
+                  <span className="text-xs text-muted-foreground">{linkStrength}</span>
+                </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Friction</label>
-                <Slider
-                  value={[friction]}
-                  onValueChange={([value]) => {
-                    setFriction(value);
-                    handleSettingChange('friction', value, 'graphPhysics');
-                  }}
-                  max={0.9}
-                  min={0.1}
-                  step={0.1}
-                />
-                <span className="text-xs text-muted-foreground">{friction}</span>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Friction</label>
+                  <Slider
+                    value={[friction]}
+                    onValueChange={([value]) => {
+                      setFriction(value);
+                      handleSettingChange('friction', value, 'graphPhysics');
+                    }}
+                    max={0.9}
+                    min={0.1}
+                    step={0.1}
+                  />
+                  <span className="text-xs text-muted-foreground">{friction}</span>
+                </div>
               </div>
-            </div>
-          </Card>
+            </Card>
+          )}
+          {!showSettings && (
+            <Button
+              variant="outline"
+              size="icon"
+              className="bg-background/50 backdrop-blur-sm"
+              onClick={() => setShowSettings(true)}
+            >
+              <Settings2 className="h-4 w-4" />
+            </Button>
+          )}
           <Button
             variant="outline"
             size="icon"
