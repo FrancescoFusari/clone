@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import ForceGraph3D from "3d-force-graph";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -69,6 +69,7 @@ interface GraphData {
 
 export const UnifiedGraphVisualization = () => {
   const graphRef = useRef<HTMLDivElement>(null);
+  const graphInstanceRef = useRef<any>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [linkOpacity, setLinkOpacity] = useState(DEFAULT_SETTINGS.linkOpacity);
@@ -129,7 +130,8 @@ export const UnifiedGraphVisualization = () => {
     }
   }, [profile]);
 
-  const handleSettingChange = async (
+  // Debounced setting change handler
+  const debouncedHandleSettingChange = useCallback(async (
     setting: keyof GraphSettings | keyof GraphSettings["graphPhysics"],
     value: number | boolean,
     category?: "graphPhysics"
@@ -167,7 +169,81 @@ export const UnifiedGraphVisualization = () => {
       console.error("Error updating graph settings:", error);
       toast.error("Failed to update graph settings");
     }
-  };
+  }, [profile]);
+
+  // Update graph instance directly without re-rendering
+  const updateGraphInstance = useCallback((
+    setting: string,
+    value: number | boolean
+  ) => {
+    if (!graphInstanceRef.current) return;
+
+    switch (setting) {
+      case 'nodeSize':
+        graphInstanceRef.current.nodeVal(node => ((node as Node).val * value) / 100);
+        break;
+      case 'linkWidth':
+        graphInstanceRef.current.linkWidth(value);
+        break;
+      case 'linkOpacity':
+        graphInstanceRef.current.linkColor(link => {
+          const l = link as Link;
+          if (l.color) {
+            const rgbaMatch = l.color.match(/rgba\((\d+),\s*(\d+),\s*(\d+),\s*[\d.]+\)/);
+            if (rgbaMatch) {
+              return `rgba(${rgbaMatch[1]}, ${rgbaMatch[2]}, ${rgbaMatch[3]}, ${value / 100})`;
+            }
+          }
+          return `rgba(255, 255, 255, ${value / 100})`;
+        });
+        break;
+      case 'showArrows':
+        graphInstanceRef.current.linkDirectionalArrowLength(value ? 3.5 : 0);
+        break;
+      case 'gravity':
+        const chargeForce = graphInstanceRef.current.d3Force('charge');
+        if (chargeForce) chargeForce.strength(value);
+        break;
+      case 'linkStrength':
+        const linkForce = graphInstanceRef.current.d3Force('link');
+        if (linkForce) linkForce.strength(value);
+        break;
+      case 'friction':
+        const simulation = graphInstanceRef.current.d3Force('simulation');
+        if (simulation) simulation.velocityDecay(value);
+        break;
+    }
+  }, []);
+
+  // Handle setting changes with immediate visual feedback
+  const handleSettingChange = useCallback((
+    setting: keyof GraphSettings | keyof GraphSettings["graphPhysics"],
+    value: number | boolean,
+    category?: "graphPhysics"
+  ) => {
+    // Update local state
+    switch (setting) {
+      case 'nodeSize': setNodeSize(value as number); break;
+      case 'linkWidth': setLinkWidth(value as number); break;
+      case 'linkOpacity': setLinkOpacity(value as number); break;
+      case 'showLabels': setShowLabels(value as boolean); break;
+      case 'showArrows': setShowArrows(value as boolean); break;
+      case 'spriteSize': setSpriteSize(value as number); break;
+      case 'gravity': setGravity(value as number); break;
+      case 'linkStrength': setLinkStrength(value as number); break;
+      case 'friction': setFriction(value as number); break;
+    }
+
+    // Update graph instance immediately for supported properties
+    updateGraphInstance(setting as string, value);
+
+    // Debounce the server update
+    const timeoutId = setTimeout(() => {
+      debouncedHandleSettingChange(setting, value, category);
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [debouncedHandleSettingChange, updateGraphInstance]);
 
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
@@ -288,6 +364,7 @@ export const UnifiedGraphVisualization = () => {
 
     // Initialize Force Graph with correct syntax
     const graphInstance = new ForceGraph3D()(graphRef.current);
+    graphInstanceRef.current = graphInstance;
     
     const getNodeColor = (node: Node) => {
       switch (node.type) {
@@ -485,8 +562,9 @@ export const UnifiedGraphVisualization = () => {
       if (graphRef.current) {
         graphRef.current.innerHTML = "";
       }
+      graphInstanceRef.current = null;
     };
-  }, [entries, profile, linkOpacity, nodeSize, linkWidth, showLabels, showArrows, spriteSize, gravity, linkStrength, friction]);
+  }, [entries, profile]);
 
   if (!entries || !profile) {
     return <Skeleton className="w-screen h-screen" />;
