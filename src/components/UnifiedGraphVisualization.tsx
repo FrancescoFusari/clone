@@ -282,8 +282,8 @@ export const UnifiedGraphVisualization = () => {
       });
     });
 
-    const Graph = ForceGraph3D;
-    const graphInstance = Graph(graphRef.current);
+    // Initialize Force Graph with correct syntax
+    const graphInstance = new ForceGraph3D()(graphRef.current);
     
     const getNodeColor = (node: Node) => {
       switch (node.type) {
