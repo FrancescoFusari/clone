@@ -1,4 +1,3 @@
-
 import { useEffect, useRef, useState } from "react";
 import ForceGraph3D from "3d-force-graph";
 import { useQuery } from "@tanstack/react-query";
@@ -188,8 +187,8 @@ export const SphericalGraphVisualization = () => {
       }
     });
 
-    const Graph = ForceGraph3D;
-    const graphInstance = Graph()(graphRef.current)
+    const Graph = ForceGraph3D();
+    const graphInstance = Graph(graphRef.current)
       .graphData(graphData)
       .forceEngine('d3')
       .d3Force('sphere', () => {
