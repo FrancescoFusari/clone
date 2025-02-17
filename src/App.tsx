@@ -18,6 +18,7 @@ const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Categories = lazy(() => import("./pages/Categories"));
 const CategoryGraph = lazy(() => import("./pages/CategoryGraph"));
 const UnifiedGraph = lazy(() => import("./pages/UnifiedGraph"));
+const ExperimentalGraph = lazy(() => import("./pages/ExperimentalGraph"));
 const Vault = lazy(() => import("./pages/Vault"));
 const Chat = lazy(() => import("./pages/Chat"));
 const Settings = lazy(() => import("./pages/Settings"));
@@ -130,6 +131,14 @@ const AppRoutes = () => {
           element={
             <ProtectedRoute>
               <UnifiedGraph />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/experimental-graph"
+          element={
+            <ProtectedRoute>
+              <ExperimentalGraph />
             </ProtectedRoute>
           }
         />

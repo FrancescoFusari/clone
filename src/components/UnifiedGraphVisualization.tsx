@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "./ui/skeleton";
 import { Card, CardContent } from "./ui/card";
 import { Button } from "./ui/button";
-import { Maximize2, Minimize2, Settings2, X, ChevronDown } from "lucide-react";
+import { Maximize2, Minimize2, Settings2, X, Beaker } from "lucide-react";
 import { Slider } from "./ui/slider";
 import { Switch } from "./ui/switch";
 import {
@@ -17,6 +17,7 @@ import {
 import type { Database } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 import * as THREE from 'three';
+import { useNavigate } from "react-router-dom";
 
 type EntryCategory = Database["public"]["Enums"]["entry_category"];
 type Json = Database["public"]["Tables"]["profiles"]["Row"]["graph_settings"];
@@ -76,6 +77,7 @@ interface GraphData {
 }
 
 export const UnifiedGraphVisualization = () => {
+  const navigate = useNavigate();
   const graphRef = useRef<HTMLDivElement>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -513,6 +515,14 @@ export const UnifiedGraphVisualization = () => {
       <CardContent className="p-0 w-full h-full">
         <div ref={graphRef} className="w-full h-full" />
         <div className="absolute top-4 right-4 flex gap-2">
+          <Button
+            variant="outline"
+            size="icon"
+            className="bg-background/50 backdrop-blur-sm"
+            onClick={() => navigate("/experimental-graph")}
+          >
+            <Beaker className="h-4 w-4" />
+          </Button>
           {showSettings && (
             <Card className="p-4 bg-background/50 backdrop-blur-sm w-80">
               <div className="flex justify-between items-center mb-4">
@@ -717,7 +727,7 @@ export const UnifiedGraphVisualization = () => {
             className="bg-background/50 backdrop-blur-sm"
             onClick={toggleFullscreen}
           >
-            {isFullscreen ? <Minimize2 /> : <Maximize2 />}
+            {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
           </Button>
         </div>
       </CardContent>
