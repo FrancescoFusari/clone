@@ -1,3 +1,4 @@
+
 import { useEffect, useRef, useState } from "react";
 import ForceGraph3D from "3d-force-graph";
 import { useQuery } from "@tanstack/react-query";
@@ -203,40 +204,10 @@ export const SphericalGraphVisualization = () => {
       }
     });
 
-    const Graph = ForceGraph3D();
-    const graphInstance = Graph(graphRef.current)
+    // Create the force graph instance
+    const graph = ForceGraph3D()(graphRef.current)
       .graphData(graphData)
-      .forceEngine('d3')
-      .d3Force('sphere', () => {
-        graphData.nodes.forEach(node => {
-          if (node.type !== "category") {
-            const sphere = categorySpheres.find(s => s.category === node.groupId);
-            if (!sphere) return;
-
-            const r = node.type === "subcategory" ? 200 : 400;
-            const phi = Math.acos(-1 + (2 * Math.random()));
-            const theta = 2 * Math.PI * Math.random();
-            
-            node.x = sphere.center.x + (r * Math.sin(phi) * Math.cos(theta));
-            node.y = sphere.center.y + (r * Math.sin(phi) * Math.sin(theta));
-            node.z = sphere.center.z + (r * Math.cos(phi));
-          }
-        });
-      })
-      .d3Force('charge', d3.forceManyBody()
-        .strength(-100)
-        .distanceMin(100)
-        .distanceMax(300)
-      )
-      .d3Force('link', d3.forceLink(graphData.links)
-        .distance(d => {
-          const source = d.source as Node;
-          const target = d.target as Node;
-          return (source.type === "category" || target.type === "category") ? 200 : 100;
-        })
-      );
-
-    graphInstance.nodeThreeObject(node => {
+      .nodeThreeObject(node => {
         const nodeObj = node as Node;
         const isExpanded = expandedNodes.has(nodeObj.id);
 
@@ -281,9 +252,8 @@ export const SphericalGraphVisualization = () => {
         sprite.scale.set(scale, scale * (cardHeight / cardWidth), 1);
 
         return sprite;
-    });
-
-    graphInstance.onNodeClick((node) => {
+      })
+      .onNodeClick((node) => {
         const nodeObj = node as Node;
         setExpandedNodes(prev => {
           const newSet = new Set(prev);
@@ -294,10 +264,42 @@ export const SphericalGraphVisualization = () => {
           }
           return newSet;
         });
-    });
+      });
+
+    // Configure forces after the graph is created
+    graph
+      .forceEngine('d3')
+      .d3Force('sphere', () => {
+        graphData.nodes.forEach(node => {
+          if (node.type !== "category") {
+            const sphere = categorySpheres.find(s => s.category === node.groupId);
+            if (!sphere) return;
+
+            const r = node.type === "subcategory" ? 200 : 400;
+            const phi = Math.acos(-1 + (2 * Math.random()));
+            const theta = 2 * Math.PI * Math.random();
+            
+            node.x = sphere.center.x + (r * Math.sin(phi) * Math.cos(theta));
+            node.y = sphere.center.y + (r * Math.sin(phi) * Math.sin(theta));
+            node.z = sphere.center.z + (r * Math.cos(phi));
+          }
+        });
+      })
+      .d3Force('charge', d3.forceManyBody()
+        .strength(-100)
+        .distanceMin(100)
+        .distanceMax(300)
+      )
+      .d3Force('link', d3.forceLink(graphData.links)
+        .distance(d => {
+          const source = d.source as Node;
+          const target = d.target as Node;
+          return (source.type === "category" || target.type === "category") ? 200 : 100;
+        })
+      );
 
     // Position camera to view all spheres
-    graphInstance.cameraPosition({ x: 2000, y: 1000, z: 2000 });
+    graph.cameraPosition({ x: 2000, y: 1000, z: 2000 });
 
     return () => {
       if (graphRef.current) {
