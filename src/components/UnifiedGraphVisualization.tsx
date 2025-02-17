@@ -5,9 +5,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "./ui/skeleton";
 import { Card, CardContent } from "./ui/card";
 import { Button } from "./ui/button";
-import { Maximize2, Minimize2, Settings2, X } from "lucide-react";
+import { Maximize2, Minimize2, Settings2, X, ChevronDown } from "lucide-react";
 import { Slider } from "./ui/slider";
 import { Switch } from "./ui/switch";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "./ui/accordion";
 import type { Database } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 import * as THREE from 'three';
@@ -510,134 +516,161 @@ export const UnifiedGraphVisualization = () => {
                   <X className="h-4 w-4" />
                 </Button>
               </div>
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Node Size</label>
-                  <Slider
-                    value={[nodeSize]}
-                    onValueChange={([value]) => {
-                      setNodeSize(value);
-                      handleSettingChange('nodeSize', value);
-                    }}
-                    max={200}
-                    min={50}
-                    step={10}
-                  />
-                  <span className="text-xs text-muted-foreground">{nodeSize}%</span>
-                </div>
+              <Accordion type="single" collapsible className="space-y-2">
+                <AccordionItem value="nodes" className="border-none">
+                  <AccordionTrigger className="py-2 hover:no-underline">
+                    <span className="text-sm font-medium">Nodes</span>
+                  </AccordionTrigger>
+                  <AccordionContent className="space-y-4 pt-2">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Node Size</label>
+                      <Slider
+                        value={[nodeSize]}
+                        onValueChange={([value]) => {
+                          setNodeSize(value);
+                          handleSettingChange('nodeSize', value);
+                        }}
+                        max={200}
+                        min={50}
+                        step={10}
+                      />
+                      <span className="text-xs text-muted-foreground">{nodeSize}%</span>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
 
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Sprite Size</label>
-                  <Slider
-                    value={[spriteSize]}
-                    onValueChange={([value]) => {
-                      setSpriteSize(value);
-                      handleSettingChange('spriteSize', value);
-                    }}
-                    max={200}
-                    min={50}
-                    step={10}
-                  />
-                  <span className="text-xs text-muted-foreground">{spriteSize}%</span>
-                </div>
+                <AccordionItem value="labels" className="border-none">
+                  <AccordionTrigger className="py-2 hover:no-underline">
+                    <span className="text-sm font-medium">Labels</span>
+                  </AccordionTrigger>
+                  <AccordionContent className="space-y-4 pt-2">
+                    <div className="flex items-center justify-between">
+                      <label className="text-sm font-medium">Show Labels</label>
+                      <Switch
+                        checked={showLabels}
+                        onCheckedChange={(checked) => {
+                          setShowLabels(checked);
+                          handleSettingChange('showLabels', checked);
+                        }}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Label Size</label>
+                      <Slider
+                        value={[spriteSize]}
+                        onValueChange={([value]) => {
+                          setSpriteSize(value);
+                          handleSettingChange('spriteSize', value);
+                        }}
+                        max={200}
+                        min={50}
+                        step={10}
+                      />
+                      <span className="text-xs text-muted-foreground">{spriteSize}%</span>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
 
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Link Opacity</label>
-                  <Slider
-                    value={[linkOpacity]}
-                    onValueChange={([value]) => {
-                      setLinkOpacity(value);
-                      handleSettingChange('linkOpacity', value);
-                    }}
-                    max={100}
-                    min={0}
-                    step={10}
-                  />
-                  <span className="text-xs text-muted-foreground">{linkOpacity}%</span>
-                </div>
+                <AccordionItem value="links" className="border-none">
+                  <AccordionTrigger className="py-2 hover:no-underline">
+                    <span className="text-sm font-medium">Links</span>
+                  </AccordionTrigger>
+                  <AccordionContent className="space-y-4 pt-2">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Link Width</label>
+                      <Slider
+                        value={[linkWidth]}
+                        onValueChange={([value]) => {
+                          setLinkWidth(value);
+                          handleSettingChange('linkWidth', value);
+                        }}
+                        max={3}
+                        min={0.5}
+                        step={0.5}
+                      />
+                      <span className="text-xs text-muted-foreground">{linkWidth}</span>
+                    </div>
 
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Link Width</label>
-                  <Slider
-                    value={[linkWidth]}
-                    onValueChange={([value]) => {
-                      setLinkWidth(value);
-                      handleSettingChange('linkWidth', value);
-                    }}
-                    max={3}
-                    min={0.5}
-                    step={0.5}
-                  />
-                  <span className="text-xs text-muted-foreground">{linkWidth}</span>
-                </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Link Opacity</label>
+                      <Slider
+                        value={[linkOpacity]}
+                        onValueChange={([value]) => {
+                          setLinkOpacity(value);
+                          handleSettingChange('linkOpacity', value);
+                        }}
+                        max={100}
+                        min={0}
+                        step={10}
+                      />
+                      <span className="text-xs text-muted-foreground">{linkOpacity}%</span>
+                    </div>
 
-                <div className="flex items-center justify-between">
-                  <label className="text-sm font-medium">Show Labels</label>
-                  <Switch
-                    checked={showLabels}
-                    onCheckedChange={(checked) => {
-                      setShowLabels(checked);
-                      handleSettingChange('showLabels', checked);
-                    }}
-                  />
-                </div>
+                    <div className="flex items-center justify-between">
+                      <label className="text-sm font-medium">Show Arrows</label>
+                      <Switch
+                        checked={showArrows}
+                        onCheckedChange={(checked) => {
+                          setShowArrows(checked);
+                          handleSettingChange('showArrows', checked);
+                        }}
+                      />
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
 
-                <div className="flex items-center justify-between">
-                  <label className="text-sm font-medium">Show Arrows</label>
-                  <Switch
-                    checked={showArrows}
-                    onCheckedChange={(checked) => {
-                      setShowArrows(checked);
-                      handleSettingChange('showArrows', checked);
-                    }}
-                  />
-                </div>
+                <AccordionItem value="physics" className="border-none">
+                  <AccordionTrigger className="py-2 hover:no-underline">
+                    <span className="text-sm font-medium">Physics</span>
+                  </AccordionTrigger>
+                  <AccordionContent className="space-y-4 pt-2">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Gravity</label>
+                      <Slider
+                        value={[Math.abs(gravity)]}
+                        onValueChange={([value]) => {
+                          setGravity(-value);
+                          handleSettingChange('gravity', -value, 'graphPhysics');
+                        }}
+                        max={500}
+                        min={100}
+                        step={50}
+                      />
+                      <span className="text-xs text-muted-foreground">{Math.abs(gravity)}</span>
+                    </div>
 
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Gravity</label>
-                  <Slider
-                    value={[Math.abs(gravity)]}
-                    onValueChange={([value]) => {
-                      setGravity(-value);
-                      handleSettingChange('gravity', -value, 'graphPhysics');
-                    }}
-                    max={500}
-                    min={100}
-                    step={50}
-                  />
-                  <span className="text-xs text-muted-foreground">{Math.abs(gravity)}</span>
-                </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Link Strength</label>
+                      <Slider
+                        value={[linkStrength]}
+                        onValueChange={([value]) => {
+                          setLinkStrength(value);
+                          handleSettingChange('linkStrength', value, 'graphPhysics');
+                        }}
+                        max={2}
+                        min={0.1}
+                        step={0.1}
+                      />
+                      <span className="text-xs text-muted-foreground">{linkStrength}</span>
+                    </div>
 
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Link Strength</label>
-                  <Slider
-                    value={[linkStrength]}
-                    onValueChange={([value]) => {
-                      setLinkStrength(value);
-                      handleSettingChange('linkStrength', value, 'graphPhysics');
-                    }}
-                    max={2}
-                    min={0.1}
-                    step={0.1}
-                  />
-                  <span className="text-xs text-muted-foreground">{linkStrength}</span>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Friction</label>
-                  <Slider
-                    value={[friction]}
-                    onValueChange={([value]) => {
-                      setFriction(value);
-                      handleSettingChange('friction', value, 'graphPhysics');
-                    }}
-                    max={0.9}
-                    min={0.1}
-                    step={0.1}
-                  />
-                  <span className="text-xs text-muted-foreground">{friction}</span>
-                </div>
-              </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Friction</label>
+                      <Slider
+                        value={[friction]}
+                        onValueChange={([value]) => {
+                          setFriction(value);
+                          handleSettingChange('friction', value, 'graphPhysics');
+                        }}
+                        max={0.9}
+                        min={0.1}
+                        step={0.1}
+                      />
+                      <span className="text-xs text-muted-foreground">{friction}</span>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
             </Card>
           )}
           {!showSettings && (
