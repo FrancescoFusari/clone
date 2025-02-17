@@ -9,6 +9,9 @@ import { Button } from "./ui/button";
 import { Maximize2, Minimize2, Settings2, X, ChevronDown, ChevronUp } from "lucide-react";
 import * as THREE from 'three';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./ui/collapsible";
+import type { Database } from "@/integrations/supabase/types";
+
+type EntryCategory = Database["public"]["Enums"]["entry_category"];
 
 interface Node {
   id: string;
@@ -33,6 +36,48 @@ interface GraphData {
   nodes: Node[];
   links: Link[];
 }
+
+const getCategoryColor = (category: EntryCategory) => {
+  const palettes = {
+    personal: {
+      primary: "#9b87f5",
+      secondary: "#7E69AB",
+      tertiary: "#6E59A5",
+      soft: "#E5DEFF",
+      link: "rgba(229, 222, 255, 0.8)"
+    },
+    work: {
+      primary: "#60a5fa",
+      secondary: "#3b82f6",
+      tertiary: "#2563eb",
+      soft: "#dbeafe",
+      link: "rgba(219, 234, 254, 0.8)"
+    },
+    social: {
+      primary: "#f472b6",
+      secondary: "#ec4899",
+      tertiary: "#db2777",
+      soft: "#fce7f3",
+      link: "rgba(252, 231, 243, 0.8)"
+    },
+    interests: {
+      primary: "#4ade80",
+      secondary: "#22c55e",
+      tertiary: "#16a34a",
+      soft: "#dcfce7",
+      link: "rgba(220, 252, 231, 0.8)"
+    },
+    school: {
+      primary: "#fb923c",
+      secondary: "#f97316",
+      tertiary: "#ea580c",
+      soft: "#ffedd5",
+      link: "rgba(255, 237, 213, 0.8)"
+    }
+  };
+  
+  return category ? palettes[category] : undefined;
+};
 
 export const ExperimentalGraphVisualization = () => {
   const graphRef = useRef<HTMLDivElement>(null);
@@ -75,7 +120,7 @@ export const ExperimentalGraphVisualization = () => {
       links: []
     };
 
-    // Add the central user node
+    // First, add the central user node
     graphData.nodes.push({
       id: profile.id,
       name: profile.username || "My Mind Map",
@@ -83,7 +128,22 @@ export const ExperimentalGraphVisualization = () => {
       val: 150
     });
 
-    // Add entry nodes
+    // Collect all possible nodes
+    const categories = new Set<EntryCategory>();
+    const subcategories = new Set<string>();
+    const tags = new Set<string>();
+
+    entries.forEach(entry => {
+      categories.add(entry.category);
+      if (entry.subcategory) {
+        subcategories.add(entry.subcategory);
+      }
+      entry.tags?.forEach(tag => {
+        tags.add(tag);
+      });
+    });
+
+    // Add all nodes first
     entries.forEach(entry => {
       graphData.nodes.push({
         id: entry.id,
@@ -93,7 +153,84 @@ export const ExperimentalGraphVisualization = () => {
       });
     });
 
-    const graphInstance = ForceGraph3D()(graphRef.current)
+    categories.forEach(cat => {
+      graphData.nodes.push({
+        id: cat,
+        name: cat.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '),
+        type: "category",
+        val: 100
+      });
+    });
+
+    subcategories.forEach(sub => {
+      graphData.nodes.push({
+        id: sub,
+        name: sub,
+        type: "subcategory",
+        val: 40
+      });
+    });
+
+    tags.forEach(tag => {
+      graphData.nodes.push({
+        id: tag,
+        name: tag,
+        type: "tag",
+        val: 5
+      });
+    });
+
+    // Create a set of node IDs for quick lookup
+    const nodeIds = new Set(graphData.nodes.map(node => node.id));
+
+    // Then add links only between existing nodes
+    entries.forEach(entry => {
+      const categoryColor = getCategoryColor(entry.category);
+      
+      // Add link between category and entry
+      if (categoryColor && nodeIds.has(entry.category) && nodeIds.has(entry.id)) {
+        graphData.links.push({
+          source: entry.category,
+          target: entry.id,
+          color: categoryColor.link
+        });
+      }
+
+      // Add link between entry and subcategory
+      if (entry.subcategory && categoryColor && nodeIds.has(entry.subcategory) && nodeIds.has(entry.id)) {
+        graphData.links.push({
+          source: entry.id,
+          target: entry.subcategory,
+          color: categoryColor.link
+        });
+      }
+
+      // Add links between entry and tags
+      entry.tags?.forEach(tag => {
+        if (categoryColor && nodeIds.has(tag) && nodeIds.has(entry.id)) {
+          graphData.links.push({
+            source: entry.id,
+            target: tag,
+            color: categoryColor.link
+          });
+        }
+      });
+    });
+
+    // Add links between categories and user
+    categories.forEach(cat => {
+      const categoryColor = getCategoryColor(cat);
+      if (categoryColor && nodeIds.has(cat) && nodeIds.has(profile.id)) {
+        graphData.links.push({
+          source: profile.id,
+          target: cat,
+          color: categoryColor.link
+        });
+      }
+    });
+
+    const fg = ForceGraph3D();
+    const graphInstance = fg(graphRef.current)
       .graphData(graphData)
       .nodeThreeObject(node => {
         const nodeObj = node as Node;
