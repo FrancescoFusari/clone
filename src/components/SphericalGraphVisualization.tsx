@@ -68,7 +68,9 @@ export const SphericalGraphVisualization = () => {
     const categories = new Set<EntryCategory>();
     const subcategoriesByCategory: Record<string, Set<string>> = {};
     const tagsByCategory: Record<string, Set<string>> = {};
+    const nodeIds = new Set<string>(); // Keep track of all node IDs
 
+    // First pass: collect all categories, subcategories, and tags
     entries.forEach(entry => {
       categories.add(entry.category);
       
@@ -90,7 +92,7 @@ export const SphericalGraphVisualization = () => {
     // Calculate positions for category spheres
     const categorySpheres: CategorySphere[] = [];
     const numCategories = categories.size;
-    const radius = 800; // Distance of category centers from global center
+    const radius = 800;
 
     // Position category spheres in a circle on the XZ plane
     Array.from(categories).forEach((category, index) => {
@@ -107,7 +109,7 @@ export const SphericalGraphVisualization = () => {
 
     // Add nodes for each category sphere
     categorySpheres.forEach(({ category, center }) => {
-      // Add category node at the center of its sphere
+      // Add category node
       graphData.nodes.push({
         id: category,
         name: category.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '),
@@ -118,57 +120,69 @@ export const SphericalGraphVisualization = () => {
         fz: center.z,
         groupId: category
       });
+      nodeIds.add(category);
 
       // Add subcategory nodes
       subcategoriesByCategory[category]?.forEach(subcategory => {
-        graphData.nodes.push({
-          id: subcategory,
-          name: subcategory,
-          type: "subcategory",
-          val: 40,
-          groupId: category
-        });
+        if (!nodeIds.has(subcategory)) {
+          graphData.nodes.push({
+            id: subcategory,
+            name: subcategory,
+            type: "subcategory",
+            val: 40,
+            groupId: category
+          });
+          nodeIds.add(subcategory);
+        }
       });
 
-      // Add entry nodes for this category
+      // Add entry nodes
       entries
         .filter(entry => entry.category === category)
         .forEach(entry => {
-          graphData.nodes.push({
-            id: entry.id,
-            name: entry.title,
-            type: "entry",
-            val: 20,
-            groupId: category
-          });
+          if (!nodeIds.has(entry.id)) {
+            graphData.nodes.push({
+              id: entry.id,
+              name: entry.title,
+              type: "entry",
+              val: 20,
+              groupId: category
+            });
+            nodeIds.add(entry.id);
+          }
         });
 
-      // Add tag nodes for this category
+      // Add tag nodes
       tagsByCategory[category]?.forEach(tag => {
-        graphData.nodes.push({
-          id: tag,
-          name: tag,
-          type: "tag",
-          val: 5,
-          groupId: category
-        });
+        if (!nodeIds.has(tag)) {
+          graphData.nodes.push({
+            id: tag,
+            name: tag,
+            type: "tag",
+            val: 5,
+            groupId: category
+          });
+          nodeIds.add(tag);
+        }
       });
     });
 
-    // Add links
+    // Add links only between existing nodes
     entries.forEach(entry => {
       const categoryColor = getCategoryColor(entry.category);
       
-      if (categoryColor) {
-        // Link from category to entry
-        graphData.links.push({
-          source: entry.category,
-          target: entry.id,
-          color: categoryColor.link
-        });
+      if (categoryColor && nodeIds.has(entry.id)) {
+        // Link from category to entry (only if both nodes exist)
+        if (nodeIds.has(entry.category)) {
+          graphData.links.push({
+            source: entry.category,
+            target: entry.id,
+            color: categoryColor.link
+          });
+        }
 
-        // Link from entry to subcategory
-        if (entry.subcategory) {
+        // Link from entry to subcategory (only if both nodes exist)
+        if (entry.subcategory && nodeIds.has(entry.subcategory)) {
           graphData.links.push({
             source: entry.id,
             target: entry.subcategory,
@@ -176,13 +190,15 @@ export const SphericalGraphVisualization = () => {
           });
         }
 
-        // Links from entry to tags
+        // Links from entry to tags (only if both nodes exist)
         entry.tags?.forEach(tag => {
-          graphData.links.push({
-            source: entry.id,
-            target: tag,
-            color: categoryColor.link
-          });
+          if (nodeIds.has(tag)) {
+            graphData.links.push({
+              source: entry.id,
+              target: tag,
+              color: categoryColor.link
+            });
+          }
         });
       }
     });
@@ -193,15 +209,14 @@ export const SphericalGraphVisualization = () => {
       .forceEngine('d3')
       .d3Force('sphere', () => {
         graphData.nodes.forEach(node => {
-          if (node.type !== "category") { // Skip category nodes as they're fixed
+          if (node.type !== "category") {
             const sphere = categorySpheres.find(s => s.category === node.groupId);
             if (!sphere) return;
 
-            const r = node.type === "subcategory" ? 200 : 400; // subcategories closer, entries/tags further
+            const r = node.type === "subcategory" ? 200 : 400;
             const phi = Math.acos(-1 + (2 * Math.random()));
             const theta = 2 * Math.PI * Math.random();
             
-            // Position relative to the category center
             node.x = sphere.center.x + (r * Math.sin(phi) * Math.cos(theta));
             node.y = sphere.center.y + (r * Math.sin(phi) * Math.sin(theta));
             node.z = sphere.center.z + (r * Math.cos(phi));
