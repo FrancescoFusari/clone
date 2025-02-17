@@ -93,8 +93,7 @@ export const ExperimentalGraphVisualization = () => {
       });
     });
 
-    const Graph = ForceGraph3D;
-    const graphInstance = new Graph()(graphRef.current)
+    const graphInstance = ForceGraph3D()(graphRef.current)
       .graphData(graphData)
       .nodeThreeObject(node => {
         const nodeObj = node as Node;
