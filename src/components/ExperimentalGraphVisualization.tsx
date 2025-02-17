@@ -4,10 +4,8 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "./ui/skeleton";
 import { Card, CardContent } from "./ui/card";
-import { Button } from "./ui/button";
-import { Maximize2, Minimize2, Settings2, X, ChevronDown, ChevronUp } from "lucide-react";
 import * as THREE from 'three';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./ui/collapsible";
+import * as d3 from 'd3';
 import type { Database } from "@/integrations/supabase/types";
 
 type EntryCategory = Database["public"]["Enums"]["entry_category"];
@@ -219,12 +217,16 @@ export const ExperimentalGraphVisualization = () => {
       }
     });
 
-    const fg = ForceGraph3D();
-    const graphInstance = fg(graphRef.current)
+    const Graph = ForceGraph3D();
+    
+    const graphInstance = Graph(graphRef.current)
       .graphData(graphData)
-      .linkLength(100)
-      .d3Force('charge', d3.forceManyBody().strength(-200))
-      .nodeThreeObject(node => {
+      .d3Force('link')
+        .distance(100)
+      .d3Force('charge')
+        .strength(-200);
+
+    graphInstance.nodeThreeObject(node => {
         const nodeObj = node as Node;
         const isExpanded = expandedNodes.has(nodeObj.id);
 
@@ -269,8 +271,9 @@ export const ExperimentalGraphVisualization = () => {
         sprite.scale.set(scale, scale * (cardHeight / cardWidth), 1);
 
         return sprite;
-      })
-      .onNodeClick((node) => {
+    });
+
+    graphInstance.onNodeClick((node) => {
         const nodeObj = node as Node;
         setExpandedNodes(prev => {
           const newSet = new Set(prev);
@@ -281,7 +284,7 @@ export const ExperimentalGraphVisualization = () => {
           }
           return newSet;
         });
-      });
+    });
 
     graphInstance.cameraPosition({ x: 600, y: 600, z: 1000 });
 
