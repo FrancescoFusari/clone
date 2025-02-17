@@ -28,6 +28,7 @@ interface GraphSettings {
   showLabels: boolean;
   showArrows: boolean;
   spriteSize: number;
+  enableNodeZoom: boolean;
   graphPhysics: {
     gravity: number;
     linkStrength: number;
@@ -42,6 +43,7 @@ const DEFAULT_SETTINGS: GraphSettings = {
   showLabels: true,
   showArrows: false,
   spriteSize: 100,
+  enableNodeZoom: false,
   graphPhysics: {
     gravity: -250,
     linkStrength: 1,
@@ -83,6 +85,7 @@ export const UnifiedGraphVisualization = () => {
   const [showLabels, setShowLabels] = useState(DEFAULT_SETTINGS.showLabels);
   const [showArrows, setShowArrows] = useState(DEFAULT_SETTINGS.showArrows);
   const [spriteSize, setSpriteSize] = useState(DEFAULT_SETTINGS.spriteSize);
+  const [enableNodeZoom, setEnableNodeZoom] = useState(DEFAULT_SETTINGS.enableNodeZoom);
   const [gravity, setGravity] = useState(DEFAULT_SETTINGS.graphPhysics.gravity);
   const [linkStrength, setLinkStrength] = useState(DEFAULT_SETTINGS.graphPhysics.linkStrength);
   const [friction, setFriction] = useState(DEFAULT_SETTINGS.graphPhysics.friction);
@@ -126,6 +129,7 @@ export const UnifiedGraphVisualization = () => {
         setShowLabels(settings.showLabels ?? DEFAULT_SETTINGS.showLabels);
         setShowArrows(settings.showArrows ?? DEFAULT_SETTINGS.showArrows);
         setSpriteSize(settings.spriteSize ?? DEFAULT_SETTINGS.spriteSize);
+        setEnableNodeZoom(settings.enableNodeZoom ?? DEFAULT_SETTINGS.enableNodeZoom);
         setGravity(settings.graphPhysics?.gravity ?? DEFAULT_SETTINGS.graphPhysics.gravity);
         setLinkStrength(settings.graphPhysics?.linkStrength ?? DEFAULT_SETTINGS.graphPhysics.linkStrength);
         setFriction(settings.graphPhysics?.friction ?? DEFAULT_SETTINGS.graphPhysics.friction);
@@ -202,14 +206,6 @@ export const UnifiedGraphVisualization = () => {
       links: []
     };
 
-    // Add central user node
-    graphData.nodes.push({
-      id: profile.id,
-      name: profile.username || "User",
-      type: "user",
-      val: 300
-    });
-
     const categories = new Set<EntryCategory>();
     const subcategories = new Set<string>();
     const tags = new Set<string>();
@@ -224,7 +220,6 @@ export const UnifiedGraphVisualization = () => {
         val: 20
       });
 
-      // Get category color before using it
       const categoryColor = getCategoryColor(entry.category);
       if (categoryColor) {
         graphData.links.push({
@@ -292,8 +287,8 @@ export const UnifiedGraphVisualization = () => {
       });
     });
 
-    // Initialize Force Graph with correct syntax
-    const graphInstance = new ForceGraph3D()(graphRef.current);
+    const Graph = ForceGraph3D();
+    const graphInstance = Graph(graphRef.current);
     
     const getNodeColor = (node: Node) => {
       switch (node.type) {
@@ -336,12 +331,10 @@ export const UnifiedGraphVisualization = () => {
         const n = node as Node;
         if (!showLabels) return undefined;
 
-        // Create a high-resolution canvas texture for the label
         const canvas = document.createElement('canvas');
         const context = canvas.getContext('2d');
         if (!context) return undefined;
 
-        // Set up text properties with higher resolution
         const fontSize = 48;
         const devicePixelRatio = window.devicePixelRatio || 1;
         context.scale(devicePixelRatio, devicePixelRatio);
@@ -351,20 +344,16 @@ export const UnifiedGraphVisualization = () => {
         const textWidth = textMetrics.width;
         const textHeight = fontSize;
         const padding = 16;
-        const borderRadius = 12 * devicePixelRatio; // Rounded corners radius
+        const borderRadius = 12 * devicePixelRatio;
 
-        // Set canvas dimensions with higher resolution and proper centering
         const canvasWidth = (textWidth + padding * 2) * devicePixelRatio;
         const canvasHeight = (textHeight + padding * 2) * devicePixelRatio;
         canvas.width = canvasWidth;
         canvas.height = canvasHeight;
 
-        // Clear canvas
         context.clearRect(0, 0, canvasWidth, canvasHeight);
 
-        // Draw rounded rectangle background
-        const nodeColor = getNodeColor(n);
-        context.fillStyle = nodeColor;
+        context.fillStyle = getNodeColor(n);
         context.beginPath();
         context.moveTo(borderRadius, 0);
         context.lineTo(canvasWidth - borderRadius, 0);
@@ -378,29 +367,23 @@ export const UnifiedGraphVisualization = () => {
         context.closePath();
         context.fill();
 
-        // Reset context after resize
         context.scale(devicePixelRatio, devicePixelRatio);
         context.font = `${fontSize}px Sans-Serif`;
         context.textAlign = 'center';
         context.textBaseline = 'middle';
         
-        // Always use black text
         context.fillStyle = '#000000';
         
-        // Enable text anti-aliasing
         context.imageSmoothingEnabled = true;
         context.imageSmoothingQuality = 'high';
         
-        // Draw the text at the exact center of the canvas
         const centerX = canvasWidth / (2 * devicePixelRatio);
         const centerY = canvasHeight / (2 * devicePixelRatio);
         context.fillText(n.name, centerX, centerY);
 
-        // Create sprite material with the high-res texture
         const texture = new THREE.CanvasTexture(canvas);
         texture.needsUpdate = true;
         
-        // Use linear filter for sharper text
         texture.minFilter = THREE.LinearFilter;
         texture.magFilter = THREE.LinearFilter;
         
@@ -411,7 +394,6 @@ export const UnifiedGraphVisualization = () => {
         
         const sprite = new THREE.Sprite(spriteMaterial);
         
-        // Use spriteSize setting to adjust the scale
         sprite.scale.set(
           ((canvasWidth / devicePixelRatio) / 4) * (spriteSize / 100),
           ((canvasHeight / devicePixelRatio) / 4) * (spriteSize / 100),
@@ -438,6 +420,8 @@ export const UnifiedGraphVisualization = () => {
         n.fz = n.z;
       })
       .onNodeClick((node) => {
+        if (!enableNodeZoom) return;
+        
         const distance = 150;
         const distRatio = 1 + distance/Math.hypot(node.x || 0, node.y || 0, node.z || 0);
 
@@ -452,7 +436,6 @@ export const UnifiedGraphVisualization = () => {
         );
       });
 
-    // Update physics settings separately
     const chargeForce = graphInstance.d3Force('charge');
     if (chargeForce) {
       chargeForce.strength(gravity);
@@ -463,7 +446,6 @@ export const UnifiedGraphVisualization = () => {
       linkForce.strength(linkStrength);
     }
 
-    // Update global simulation parameters
     const simulation = graphInstance.d3Force('simulation');
     if (simulation) {
       simulation.velocityDecay(friction);
@@ -492,7 +474,7 @@ export const UnifiedGraphVisualization = () => {
         graphRef.current.innerHTML = "";
       }
     };
-  }, [entries, profile, linkOpacity, nodeSize, linkWidth, showLabels, showArrows, spriteSize, gravity, linkStrength, friction]);
+  }, [entries, profile, linkOpacity, nodeSize, linkWidth, showLabels, showArrows, spriteSize, gravity, linkStrength, friction, enableNodeZoom]);
 
   if (!entries || !profile) {
     return <Skeleton className="w-screen h-screen" />;
@@ -667,6 +649,24 @@ export const UnifiedGraphVisualization = () => {
                         step={0.1}
                       />
                       <span className="text-xs text-muted-foreground">{friction}</span>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+
+                <AccordionItem value="interaction" className="border-none">
+                  <AccordionTrigger className="py-2 hover:no-underline">
+                    <span className="text-sm font-medium">Interaction</span>
+                  </AccordionTrigger>
+                  <AccordionContent className="space-y-4 pt-2">
+                    <div className="flex items-center justify-between">
+                      <label className="text-sm font-medium">Enable Node Zoom</label>
+                      <Switch
+                        checked={enableNodeZoom}
+                        onCheckedChange={(checked) => {
+                          setEnableNodeZoom(checked);
+                          handleSettingChange('enableNodeZoom', checked);
+                        }}
+                      />
                     </div>
                   </AccordionContent>
                 </AccordionItem>
