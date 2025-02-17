@@ -241,16 +241,16 @@ export const ExperimentalGraphVisualization = () => {
         const context = canvas.getContext('2d');
         if (!context) return undefined;
 
-        // Set up canvas
-        const padding = 16;
-        const borderRadius = 8;
-        const fontSize = 14;
+        // Increase base sizes
+        const padding = 24;
+        const borderRadius = 12;
+        const fontSize = 20;
         context.font = `${fontSize}px Arial`;
 
-        // Calculate dimensions
+        // Calculate dimensions with larger minimums
         const titleWidth = context.measureText(nodeObj.name).width;
-        const cardWidth = Math.max(titleWidth + (padding * 2), 150);
-        const cardHeight = isExpanded ? 100 : 40;
+        const cardWidth = Math.max(titleWidth + (padding * 2), 200);
+        const cardHeight = isExpanded ? 140 : 60;
 
         // Set canvas dimensions
         canvas.width = cardWidth;
@@ -268,12 +268,12 @@ export const ExperimentalGraphVisualization = () => {
         context.textBaseline = 'middle';
         
         // Draw title
-        context.fillText(nodeObj.name, padding, 20);
+        context.fillText(nodeObj.name, padding, 30);
 
         if (isExpanded) {
           // Draw additional details when expanded
-          context.fillText(`Type: ${nodeObj.type}`, padding, 50);
-          context.fillText(`ID: ${nodeObj.id.slice(0, 8)}...`, padding, 80);
+          context.fillText(`Type: ${nodeObj.type}`, padding, 70);
+          context.fillText(`ID: ${nodeObj.id.slice(0, 8)}...`, padding, 110);
         }
 
         // Create sprite from canvas
@@ -281,8 +281,9 @@ export const ExperimentalGraphVisualization = () => {
         const material = new THREE.SpriteMaterial({ map: texture });
         const sprite = new THREE.Sprite(material);
 
-        // Scale sprite based on node value
-        const scale = (nodeObj.val || 20) / 20;
+        // Increase the base scale significantly
+        const baseScale = 15; // Increased from previous small value
+        const scale = (nodeObj.val || 20) / 20 * baseScale;
         sprite.scale.set(scale, scale * (cardHeight / cardWidth), 1);
 
         return sprite;
@@ -300,8 +301,8 @@ export const ExperimentalGraphVisualization = () => {
         });
       });
 
-    // Set up initial camera position
-    graphInstance.cameraPosition({ x: 500, y: 500, z: 800 });
+    // Adjust camera position to accommodate larger nodes
+    graphInstance.cameraPosition({ x: 1000, y: 1000, z: 1600 });
 
     return () => {
       if (graphRef.current) {
