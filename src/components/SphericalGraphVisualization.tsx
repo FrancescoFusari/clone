@@ -64,13 +64,11 @@ export const SphericalGraphVisualization = () => {
       links: []
     };
 
-    // Collect all unique categories, subcategories, and tags
     const categories = new Set<EntryCategory>();
     const subcategoriesByCategory: Record<string, Set<string>> = {};
     const tagsByCategory: Record<string, Set<string>> = {};
-    const nodesMap = new Map<string, Node>(); // Map to store node references
+    const nodesMap = new Map<string, Node>();
 
-    // First pass: collect all categories, subcategories, and tags
     entries.forEach(entry => {
       categories.add(entry.category);
       
@@ -89,12 +87,10 @@ export const SphericalGraphVisualization = () => {
       });
     });
 
-    // Calculate positions for category spheres
     const categorySpheres: CategorySphere[] = [];
     const numCategories = categories.size;
     const radius = 800;
 
-    // Position category spheres in a circle on the XZ plane
     Array.from(categories).forEach((category, index) => {
       const angle = (2 * Math.PI * index) / numCategories;
       categorySpheres.push({
@@ -107,14 +103,15 @@ export const SphericalGraphVisualization = () => {
       });
     });
 
-    // Add nodes and store references
     categorySpheres.forEach(({ category, center }) => {
-      // Add category node
       const categoryNode: Node = {
         id: category,
         name: category.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '),
         type: "category",
         val: 100,
+        x: center.x,
+        y: center.y,
+        z: center.z,
         fx: center.x,
         fy: center.y,
         fz: center.z,
@@ -123,61 +120,86 @@ export const SphericalGraphVisualization = () => {
       graphData.nodes.push(categoryNode);
       nodesMap.set(category, categoryNode);
 
-      // Add subcategory nodes
-      subcategoriesByCategory[category]?.forEach(subcategory => {
-        if (!nodesMap.has(subcategory)) {
-          const subcategoryNode: Node = {
-            id: subcategory,
-            name: subcategory,
-            type: "subcategory",
-            val: 40,
-            groupId: category
-          };
-          graphData.nodes.push(subcategoryNode);
-          nodesMap.set(subcategory, subcategoryNode);
-        }
+      const subcategories = Array.from(subcategoriesByCategory[category] || []);
+      const entries = entries.filter(e => e.category === category);
+      const tags = Array.from(tagsByCategory[category] || []);
+
+      subcategories.forEach((subcategory, idx) => {
+        const angle = (2 * Math.PI * idx) / subcategories.length;
+        const r = 200;
+        const x = center.x + r * Math.cos(angle);
+        const y = center.y;
+        const z = center.z + r * Math.sin(angle);
+
+        const subcategoryNode: Node = {
+          id: subcategory,
+          name: subcategory,
+          type: "subcategory",
+          val: 40,
+          x, y, z,
+          fx: x,
+          fy: y,
+          fz: z,
+          groupId: category
+        };
+        graphData.nodes.push(subcategoryNode);
+        nodesMap.set(subcategory, subcategoryNode);
       });
 
-      // Add entry nodes
-      entries
-        .filter(entry => entry.category === category)
-        .forEach(entry => {
-          if (!nodesMap.has(entry.id)) {
-            const entryNode: Node = {
-              id: entry.id,
-              name: entry.title,
-              type: "entry",
-              val: 20,
-              groupId: category
-            };
-            graphData.nodes.push(entryNode);
-            nodesMap.set(entry.id, entryNode);
-          }
-        });
+      entries.forEach((entry, idx) => {
+        const angle = (2 * Math.PI * idx) / entries.length;
+        const r = 400;
+        const phi = Math.acos(-1 + (2 * idx) / entries.length);
+        
+        const x = center.x + r * Math.sin(phi) * Math.cos(angle);
+        const y = center.y + r * Math.cos(phi);
+        const z = center.z + r * Math.sin(phi) * Math.sin(angle);
 
-      // Add tag nodes
-      tagsByCategory[category]?.forEach(tag => {
-        if (!nodesMap.has(tag)) {
-          const tagNode: Node = {
-            id: tag,
-            name: tag,
-            type: "tag",
-            val: 5,
-            groupId: category
-          };
-          graphData.nodes.push(tagNode);
-          nodesMap.set(tag, tagNode);
-        }
+        const entryNode: Node = {
+          id: entry.id,
+          name: entry.title,
+          type: "entry",
+          val: 20,
+          x, y, z,
+          fx: x,
+          fy: y,
+          fz: z,
+          groupId: category
+        };
+        graphData.nodes.push(entryNode);
+        nodesMap.set(entry.id, entryNode);
+      });
+
+      tags.forEach((tag, idx) => {
+        const angle = (2 * Math.PI * idx) / tags.length;
+        const r = 400;
+        const phi = Math.acos(-1 + (2 * (idx + 0.5)) / (tags.length + 1));
+        
+        const x = center.x + r * Math.sin(phi) * Math.cos(angle);
+        const y = center.y + r * Math.cos(phi);
+        const z = center.z + r * Math.sin(phi) * Math.sin(angle);
+
+        const tagNode: Node = {
+          id: tag,
+          name: tag,
+          type: "tag",
+          val: 5,
+          x, y, z,
+          fx: x,
+          fy: y,
+          fz: z,
+          groupId: category
+        };
+        graphData.nodes.push(tagNode);
+        nodesMap.set(tag, tagNode);
       });
     });
 
-    // Add links using node references
     entries.forEach(entry => {
       const categoryColor = getCategoryColor(entry.category);
       const entryNode = nodesMap.get(entry.id);
       
       if (categoryColor && entryNode) {
-        // Link from category to entry
         const categoryNode = nodesMap.get(entry.category);
         if (categoryNode) {
           graphData.links.push({
@@ -187,7 +209,6 @@ export const SphericalGraphVisualization = () => {
           });
         }
 
-        // Link from entry to subcategory
         if (entry.subcategory) {
           const subcategoryNode = nodesMap.get(entry.subcategory);
           if (subcategoryNode) {
@@ -199,7 +220,6 @@ export const SphericalGraphVisualization = () => {
           }
         }
 
-        // Links from entry to tags
         entry.tags?.forEach(tag => {
           const tagNode = nodesMap.get(tag);
           if (tagNode) {
@@ -213,9 +233,8 @@ export const SphericalGraphVisualization = () => {
       }
     });
 
-    // Create the force graph instance
-    const graph = ForceGraph3D();
-    graph(graphRef.current)
+    const graph = ForceGraph3D()
+      (graphRef.current)
       .graphData(graphData)
       .nodeThreeObject(node => {
         const nodeObj = node as Node;
@@ -276,24 +295,9 @@ export const SphericalGraphVisualization = () => {
         });
       })
       .forceEngine('d3')
-      .d3Force('sphere', () => {
-        graphData.nodes.forEach(node => {
-          if (node.type !== "category") {
-            const sphere = categorySpheres.find(s => s.category === node.groupId);
-            if (!sphere) return;
+      .d3AlphaDecay(0.02)
+      .d3VelocityDecay(0.3);
 
-            const r = node.type === "subcategory" ? 200 : 400;
-            const phi = Math.acos(-1 + (2 * Math.random()));
-            const theta = 2 * Math.PI * Math.random();
-            
-            node.x = sphere.center.x + (r * Math.sin(phi) * Math.cos(theta));
-            node.y = sphere.center.y + (r * Math.sin(phi) * Math.sin(theta));
-            node.z = sphere.center.z + (r * Math.cos(phi));
-          }
-        });
-      });
-
-    // Position camera to view all spheres
     graph.cameraPosition({ x: 2000, y: 1000, z: 2000 });
 
     return () => {
