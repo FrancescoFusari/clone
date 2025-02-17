@@ -217,14 +217,14 @@ export const ExperimentalGraphVisualization = () => {
       }
     });
 
-    const Graph = ForceGraph3D();
-    
-    const graphInstance = Graph(graphRef.current)
+    const graphInstance = ForceGraph3D()(graphRef.current)
       .graphData(graphData)
-      .d3Force('link')
-        .distance(100)
-      .d3Force('charge')
-        .strength(-200);
+      .d3Force('center', d3.forceCenter())
+      .d3Force('charge', d3.forceManyBody()
+        .strength(-400)
+        .distanceMin(100)
+        .distanceMax(500)
+      );
 
     graphInstance.nodeThreeObject(node => {
         const nodeObj = node as Node;
