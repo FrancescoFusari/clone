@@ -206,49 +206,28 @@ export const UnifiedGraphVisualization = () => {
       links: []
     };
 
+    // First, collect all possible nodes
     const categories = new Set<EntryCategory>();
     const subcategories = new Set<string>();
     const tags = new Set<string>();
 
     entries.forEach(entry => {
       categories.add(entry.category);
-      
+      if (entry.subcategory) {
+        subcategories.add(entry.subcategory);
+      }
+      entry.tags?.forEach(tag => {
+        tags.add(tag);
+      });
+    });
+
+    // Add all nodes first
+    entries.forEach(entry => {
       graphData.nodes.push({
         id: entry.id,
         name: entry.title,
         type: "entry",
         val: 20
-      });
-
-      const categoryColor = getCategoryColor(entry.category);
-      if (categoryColor) {
-        graphData.links.push({
-          source: entry.category,
-          target: entry.id,
-          color: categoryColor.link
-        });
-      }
-
-      if (entry.subcategory) {
-        subcategories.add(entry.subcategory);
-        if (categoryColor) {
-          graphData.links.push({
-            source: entry.id,
-            target: entry.subcategory,
-            color: categoryColor.link
-          });
-        }
-      }
-
-      entry.tags?.forEach(tag => {
-        tags.add(tag);
-        if (categoryColor) {
-          graphData.links.push({
-            source: entry.id,
-            target: tag,
-            color: categoryColor.link
-          });
-        }
       });
     });
 
@@ -259,14 +238,6 @@ export const UnifiedGraphVisualization = () => {
         type: "category",
         val: 100
       });
-      const categoryColor = getCategoryColor(cat);
-      if (categoryColor) {
-        graphData.links.push({
-          source: profile.id,
-          target: cat,
-          color: categoryColor.link
-        });
-      }
     });
 
     subcategories.forEach(sub => {
@@ -287,8 +258,57 @@ export const UnifiedGraphVisualization = () => {
       });
     });
 
-    const Graph = ForceGraph3D();
-    const graphInstance = Graph(graphRef.current);
+    // Create a set of node IDs for quick lookup
+    const nodeIds = new Set(graphData.nodes.map(node => node.id));
+
+    // Then add links only between existing nodes
+    entries.forEach(entry => {
+      const categoryColor = getCategoryColor(entry.category);
+      
+      // Add link between category and entry
+      if (categoryColor && nodeIds.has(entry.category) && nodeIds.has(entry.id)) {
+        graphData.links.push({
+          source: entry.category,
+          target: entry.id,
+          color: categoryColor.link
+        });
+      }
+
+      // Add link between entry and subcategory
+      if (entry.subcategory && categoryColor && nodeIds.has(entry.subcategory) && nodeIds.has(entry.id)) {
+        graphData.links.push({
+          source: entry.id,
+          target: entry.subcategory,
+          color: categoryColor.link
+        });
+      }
+
+      // Add links between entry and tags
+      entry.tags?.forEach(tag => {
+        if (categoryColor && nodeIds.has(tag) && nodeIds.has(entry.id)) {
+          graphData.links.push({
+            source: entry.id,
+            target: tag,
+            color: categoryColor.link
+          });
+        }
+      });
+    });
+
+    // Add links between categories and user
+    categories.forEach(cat => {
+      const categoryColor = getCategoryColor(cat);
+      if (categoryColor && nodeIds.has(cat) && nodeIds.has(profile.id)) {
+        graphData.links.push({
+          source: profile.id,
+          target: cat,
+          color: categoryColor.link
+        });
+      }
+    });
+
+    const Graph = ForceGraph3D;
+    const graphInstance = new Graph()(graphRef.current);
     
     const getNodeColor = (node: Node) => {
       switch (node.type) {
