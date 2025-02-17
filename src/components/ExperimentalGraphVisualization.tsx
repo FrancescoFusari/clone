@@ -1,3 +1,4 @@
+
 import { useEffect, useRef, useState } from "react";
 import ForceGraph3D from "3d-force-graph";
 import { useQuery } from "@tanstack/react-query";
@@ -219,7 +220,21 @@ export const ExperimentalGraphVisualization = () => {
 
     const graphInstance = ForceGraph3D()(graphRef.current)
       .graphData(graphData)
-      .d3Force('center', d3.forceCenter())
+      // Configure truly 3D force layout
+      .forceEngine('d3')
+      .d3Force('sphere', () => {
+        // Create a spherical force
+        graphData.nodes.forEach(node => {
+          const r = 400; // radius of the sphere
+          const phi = Math.acos(-1 + (2 * Math.random()));
+          const theta = 2 * Math.PI * Math.random();
+          
+          // Convert spherical coordinates to Cartesian
+          node.x = r * Math.sin(phi) * Math.cos(theta);
+          node.y = r * Math.sin(phi) * Math.sin(theta);
+          node.z = r * Math.cos(phi);
+        });
+      })
       .d3Force('charge', d3.forceManyBody()
         .strength(-400)
         .distanceMin(100)
@@ -286,7 +301,8 @@ export const ExperimentalGraphVisualization = () => {
         });
     });
 
-    graphInstance.cameraPosition({ x: 600, y: 600, z: 1000 });
+    // Adjust camera position for better initial view of the sphere
+    graphInstance.cameraPosition({ x: 1000, y: 1000, z: 1000 });
 
     return () => {
       if (graphRef.current) {
