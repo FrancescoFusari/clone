@@ -21,6 +21,7 @@ interface GraphSettings {
   linkWidth: number;
   showLabels: boolean;
   showArrows: boolean;
+  spriteSize: number;
   graphPhysics: {
     gravity: number;
     linkStrength: number;
@@ -34,6 +35,7 @@ const DEFAULT_SETTINGS: GraphSettings = {
   linkWidth: 1,
   showLabels: true,
   showArrows: false,
+  spriteSize: 100,
   graphPhysics: {
     gravity: -250,
     linkStrength: 1,
@@ -74,6 +76,7 @@ export const UnifiedGraphVisualization = () => {
   const [linkWidth, setLinkWidth] = useState(DEFAULT_SETTINGS.linkWidth);
   const [showLabels, setShowLabels] = useState(DEFAULT_SETTINGS.showLabels);
   const [showArrows, setShowArrows] = useState(DEFAULT_SETTINGS.showArrows);
+  const [spriteSize, setSpriteSize] = useState(DEFAULT_SETTINGS.spriteSize);
   const [gravity, setGravity] = useState(DEFAULT_SETTINGS.graphPhysics.gravity);
   const [linkStrength, setLinkStrength] = useState(DEFAULT_SETTINGS.graphPhysics.linkStrength);
   const [friction, setFriction] = useState(DEFAULT_SETTINGS.graphPhysics.friction);
@@ -116,6 +119,7 @@ export const UnifiedGraphVisualization = () => {
         setLinkWidth(settings.linkWidth ?? DEFAULT_SETTINGS.linkWidth);
         setShowLabels(settings.showLabels ?? DEFAULT_SETTINGS.showLabels);
         setShowArrows(settings.showArrows ?? DEFAULT_SETTINGS.showArrows);
+        setSpriteSize(settings.spriteSize ?? DEFAULT_SETTINGS.spriteSize);
         setGravity(settings.graphPhysics?.gravity ?? DEFAULT_SETTINGS.graphPhysics.gravity);
         setLinkStrength(settings.graphPhysics?.linkStrength ?? DEFAULT_SETTINGS.graphPhysics.linkStrength);
         setFriction(settings.graphPhysics?.friction ?? DEFAULT_SETTINGS.graphPhysics.friction);
@@ -374,8 +378,8 @@ export const UnifiedGraphVisualization = () => {
         context.textAlign = 'center';
         context.textBaseline = 'middle';
         
-        // Set text color based on background brightness
-        context.fillStyle = isLightColor(nodeColor) ? '#000000' : '#ffffff';
+        // Always use black text
+        context.fillStyle = '#000000';
         
         // Enable text anti-aliasing
         context.imageSmoothingEnabled = true;
@@ -401,10 +405,10 @@ export const UnifiedGraphVisualization = () => {
         
         const sprite = new THREE.Sprite(spriteMaterial);
         
-        // Adjust scale to account for the higher resolution
+        // Use spriteSize setting to adjust the scale
         sprite.scale.set(
-          (canvasWidth / devicePixelRatio) / 4,
-          (canvasHeight / devicePixelRatio) / 4,
+          ((canvasWidth / devicePixelRatio) / 4) * (spriteSize / 100),
+          ((canvasHeight / devicePixelRatio) / 4) * (spriteSize / 100),
           1
         );
         
@@ -482,7 +486,7 @@ export const UnifiedGraphVisualization = () => {
         graphRef.current.innerHTML = "";
       }
     };
-  }, [entries, profile, linkOpacity, nodeSize, linkWidth, showLabels, showArrows, gravity, linkStrength, friction]);
+  }, [entries, profile, linkOpacity, nodeSize, linkWidth, showLabels, showArrows, spriteSize, gravity, linkStrength, friction]);
 
   if (!entries || !profile) {
     return <Skeleton className="w-screen h-screen" />;
@@ -520,6 +524,21 @@ export const UnifiedGraphVisualization = () => {
                     step={10}
                   />
                   <span className="text-xs text-muted-foreground">{nodeSize}%</span>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Sprite Size</label>
+                  <Slider
+                    value={[spriteSize]}
+                    onValueChange={([value]) => {
+                      setSpriteSize(value);
+                      handleSettingChange('spriteSize', value);
+                    }}
+                    max={200}
+                    min={50}
+                    step={10}
+                  />
+                  <span className="text-xs text-muted-foreground">{spriteSize}%</span>
                 </div>
 
                 <div className="space-y-2">
