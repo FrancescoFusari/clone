@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "./ui/skeleton";
 import { Card, CardContent } from "./ui/card";
 import { Button } from "./ui/button";
-import { Maximize2, Minimize2, Settings2, X, ChevronDown } from "lucide-react";
+import { Maximize2, Minimize2, Settings2, X } from "lucide-react";
 import { Slider } from "./ui/slider";
 import { Switch } from "./ui/switch";
 import {
@@ -316,39 +316,7 @@ export const UnifiedGraphVisualization = () => {
     });
 
     const Graph = ForceGraph3D;
-    const graphInstance = new Graph()(graphRef.current);
-    
-    const getNodeColor = (node: Node) => {
-      switch (node.type) {
-        case "user":
-          return "#9b87f5";
-        case "category":
-          const catColor = getCategoryColor(node.id as EntryCategory);
-          return catColor ? catColor.primary : "#F5F3F2";
-        case "subcategory":
-          const subCatColor = getCategoryColor(getNodeCategory(node.id, graphData) as EntryCategory);
-          return subCatColor ? subCatColor.secondary : "#F5F3F2";
-        case "entry":
-          const entryColor = getCategoryColor(getNodeCategory(node.id, graphData) as EntryCategory);
-          return entryColor ? entryColor.tertiary : "#F5F3F2";
-        case "tag":
-          const tagColor = getCategoryColor(getNodeCategory(node.id, graphData) as EntryCategory);
-          return tagColor ? tagColor.soft : "#F5F3F2";
-        default:
-          return "#F5F3F2";
-      }
-    };
-
-    const isLightColor = (color: string) => {
-      const hex = color.replace('#', '');
-      const r = parseInt(hex.substr(0, 2), 16);
-      const g = parseInt(hex.substr(2, 2), 16);
-      const b = parseInt(hex.substr(4, 2), 16);
-      const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-      return brightness > 155;
-    };
-    
-    graphInstance
+    const graphInstance = new Graph()(graphRef.current)
       .graphData(graphData)
       .nodeVal(node => ((node as Node).val * nodeSize) / 100)
       .linkWidth(linkWidth)
@@ -436,10 +404,10 @@ export const UnifiedGraphVisualization = () => {
         if (l.color) {
           const rgbaMatch = l.color.match(/rgba\((\d+),\s*(\d+),\s*(\d+),\s*[\d.]+\)/);
           if (rgbaMatch) {
-            return `rgba(${rgbaMatch[1]}, ${rgbaMatch[2]}, ${rgbaMatch[3]}, ${linkOpacity / 100})`;
+            return `rgb(${rgbaMatch[1]}, ${rgbaMatch[2]}, ${rgbaMatch[3]})`;
           }
         }
-        return `rgba(255, 255, 255, 1)`; // Pure white with full opacity
+        return `rgb(255, 255, 255)`;
       })
       .onNodeDragEnd(node => {
         const n = node as Node;
