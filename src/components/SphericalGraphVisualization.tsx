@@ -1,3 +1,4 @@
+
 import { useEffect, useRef, useState } from "react";
 import ForceGraph3D from "3d-force-graph";
 import { useQuery } from "@tanstack/react-query";
@@ -5,7 +6,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "./ui/skeleton";
 import { Card, CardContent } from "./ui/card";
 import * as THREE from 'three';
-import * as d3 from 'd3';
 import type { Database } from "@/integrations/supabase/types";
 
 type EntryCategory = Database["public"]["Enums"]["entry_category"];
@@ -44,7 +44,7 @@ export const SphericalGraphVisualization = () => {
   const graphRef = useRef<HTMLDivElement>(null);
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
 
-  const { data: entries } = useQuery({
+  const { data: entriesData } = useQuery({
     queryKey: ["all-entries"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -57,7 +57,7 @@ export const SphericalGraphVisualization = () => {
   });
 
   useEffect(() => {
-    if (!entries || !graphRef.current) return;
+    if (!entriesData || !graphRef.current) return;
 
     const graphData: GraphData = {
       nodes: [],
@@ -69,7 +69,8 @@ export const SphericalGraphVisualization = () => {
     const tagsByCategory: Record<string, Set<string>> = {};
     const nodesMap = new Map<string, Node>();
 
-    entries.forEach(entry => {
+    // First pass: collect all categories, subcategories, and tags
+    entriesData.forEach(entry => {
       categories.add(entry.category);
       
       if (!subcategoriesByCategory[entry.category]) {
@@ -87,6 +88,7 @@ export const SphericalGraphVisualization = () => {
       });
     });
 
+    // Calculate positions for category spheres
     const categorySpheres: CategorySphere[] = [];
     const numCategories = categories.size;
     const radius = 800;
@@ -103,7 +105,9 @@ export const SphericalGraphVisualization = () => {
       });
     });
 
+    // Add nodes with fixed positions
     categorySpheres.forEach(({ category, center }) => {
+      // Add category node
       const categoryNode: Node = {
         id: category,
         name: category.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '),
@@ -120,10 +124,11 @@ export const SphericalGraphVisualization = () => {
       graphData.nodes.push(categoryNode);
       nodesMap.set(category, categoryNode);
 
+      const categoryEntries = entriesData.filter(e => e.category === category);
       const subcategories = Array.from(subcategoriesByCategory[category] || []);
-      const entries = entries.filter(e => e.category === category);
       const tags = Array.from(tagsByCategory[category] || []);
 
+      // Add subcategory nodes
       subcategories.forEach((subcategory, idx) => {
         const angle = (2 * Math.PI * idx) / subcategories.length;
         const r = 200;
@@ -146,10 +151,11 @@ export const SphericalGraphVisualization = () => {
         nodesMap.set(subcategory, subcategoryNode);
       });
 
-      entries.forEach((entry, idx) => {
-        const angle = (2 * Math.PI * idx) / entries.length;
+      // Add entry nodes
+      categoryEntries.forEach((entry, idx) => {
+        const angle = (2 * Math.PI * idx) / categoryEntries.length;
         const r = 400;
-        const phi = Math.acos(-1 + (2 * idx) / entries.length);
+        const phi = Math.acos(-1 + (2 * idx) / categoryEntries.length);
         
         const x = center.x + r * Math.sin(phi) * Math.cos(angle);
         const y = center.y + r * Math.cos(phi);
@@ -170,6 +176,7 @@ export const SphericalGraphVisualization = () => {
         nodesMap.set(entry.id, entryNode);
       });
 
+      // Add tag nodes
       tags.forEach((tag, idx) => {
         const angle = (2 * Math.PI * idx) / tags.length;
         const r = 400;
@@ -195,7 +202,8 @@ export const SphericalGraphVisualization = () => {
       });
     });
 
-    entries.forEach(entry => {
+    // Add links
+    entriesData.forEach(entry => {
       const categoryColor = getCategoryColor(entry.category);
       const entryNode = nodesMap.get(entry.id);
       
@@ -233,8 +241,9 @@ export const SphericalGraphVisualization = () => {
       }
     });
 
-    const graph = ForceGraph3D()
-      (graphRef.current)
+    // Create and configure the force graph
+    const graph = ForceGraph3D();
+    graph(graphRef.current)
       .graphData(graphData)
       .nodeThreeObject(node => {
         const nodeObj = node as Node;
@@ -294,7 +303,6 @@ export const SphericalGraphVisualization = () => {
           return newSet;
         });
       })
-      .forceEngine('d3')
       .d3AlphaDecay(0.02)
       .d3VelocityDecay(0.3);
 
@@ -305,9 +313,9 @@ export const SphericalGraphVisualization = () => {
         graphRef.current.innerHTML = "";
       }
     };
-  }, [entries, expandedNodes]);
+  }, [entriesData, expandedNodes]);
 
-  if (!entries) {
+  if (!entriesData) {
     return <Skeleton className="w-screen h-screen" />;
   }
 
