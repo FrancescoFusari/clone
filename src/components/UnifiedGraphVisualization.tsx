@@ -439,7 +439,7 @@ export const UnifiedGraphVisualization = () => {
             return `rgba(${rgbaMatch[1]}, ${rgbaMatch[2]}, ${rgbaMatch[3]}, ${linkOpacity / 100})`;
           }
         }
-        return `rgba(255, 255, 255, ${linkOpacity / 100})`;
+        return `rgba(255, 255, 255, 1)`; // Pure white with full opacity
       })
       .onNodeDragEnd(node => {
         const n = node as Node;
