@@ -1,4 +1,3 @@
-
 import { useEffect, useRef, useState } from "react";
 import ForceGraph3D from "3d-force-graph";
 import { useQuery } from "@tanstack/react-query";
@@ -120,7 +119,6 @@ export const ExperimentalGraphVisualization = () => {
       links: []
     };
 
-    // First, add the central user node
     graphData.nodes.push({
       id: profile.id,
       name: profile.username || "My Mind Map",
@@ -128,7 +126,6 @@ export const ExperimentalGraphVisualization = () => {
       val: 150
     });
 
-    // Collect all possible nodes
     const categories = new Set<EntryCategory>();
     const subcategories = new Set<string>();
     const tags = new Set<string>();
@@ -143,7 +140,6 @@ export const ExperimentalGraphVisualization = () => {
       });
     });
 
-    // Add all nodes first
     entries.forEach(entry => {
       graphData.nodes.push({
         id: entry.id,
@@ -180,14 +176,11 @@ export const ExperimentalGraphVisualization = () => {
       });
     });
 
-    // Create a set of node IDs for quick lookup
     const nodeIds = new Set(graphData.nodes.map(node => node.id));
 
-    // Then add links only between existing nodes
     entries.forEach(entry => {
       const categoryColor = getCategoryColor(entry.category);
       
-      // Add link between category and entry
       if (categoryColor && nodeIds.has(entry.category) && nodeIds.has(entry.id)) {
         graphData.links.push({
           source: entry.category,
@@ -196,7 +189,6 @@ export const ExperimentalGraphVisualization = () => {
         });
       }
 
-      // Add link between entry and subcategory
       if (entry.subcategory && categoryColor && nodeIds.has(entry.subcategory) && nodeIds.has(entry.id)) {
         graphData.links.push({
           source: entry.id,
@@ -205,7 +197,6 @@ export const ExperimentalGraphVisualization = () => {
         });
       }
 
-      // Add links between entry and tags
       entry.tags?.forEach(tag => {
         if (categoryColor && nodeIds.has(tag) && nodeIds.has(entry.id)) {
           graphData.links.push({
@@ -217,7 +208,6 @@ export const ExperimentalGraphVisualization = () => {
       });
     });
 
-    // Add links between categories and user
     categories.forEach(cat => {
       const categoryColor = getCategoryColor(cat);
       if (categoryColor && nodeIds.has(cat) && nodeIds.has(profile.id)) {
@@ -232,57 +222,49 @@ export const ExperimentalGraphVisualization = () => {
     const fg = ForceGraph3D();
     const graphInstance = fg(graphRef.current)
       .graphData(graphData)
+      .linkLength(100)
+      .d3Force('charge', d3.forceManyBody().strength(-200))
       .nodeThreeObject(node => {
         const nodeObj = node as Node;
         const isExpanded = expandedNodes.has(nodeObj.id);
 
-        // Create a canvas for the HTML-like card
         const canvas = document.createElement('canvas');
         const context = canvas.getContext('2d');
         if (!context) return undefined;
 
-        // Increase base sizes
-        const padding = 24;
-        const borderRadius = 12;
-        const fontSize = 20;
+        const padding = 32;
+        const borderRadius = 16;
+        const fontSize = 24;
         context.font = `${fontSize}px Arial`;
 
-        // Calculate dimensions with larger minimums
         const titleWidth = context.measureText(nodeObj.name).width;
-        const cardWidth = Math.max(titleWidth + (padding * 2), 200);
-        const cardHeight = isExpanded ? 140 : 60;
+        const cardWidth = Math.max(titleWidth + (padding * 2), 300);
+        const cardHeight = isExpanded ? 200 : 80;
 
-        // Set canvas dimensions
         canvas.width = cardWidth;
         canvas.height = cardHeight;
 
-        // Draw card background
         context.fillStyle = '#E5DEFF';
         context.beginPath();
         context.roundRect(0, 0, cardWidth, cardHeight, borderRadius);
         context.fill();
 
-        // Draw card content
         context.fillStyle = '#000000';
         context.textAlign = 'left';
         context.textBaseline = 'middle';
         
-        // Draw title
-        context.fillText(nodeObj.name, padding, 30);
+        context.fillText(nodeObj.name, padding, 40);
 
         if (isExpanded) {
-          // Draw additional details when expanded
-          context.fillText(`Type: ${nodeObj.type}`, padding, 70);
-          context.fillText(`ID: ${nodeObj.id.slice(0, 8)}...`, padding, 110);
+          context.fillText(`Type: ${nodeObj.type}`, padding, 100);
+          context.fillText(`ID: ${nodeObj.id.slice(0, 8)}...`, padding, 160);
         }
 
-        // Create sprite from canvas
         const texture = new THREE.CanvasTexture(canvas);
         const material = new THREE.SpriteMaterial({ map: texture });
         const sprite = new THREE.Sprite(material);
 
-        // Increase the base scale significantly
-        const baseScale = 15; // Increased from previous small value
+        const baseScale = 25;
         const scale = (nodeObj.val || 20) / 20 * baseScale;
         sprite.scale.set(scale, scale * (cardHeight / cardWidth), 1);
 
@@ -301,8 +283,7 @@ export const ExperimentalGraphVisualization = () => {
         });
       });
 
-    // Adjust camera position to accommodate larger nodes
-    graphInstance.cameraPosition({ x: 1000, y: 1000, z: 1600 });
+    graphInstance.cameraPosition({ x: 600, y: 600, z: 1000 });
 
     return () => {
       if (graphRef.current) {
