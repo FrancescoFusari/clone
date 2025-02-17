@@ -283,7 +283,7 @@ export const UnifiedGraphVisualization = () => {
     });
 
     const Graph = ForceGraph3D;
-    const graphInstance = new Graph()(graphRef.current);
+    const graphInstance = Graph(graphRef.current);
     
     const getNodeColor = (node: Node) => {
       switch (node.type) {
