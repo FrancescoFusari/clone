@@ -1,3 +1,4 @@
+
 import { useEffect, useRef, useState } from "react";
 import ForceGraph3D from "3d-force-graph";
 import { useQuery } from "@tanstack/react-query";
@@ -214,8 +215,26 @@ export const SphericalGraphVisualization = () => {
     });
 
     // Create the force graph instance
-    const graph = ForceGraph3D();
-    graph(graphRef.current)
+    const Graph = ForceGraph3D();
+    const graph = Graph(graphRef.current);
+
+    // Set initial positions for all nodes
+    graphData.nodes.forEach(node => {
+      if (node.type !== "category") {
+        const sphere = categorySpheres.find(s => s.category === node.groupId);
+        if (!sphere) return;
+
+        const r = node.type === "subcategory" ? 200 : 400;
+        const phi = Math.acos(-1 + (2 * Math.random()));
+        const theta = 2 * Math.PI * Math.random();
+        
+        node.x = sphere.center.x + (r * Math.sin(phi) * Math.cos(theta));
+        node.y = sphere.center.y + (r * Math.sin(phi) * Math.sin(theta));
+        node.z = sphere.center.z + (r * Math.cos(phi));
+      }
+    });
+
+    graph
       .graphData(graphData)
       .nodeThreeObject(node => {
         const nodeObj = node as Node;
@@ -276,6 +295,8 @@ export const SphericalGraphVisualization = () => {
         });
       })
       .forceEngine('d3')
+      .d3VelocityDecay(0.9) // Add velocity decay to dampen node movement
+      .cooldownTime(1000) // Set cooldown time to 1 second
       .d3Force('sphere', () => {
         graphData.nodes.forEach(node => {
           if (node.type !== "category") {
@@ -286,9 +307,20 @@ export const SphericalGraphVisualization = () => {
             const phi = Math.acos(-1 + (2 * Math.random()));
             const theta = 2 * Math.PI * Math.random();
             
-            node.x = sphere.center.x + (r * Math.sin(phi) * Math.cos(theta));
-            node.y = sphere.center.y + (r * Math.sin(phi) * Math.sin(theta));
-            node.z = sphere.center.z + (r * Math.cos(phi));
+            const targetX = sphere.center.x + (r * Math.sin(phi) * Math.cos(theta));
+            const targetY = sphere.center.y + (r * Math.sin(phi) * Math.sin(theta));
+            const targetZ = sphere.center.z + (r * Math.cos(phi));
+            
+            // Apply gradual force towards target position
+            if (node.x && node.y && node.z) {
+              node.x += (targetX - node.x) * 0.1;
+              node.y += (targetY - node.y) * 0.1;
+              node.z += (targetZ - node.z) * 0.1;
+            } else {
+              node.x = targetX;
+              node.y = targetY;
+              node.z = targetZ;
+            }
           }
         });
       });
