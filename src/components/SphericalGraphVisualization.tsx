@@ -1,4 +1,3 @@
-
 import { useEffect, useRef, useState } from "react";
 import ForceGraph3D from "3d-force-graph";
 import { useQuery } from "@tanstack/react-query";
@@ -292,19 +291,7 @@ export const SphericalGraphVisualization = () => {
             node.z = sphere.center.z + (r * Math.cos(phi));
           }
         });
-      })
-      .d3Force('charge', d3.forceManyBody()
-        .strength(-100)
-        .distanceMin(100)
-        .distanceMax(300)
-      )
-      .d3Force('link', d3.forceLink(graphData.links)
-        .distance(d => {
-          const source = d.source as Node;
-          const target = d.target as Node;
-          return (source.type === "category" || target.type === "category") ? 200 : 100;
-        })
-      );
+      });
 
     // Position camera to view all spheres
     graph.cameraPosition({ x: 2000, y: 1000, z: 2000 });
