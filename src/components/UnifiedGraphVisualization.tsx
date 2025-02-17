@@ -75,6 +75,27 @@ interface GraphData {
   links: Link[];
 }
 
+const getNodeColor = (node: Node) => {
+  switch (node.type) {
+    case "user":
+      return "#9b87f5";
+    case "category":
+      const catColor = getCategoryColor(node.id as EntryCategory);
+      return catColor ? catColor.primary : "#F5F3F2";
+    case "subcategory":
+      const subCatColor = getCategoryColor(getNodeCategory(node.id, graphData) as EntryCategory);
+      return subCatColor ? subCatColor.secondary : "#F5F3F2";
+    case "entry":
+      const entryColor = getCategoryColor(getNodeCategory(node.id, graphData) as EntryCategory);
+      return entryColor ? entryColor.tertiary : "#F5F3F2";
+    case "tag":
+      const tagColor = getCategoryColor(getNodeCategory(node.id, graphData) as EntryCategory);
+      return tagColor ? tagColor.soft : "#F5F3F2";
+    default:
+      return "#F5F3F2";
+  }
+};
+
 export const UnifiedGraphVisualization = () => {
   const graphRef = useRef<HTMLDivElement>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -316,7 +337,7 @@ export const UnifiedGraphVisualization = () => {
     });
 
     const Graph = ForceGraph3D;
-    const graphInstance = new Graph()(graphRef.current)
+    const graphInstance = Graph()(graphRef.current)
       .graphData(graphData)
       .nodeVal(node => ((node as Node).val * nodeSize) / 100)
       .linkWidth(linkWidth)
