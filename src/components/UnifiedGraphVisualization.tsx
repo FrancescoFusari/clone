@@ -206,7 +206,15 @@ export const UnifiedGraphVisualization = () => {
       links: []
     };
 
-    // First, collect all possible nodes
+    // First, add the central user node
+    graphData.nodes.push({
+      id: profile.id,
+      name: profile.username || "My Mind Map",
+      type: "user",
+      val: 150
+    });
+
+    // Collect all possible nodes
     const categories = new Set<EntryCategory>();
     const subcategories = new Set<string>();
     const tags = new Set<string>();
