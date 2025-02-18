@@ -1,4 +1,3 @@
-
 import { Suspense, lazy } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -21,6 +20,7 @@ const CategoryGraph = lazy(() => import("./pages/CategoryGraph"));
 const UnifiedGraph = lazy(() => import("./pages/UnifiedGraph"));
 const ExperimentalGraph = lazy(() => import("./pages/ExperimentalGraph"));
 const SphericalGraph = lazy(() => import("./pages/SphericalGraph"));
+const TreeGraph = lazy(() => import("./pages/TreeGraph"));
 const Vault = lazy(() => import("./pages/Vault"));
 const Chat = lazy(() => import("./pages/Chat"));
 const Settings = lazy(() => import("./pages/Settings"));
@@ -157,6 +157,14 @@ const AppRoutes = () => {
           element={
             <ProtectedRoute>
               <Settings />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/tree-graph"
+          element={
+            <ProtectedRoute>
+              <TreeGraph />
             </ProtectedRoute>
           }
         />
