@@ -1,6 +1,6 @@
 
 import { Link, useLocation } from "react-router-dom";
-import { Home, PlusCircle, FolderTree, Network, Settings, Trees } from "lucide-react";
+import { Home, PlusCircle, FolderTree, Network, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -66,18 +66,6 @@ export const Navigation = () => {
               </Button>
             </TooltipTrigger>
             <TooltipContent>Mind Map</TooltipContent>
-          </Tooltip>
-
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="ghost" className={cn("flex-1 max-w-[100px] gap-2 transition-all duration-300", isActive("/tree-graph") && "bg-white text-black hover:bg-white/90 hover:text-black")} asChild>
-                <Link to="/tree-graph">
-                  <Trees className="h-5 w-5" />
-                  <span className="sr-only">Tree Graph</span>
-                </Link>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Tree Graph</TooltipContent>
           </Tooltip>
 
           <Tooltip>
