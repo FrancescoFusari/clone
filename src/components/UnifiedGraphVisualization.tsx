@@ -1,4 +1,3 @@
-<lov-code>
 import { useEffect, useRef, useState } from "react";
 import ForceGraph3D from "3d-force-graph";
 import { useQuery } from "@tanstack/react-query";
@@ -847,4 +846,13 @@ const getNodeCategory = (nodeId: string, graphData: GraphData): EntryCategory | 
       }
       
       const result = findCategory(connectedId.toString(), visited);
-      if (result)
+      if (result) {
+        return result;
+      }
+    }
+
+    return null;
+  };
+
+  return findCategory(nodeId);
+};
