@@ -42,7 +42,7 @@ export const Navigation = () => {
               <Button 
                 variant="ghost" 
                 className={cn(
-                  "flex-1 max-w-[140px] gap-2 transition-all duration-300 scale-105 rainbow-border rounded-full hover:bg-transparent",
+                  "flex-1 max-w-[140px] gap-2 transition-all duration-300 scale-105 shadow-inner shadow-[#333333] hover:shadow-[#555555] rounded-full hover:bg-transparent",
                   isActive("/new") && "scale-110"
                 )} 
                 asChild
