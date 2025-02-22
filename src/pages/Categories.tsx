@@ -58,11 +58,11 @@ const Categories = () => {
     <CenteredLayout>
       <div className="space-y-6">
         {/* Header Card */}
-        <Card className="overflow-hidden relative bg-white/5 backdrop-blur-xl border-white/10">
-          <div className="absolute inset-0 bg-gradient-to-br from-[#F1F0FB]/20 to-[#F1F0FB]/5 opacity-50" />
+        <Card className="overflow-hidden relative bg-white/10 backdrop-blur-xl border-white/20">
+          <div className="absolute inset-0 bg-gradient-to-br from-[#F1F0FB]/30 to-[#F1F0FB]/10 opacity-50" />
           <CardHeader className="relative space-y-2">
             <div className="space-y-2">
-              <div className="p-3 w-fit rounded-xl bg-white/5 backdrop-blur-sm">
+              <div className="p-3 w-fit rounded-xl bg-white/10 backdrop-blur-sm">
                 <FolderTree className="w-6 h-6" />
               </div>
               <h1 className="text-4xl font-bold tracking-tight">Categories</h1>
@@ -83,14 +83,14 @@ const Categories = () => {
               onClick={() => navigate(`/categories/${category.value}`)}
               className="group"
             >
-              <Card className="relative overflow-hidden cursor-pointer transition-all duration-300 hover:scale-[1.02] border border-white/10 bg-white/5">
-                <div className={`absolute inset-0 bg-gradient-to-br ${category.color} opacity-50 transition-opacity group-hover:opacity-70`} />
+              <Card className="relative overflow-hidden cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-white/5 border border-white/20 bg-white/10">
+                <div className={`absolute inset-0 bg-gradient-to-br ${category.color} opacity-40 transition-all duration-300 group-hover:opacity-60`} />
                 <div className="relative p-6 space-y-4">
-                  <div className="p-3 w-fit rounded-xl bg-white/10 backdrop-blur-sm transition-colors group-hover:bg-white/15">
+                  <div className="p-3 w-fit rounded-xl bg-white/20 backdrop-blur-sm transition-all duration-300 group-hover:bg-white/30 group-hover:scale-105">
                     {category.icon}
                   </div>
                   <div className="space-y-2">
-                    <h3 className="text-2xl font-semibold">{category.name}</h3>
+                    <h3 className="text-2xl font-semibold tracking-tight">{category.name}</h3>
                     <p className="text-base text-white/70 font-light">
                       {category.description}
                     </p>
