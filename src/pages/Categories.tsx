@@ -1,10 +1,18 @@
 
 import { CenteredLayout } from "@/components/layouts/CenteredLayout";
 import { Card, CardHeader } from "@/components/ui/card";
-import { Archive, Database, FolderTree, Grid, List, LayoutGrid, LayoutList } from "lucide-react";
+import { Archive, Database, FolderTree, Grid, List, LayoutGrid, LayoutList, Search, Plus, SlidersHorizontal } from "lucide-react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { Input } from "@/components/ui/input";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
 
 interface CategoryCard {
   name: string;
@@ -15,6 +23,9 @@ interface CategoryCard {
   entryCount?: number;
   lastUpdated?: string;
 }
+
+type ViewMode = "grid" | "list";
+type SortOption = "name" | "entries" | "recent";
 
 const categories: CategoryCard[] = [
   {
@@ -64,11 +75,11 @@ const categories: CategoryCard[] = [
   },
 ];
 
-type ViewMode = "grid" | "list";
-
 const Categories = () => {
   const navigate = useNavigate();
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState<SortOption>("name");
 
   const handleCategoryClick = (value: string) => {
     navigate(`/categories/${value}`);
@@ -89,6 +100,24 @@ const Categories = () => {
     show: { opacity: 1, y: 0 }
   };
 
+  const filteredCategories = categories
+    .filter(category => 
+      category.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      category.description.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+    .sort((a, b) => {
+      switch (sortBy) {
+        case "name":
+          return a.name.localeCompare(b.name);
+        case "entries":
+          return (b.entryCount || 0) - (a.entryCount || 0);
+        case "recent":
+          return a.lastUpdated?.localeCompare(b.lastUpdated || "") || 0;
+        default:
+          return 0;
+      }
+    });
+
   return (
     <CenteredLayout>
       <div className="space-y-8">
@@ -107,19 +136,57 @@ const Categories = () => {
                   </p>
                 </div>
               </div>
-              <div className="flex gap-2 p-2 rounded-lg bg-background/20 backdrop-blur-sm">
-                <button 
-                  onClick={() => setViewMode("grid")}
-                  className={`p-2 rounded-md transition-colors ${viewMode === "grid" ? "bg-white/10" : "hover:bg-white/5"}`}
-                >
-                  <LayoutGrid className="w-5 h-5" />
-                </button>
-                <button 
-                  onClick={() => setViewMode("list")}
-                  className={`p-2 rounded-md transition-colors ${viewMode === "list" ? "bg-white/10" : "hover:bg-white/5"}`}
-                >
-                  <LayoutList className="w-5 h-5" />
-                </button>
+            </div>
+
+            {/* Search and Controls */}
+            <div className="flex flex-col sm:flex-row gap-4 pt-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-white/60" />
+                <Input
+                  placeholder="Search categories..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9 bg-background/20 border-white/10 text-white placeholder:text-white/60"
+                />
+              </div>
+              <div className="flex gap-2">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" className="bg-background/20 border-white/10">
+                      <SlidersHorizontal className="w-4 h-4 mr-2" />
+                      Sort
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    <DropdownMenuItem onClick={() => setSortBy("name")}>
+                      Sort by name
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setSortBy("entries")}>
+                      Sort by entries
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setSortBy("recent")}>
+                      Sort by recent
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                <div className="flex gap-2 p-2 rounded-lg bg-background/20 backdrop-blur-sm">
+                  <button 
+                    onClick={() => setViewMode("grid")}
+                    className={`p-2 rounded-md transition-colors ${viewMode === "grid" ? "bg-white/10" : "hover:bg-white/5"}`}
+                  >
+                    <LayoutGrid className="w-5 h-5" />
+                  </button>
+                  <button 
+                    onClick={() => setViewMode("list")}
+                    className={`p-2 rounded-md transition-colors ${viewMode === "list" ? "bg-white/10" : "hover:bg-white/5"}`}
+                  >
+                    <LayoutList className="w-5 h-5" />
+                  </button>
+                </div>
+                <Button className="bg-primary/20 hover:bg-primary/30">
+                  <Plus className="w-4 h-4 mr-2" />
+                  New Category
+                </Button>
               </div>
             </div>
           </CardHeader>
@@ -135,7 +202,7 @@ const Categories = () => {
             : "space-y-4"
           }
         >
-          {categories.map((category) => (
+          {filteredCategories.map((category) => (
             <motion.div
               key={category.name}
               variants={itemAnimation}
